@@ -162,7 +162,7 @@ export default function ProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen with-sidebar flex flex-col fanzine-canvas  text-[#FAFAFA] font-mono items-center justify-center space-y-4">
+      <div className="min-h-screen with-sidebar flex flex-col bg-[#0A0A0A] text-[#FAFAFA] font-mono items-center justify-center space-y-4">
         <Loader2 className="w-10 h-10  text-[#EF4444] animate-spin" />
         <p className="text-xs font-black uppercase tracking-widest text-[#737373]">SİNEMA PROFİLİ YÜKLENİYOR...</p>
       </div>
@@ -171,7 +171,7 @@ export default function ProfilePage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen with-sidebar flex flex-col fanzine-canvas  text-[#FAFAFA]">
+      <div className="min-h-screen with-sidebar flex flex-col bg-[#0A0A0A] text-[#FAFAFA]">
         <Navbar
           onOpenSearch={() => setIsSearchOpen(true)}
           onOpenAuth={() => setIsAuthOpen(true)}
@@ -267,7 +267,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen with-sidebar flex flex-col fanzine-canvas  text-[#FAFAFA] selection:bg-[#DC2626] selection:text-white">
+    <div className="min-h-screen with-sidebar flex flex-col bg-[#0A0A0A] text-[#FAFAFA] selection:bg-[#DC2626] selection:text-white">
       <Navbar
         onOpenQuickLog={() => setIsSearchOpen(true)}
         onOpenSearch={() => setIsSearchOpen(true)}

@@ -391,7 +391,7 @@ export default function UpcomingPage() {
   }, [filteredItems]);
 
   return (
-    <div className="min-h-screen with-sidebar flex flex-col fanzine-canvas  text-[#FAFAFA] selection:bg-[#DC2626] selection:text-white font-mono">
+    <div className="min-h-screen with-sidebar flex flex-col bg-[#0A0A0A] text-[#FAFAFA] selection:bg-[#DC2626] selection:text-white font-mono">
       <Navbar
         onOpenQuickLog={() => setIsSearchOpen(true)}
         onOpenSearch={() => setIsSearchOpen(true)}

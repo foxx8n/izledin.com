@@ -98,7 +98,7 @@ export default function PremiumPage() {
     : null;
 
   return (
-    <div className="min-h-screen with-sidebar flex flex-col fanzine-canvas  text-[#FAFAFA] selection:bg-[#DC2626] selection:text-white font-mono">
+    <div className="min-h-screen with-sidebar flex flex-col bg-[#0A0A0A] text-[#FAFAFA] selection:bg-[#DC2626] selection:text-white font-mono">
       <Navbar
         onOpenSearch={() => setIsSearchOpen(true)}
         onOpenAuth={() => setIsAuthOpen(true)}
