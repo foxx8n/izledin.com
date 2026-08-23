@@ -9,6 +9,10 @@ export async function GET(request: NextRequest) {
     const type = (searchParams.get('type') || 'all') as 'all' | 'movie' | 'tv' | 'anime';
     const query = searchParams.get('q');
     const id = searchParams.get('id');
+    const limitParam = searchParams.get('limit');
+    const limit = limitParam ? Math.min(50, Math.max(1, parseInt(limitParam, 10))) : 20;
+    const offsetParam = searchParams.get('offset');
+    const offset = offsetParam ? Math.max(0, parseInt(offsetParam, 10)) : 0;
 
     // Single-item lookup by external id (used by client components — the
     // OMDB key is server-only, so browsers must go through this proxy).
@@ -33,9 +37,9 @@ export async function GET(request: NextRequest) {
 
     let items;
     if (query && query.trim()) {
-      items = await searchCatalog(query.trim());
+      items = await searchCatalog(query.trim(), limit);
     } else {
-      items = await getTrendingMedia(type);
+      items = await getTrendingMedia(type, limit, offset);
     }
 
     return NextResponse.json(

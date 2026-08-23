@@ -26,13 +26,12 @@ export function SearchModal({ isOpen, onClose, onSelectMedia }: SearchModalProps
   const [loading, setLoading] = useState(false);
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
 
-  // Load initial trending items when opened. Stale-guarded: clearing the
-  // query re-runs this, and an older in-flight fetch must not paint over it.
+  // Load initial trending items when opened (top 12 curated items, lightweight 0ms paint).
   useEffect(() => {
     if (isOpen && !query.trim()) {
       let stale = false;
       setLoading(true);
-      getTrendingMedia('all')
+      getTrendingMedia('all', 12)
         .then((items) => {
           if (!stale) setResults(items);
         })
@@ -45,22 +44,21 @@ export function SearchModal({ isOpen, onClose, onSelectMedia }: SearchModalProps
     }
   }, [isOpen, query]);
 
-  // Debounced search. Stale-guarded on top of the timeout cleanup so a slow
-  // OLD search can never overwrite a fast NEW one's results.
+  // Debounced search (250ms). Stale-guarded on top of the timeout cleanup.
   useEffect(() => {
     if (!query.trim()) return;
 
     let stale = false;
     setLoading(true);
     const handler = setTimeout(() => {
-      searchCatalog(query)
+      searchCatalog(query, 15)
         .then((items) => {
           if (!stale) setResults(items);
         })
         .finally(() => {
           if (!stale) setLoading(false);
         });
-    }, 300);
+    }, 250);
 
     return () => {
       stale = true;
@@ -151,6 +149,12 @@ export function SearchModal({ isOpen, onClose, onSelectMedia }: SearchModalProps
               {suggestion}
             </button>
           ))}
+        </div>
+
+        {/* Section Title */}
+        <div className="flex items-center justify-between text-[11px] font-black uppercase text-neutral-400 font-mono">
+          <span>{query.trim() ? `ARAMA SONUÇLARI (${results.length})` : 'POPÜLER & TREND YAPIMLAR'}</span>
+          {loading && <span className="text-[#EF4444] animate-pulse">ARANIYOR...</span>}
         </div>
 
         {/* Results List */}

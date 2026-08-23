@@ -338,11 +338,30 @@ export async function getMasterpieceOfTheWeek(): Promise<MediaItem> {
 
 /**
  * Fetches the master catalog instantly (0ms, 0 API quota used, 0 DB size).
- * Contains 235+ hand-curated and harvested titles across all genres.
+ * Supports optional limit and offset to avoid shipping massive arrays to client views.
  */
-export async function getTrendingMedia(type: 'all' | 'movie' | 'tv' | 'anime' = 'all'): Promise<MediaItem[]> {
-  if (type === 'all') return STATIC_CATALOG;
-  return STATIC_CATALOG.filter((item) => item.type === type);
+export async function getTrendingMedia(
+  type: 'all' | 'movie' | 'tv' | 'anime' = 'all',
+  limit?: number,
+  offset: number = 0,
+): Promise<MediaItem[]> {
+  if (typeof window !== 'undefined' && typeof limit === 'number' && limit > 0) {
+    try {
+      const res = await fetch(`/api/catalog?type=${type}&limit=${limit}&offset=${offset}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data?.items)) return data.items as MediaItem[];
+      }
+    } catch (err) {
+      console.warn('Trending media proxy failed, falling back to local dataset:', err);
+    }
+  }
+
+  const pool = type === 'all' ? STATIC_CATALOG : STATIC_CATALOG.filter((item) => item.type === type);
+  if (typeof limit === 'number' && limit > 0) {
+    return pool.slice(offset, offset + limit);
+  }
+  return pool;
 }
 
 /**
@@ -395,42 +414,63 @@ export async function getUpcomingReleases(): Promise<MediaItem[]> {
 }
 
 /**
- * Searches the master catalog with 0ms in-memory search first,
+ * Searches the master catalog with 0ms in-memory ranked search first,
  * then falls back to OMDB worldwide live search with caching.
  */
-export async function searchCatalog(query: string): Promise<MediaItem[]> {
+export async function searchCatalog(query: string, limit: number = 15): Promise<MediaItem[]> {
   const normalized = query.trim().toLowerCase();
   if (!normalized) return [];
 
-  // 1. Instant in-memory search from master catalog
-  const localMatches = STATIC_CATALOG.filter((item) => {
-    const titleMatch = item.title.toLowerCase().includes(normalized) || item.originalTitle?.toLowerCase().includes(normalized);
-    const directorMatch = item.director?.toLowerCase().includes(normalized);
-    const actorMatch = item.actors?.toLowerCase().includes(normalized);
-    const genreMatch = item.genres.some((g) => g.toLowerCase().includes(normalized));
-    return titleMatch || directorMatch || actorMatch || genreMatch;
-  });
-
-  if (localMatches.length >= 6) {
-    return localMatches.slice(0, 8);
-  }
-
-  // 2. In the browser the API key is server-only — use the catalog proxy
-  //    route, which runs the same live OMDB search server-side.
+  // In the browser, query via the cached Edge API proxy
   if (typeof window !== 'undefined') {
     try {
-      const res = await fetch(`/api/catalog?q=${encodeURIComponent(query.trim())}`);
+      const res = await fetch(`/api/catalog?q=${encodeURIComponent(query.trim())}&limit=${limit}`);
       if (!res.ok) throw new Error('search proxy failed');
       const data = await res.json();
-      if (Array.isArray(data?.items)) return data.items as MediaItem[];
+      if (Array.isArray(data?.items)) return (data.items as MediaItem[]).slice(0, limit);
     } catch (err) {
-      console.warn('Search proxy failed, using static results:', err);
+      console.warn('Search proxy failed, using local static matches:', err);
     }
-    return localMatches.slice(0, 8);
+  }
+
+  // 1. Instant in-memory search from master catalog with relevance scoring
+  const scoredMatches: { item: MediaItem; score: number }[] = [];
+
+  for (const item of STATIC_CATALOG) {
+    const title = item.title.toLowerCase();
+    const originalTitle = item.originalTitle?.toLowerCase() || '';
+    const director = item.director?.toLowerCase() || '';
+    const actors = item.actors?.toLowerCase() || '';
+
+    let score = 0;
+    if (title === normalized || originalTitle === normalized) {
+      score = 100;
+    } else if (title.startsWith(normalized) || originalTitle.startsWith(normalized)) {
+      score = 80;
+    } else if (title.includes(normalized) || originalTitle.includes(normalized)) {
+      score = 60;
+    } else if (director.includes(normalized) || actors.includes(normalized)) {
+      score = 40;
+    } else if (item.genres.some((g) => g.toLowerCase().includes(normalized))) {
+      score = 20;
+    }
+
+    if (score > 0) {
+      // Add slight boost based on rating
+      score += Math.min(10, item.voteAverage || 0);
+      scoredMatches.push({ item, score });
+    }
+  }
+
+  scoredMatches.sort((a, b) => b.score - a.score);
+  const localMatches = scoredMatches.slice(0, limit).map((m) => m.item);
+
+  if (localMatches.length >= Math.min(6, limit)) {
+    return localMatches.slice(0, limit);
   }
 
   // 3. Server-side: query OMDB API with cache to discover any external film
-  return searchQueryCache.getOrFetch(normalized, async () => {
+  return searchQueryCache.getOrFetch(`${normalized}_${limit}`, async () => {
     try {
       const res = await fetch(
         `${OMDB_BASE_URL}?apikey=${OMDB_API_KEY}&s=${encodeURIComponent(normalized)}`,
@@ -440,11 +480,11 @@ export async function searchCatalog(query: string): Promise<MediaItem[]> {
       const data = await res.json();
 
       if (data.Response === 'False' || !data.Search) {
-        return localMatches;
+        return localMatches.slice(0, limit);
       }
 
       // Fetch full details for top results to obtain genre, rating, and director
-      const topResults = data.Search.slice(0, 8);
+      const topResults = data.Search.slice(0, Math.min(8, limit));
       const detailPromises = topResults.map(async (searchItem: any) => {
         const fullDetail = await getOMDBDetails(searchItem.imdbID);
         if (fullDetail) return fullDetail;
@@ -464,10 +504,10 @@ export async function searchCatalog(query: string): Promise<MediaItem[]> {
         }
       }
 
-      return combined.slice(0, 8);
+      return combined.slice(0, limit);
     } catch (err) {
       console.warn('OMDB search error:', err);
-      return localMatches;
+      return localMatches.slice(0, limit);
     }
   });
 }
