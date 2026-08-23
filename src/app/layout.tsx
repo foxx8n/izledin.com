@@ -92,7 +92,10 @@ export default function RootLayout({
         },
         potentialAction: {
           "@type": "SearchAction",
-          target: "https://www.izledin.com/?q={search_term_string}",
+          target: {
+            "@type": "EntryPoint",
+            urlTemplate: "https://www.izledin.com/?q={search_term_string}",
+          },
           "query-input": "required name=search_term_string",
         },
       },
