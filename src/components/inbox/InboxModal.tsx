@@ -11,7 +11,7 @@ import {
   CinemaChatIcon 
 } from '@/components/icons/CinemaIcons';
 import { useAuth } from '@/context/AuthContext';
-import { getInboxSummary, acceptMatchRequest, rejectMatchRequest, markMatchMessagesAsRead, InboxItem } from '@/lib/services/inbox.service';
+import { getInboxSummary, acceptMatchRequest, rejectMatchRequest, cancelMatchRequest, markMatchMessagesAsRead, InboxItem } from '@/lib/services/inbox.service';
 import { MovieMateMatch } from '@/types';
 import { createClient } from '@/lib/supabase/client';
 
@@ -31,6 +31,7 @@ export function InboxModal({ isOpen, onClose, onOpenChat, onOpenAuth }: InboxMod
   const { user, profile } = useAuth();
   const [items, setItems] = useState<InboxItem[]>([]);
   const [activeTab, setActiveTab] = useState<'messages' | 'requests'>('messages');
+  const [requestsSubTab, setRequestsSubTab] = useState<'incoming' | 'outgoing'>('incoming');
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [actionError, setActionError] = useState<{ matchId: string; message: string } | null>(null);
@@ -131,8 +132,10 @@ export function InboxModal({ isOpen, onClose, onOpenChat, onOpenAuth }: InboxMod
 
   if (!isOpen) return null;
 
-  const messageItems = items.filter((item) => item.status === 'matched' || (!item.isPendingForMe && item.lastMessage));
-  const pendingRequests = items.filter((item) => item.isPendingForMe);
+  const messageItems = items.filter((item) => item.status === 'matched');
+  const incomingRequests = items.filter((item) => item.status === 'pending' && item.isPendingForMe);
+  const outgoingRequests = items.filter((item) => item.status === 'pending' && !item.isPendingForMe);
+  const totalPendingRequests = incomingRequests.length + outgoingRequests.length;
 
   const handleAccept = async (item: InboxItem) => {
     setActionError(null);
@@ -169,6 +172,25 @@ export function InboxModal({ isOpen, onClose, onOpenChat, onOpenAuth }: InboxMod
         setItems((prev) => prev.filter((i) => i.matchId !== item.matchId));
       } else {
         // Keep the card visible; surface why the pass did not stick.
+        setActionError({
+          matchId: item.matchId,
+          message: result.error || 'İşlem tamamlanamadı. Lütfen tekrar deneyin.',
+        });
+        void fetchInbox(false);
+      }
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleCancel = async (item: InboxItem) => {
+    setActionError(null);
+    setActionLoading(item.matchId);
+    try {
+      const result = await cancelMatchRequest(item.matchId);
+      if (result.success) {
+        setItems((prev) => prev.filter((i) => i.matchId !== item.matchId));
+      } else {
         setActionError({
           matchId: item.matchId,
           message: result.error || 'İşlem tamamlanamadı. Lütfen tekrar deneyin.',
@@ -291,8 +313,8 @@ export function InboxModal({ isOpen, onClose, onOpenChat, onOpenAuth }: InboxMod
                 }`}
               >
                 <CinemaTrustShieldIcon size={16} className=" text-[#EF4444]" />
-                <span>Mesaj İstekleri ({pendingRequests.length})</span>
-                {pendingRequests.length > 0 && (
+                <span>Mesaj İstekleri ({totalPendingRequests})</span>
+                {incomingRequests.length > 0 && (
                   <span className="w-2.5 h-2.5 rounded-full  bg-[#EF4444] animate-ping absolute top-2 right-2" />
                 )}
               </button>
@@ -372,85 +394,195 @@ export function InboxModal({ isOpen, onClose, onOpenChat, onOpenAuth }: InboxMod
                   ))
                 )
               ) : (
-                /* Requests Tab */
-                pendingRequests.length === 0 ? (
-                  <div className="py-12 text-center  text-[#A3A3A3] font-bold space-y-2">
-                    <div className="w-12 h-12 rounded-none  bg-[#262626] border-2  border-[#404040] mx-auto flex items-center justify-center  text-[#A3A3A3]">
-                      <CinemaTrustShieldIcon size={24} className="opacity-50 text-[#DC2626]" />
-                    </div>
-                    <p className="text-xs uppercase font-black  text-[#FAFAFA]">BEKLEYEN MESAJ İSTEĞİNİZ YOK.</p>
-                    <p className="text-[11px]  text-[#A3A3A3] max-w-xs mx-auto font-sans font-medium">
-                      Diğer sinemaseverler sizinle eşleşmek ve sohbet başlatmak istediğinde istekleri burada listelenecektir.
-                    </p>
-                  </div>
-                ) : (
-                  pendingRequests.map((item) => (
-                    <div
-                      key={item.matchId}
-                      className="p-4  bg-[#262626] border-2  border-[#404040]  shadow-[3px_3px_0px_#000000] space-y-3"
+                /* Requests Tab (Incoming & Outgoing Sub-tabs) */
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-1.5 border border-[#404040] bg-[#171717] p-1 font-mono">
+                    <button
+                      type="button"
+                      onClick={() => setRequestsSubTab('incoming')}
+                      className={`h-9 px-2 text-[11px] font-black uppercase flex items-center justify-center gap-1.5 cursor-pointer transition-all ${
+                        requestsSubTab === 'incoming'
+                          ? 'bg-[#EF4444] text-[#0A0A0A] shadow-[2px_2px_0px_#000000]'
+                          : 'text-[#A3A3A3] hover:text-[#FAFAFA]'
+                      }`}
                     >
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <img
-                            src={item.partner.avatarUrl}
-                            alt={item.partner.fullName}
-                            className="w-10 h-10 object-cover border-2  border-[#404040] bg-[#0A0A0A] flex-shrink-0"
-                          />
-                          <div className="min-w-0">
-                            <h4 className="text-xs font-black uppercase  text-[#FAFAFA] truncate font-sans">{item.partner.fullName}</h4>
-                            <p className="text-[10px]  text-[#A3A3A3] font-bold truncate">
-                              @{item.partner.username} • {(item.partner.favoriteGenres || []).slice(0, 2).join(', ')}
+                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                      <span>Gelen ({incomingRequests.length})</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setRequestsSubTab('outgoing')}
+                      className={`h-9 px-2 text-[11px] font-black uppercase flex items-center justify-center gap-1.5 cursor-pointer transition-all ${
+                        requestsSubTab === 'outgoing'
+                          ? 'bg-[#EF4444] text-[#0A0A0A] shadow-[2px_2px_0px_#000000]'
+                          : 'text-[#A3A3A3] hover:text-[#FAFAFA]'
+                      }`}
+                    >
+                      <CinemaTrustShieldIcon size={14} />
+                      <span>Giden ({outgoingRequests.length})</span>
+                    </button>
+                  </div>
+
+                  {requestsSubTab === 'incoming' ? (
+                    incomingRequests.length === 0 ? (
+                      <div className="py-12 text-center  text-[#A3A3A3] font-bold space-y-2">
+                        <div className="w-12 h-12 rounded-none  bg-[#262626] border-2  border-[#404040] mx-auto flex items-center justify-center  text-[#A3A3A3]">
+                          <CinemaTrustShieldIcon size={24} className="opacity-50 text-[#DC2626]" />
+                        </div>
+                        <p className="text-xs uppercase font-black  text-[#FAFAFA]">BEKLEYEN GELEN MESAJ İSTEĞİNİZ YOK.</p>
+                        <p className="text-[11px]  text-[#A3A3A3] max-w-xs mx-auto font-sans font-medium">
+                          Diğer sinemaseverler sizinle eşleşmek ve sohbet başlatmak istediğinde istekleri burada listelenecektir.
+                        </p>
+                      </div>
+                    ) : (
+                      incomingRequests.map((item) => (
+                        <div
+                          key={item.matchId}
+                          className="p-4  bg-[#262626] border-2  border-[#404040]  shadow-[3px_3px_0px_#000000] space-y-3"
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <img
+                                src={item.partner.avatarUrl}
+                                alt={item.partner.fullName}
+                                className="w-10 h-10 object-cover border-2  border-[#404040] bg-[#0A0A0A] flex-shrink-0"
+                              />
+                              <div className="min-w-0">
+                                <h4 className="text-xs font-black uppercase  text-[#FAFAFA] truncate font-sans">{item.partner.fullName}</h4>
+                                <p className="text-[10px]  text-[#A3A3A3] font-bold truncate">
+                                  @{item.partner.username} • {(item.partner.favoriteGenres || []).slice(0, 2).join(', ')}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="stamp-badge px-2 py-0.5 text-[11px] font-black  bg-[#EF4444]/15 border border-dashed  border-[#EF4444]  text-[#EF4444] whitespace-nowrap flex-shrink-0">
+                              %{item.compatibilityScore} UYUM
+                            </div>
+                          </div>
+
+                          {/* Request Message Quote */}
+                          {item.lastMessage?.content && (
+                            <div className=" bg-[#171717] p-2.5 border  border-[#404040] text-xs font-medium italic  text-neutral-300 font-sans">
+                              &ldquo;{item.lastMessage.content}&rdquo;
+                            </div>
+                          )}
+
+                          {/* Accept/reject failure feedback (match_respond RPC) */}
+                          {actionError?.matchId === item.matchId && (
+                            <p className="px-2.5 py-1.5  bg-rose-500/10 border-2  border-rose-600/40 text-[11px] font-bold text-rose-300">
+                              {actionError.message}
                             </p>
+                          )}
+
+                          <div className="flex items-center gap-2 pt-2 border-t  border-[#404040]">
+                            <button
+                              onClick={() => handleAccept(item)}
+                              disabled={actionLoading === item.matchId}
+                              className="flex-1 h-11 min-h-[44px]   bg-[#EF4444] hover:bg-[#DC2626]  text-[#0A0A0A] text-xs font-black uppercase border-2  border-[#404040]  shadow-[2px_2px_0px_#000000] flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 active:translate-x-0.5 active:translate-y-0.5 transition-all"
+                            >
+                              {actionLoading === item.matchId ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <>
+                                  <Check className="w-4 h-4 stroke-[3]" />
+                                  <span>Kabul Et & Sohbete Başla</span>
+                                </>
+                              )}
+                            </button>
+
+                            <button
+                              onClick={() => handleReject(item)}
+                              disabled={actionLoading === item.matchId}
+                              className="h-11 min-h-[44px] px-4   bg-[#171717] hover:bg-[#333333]  text-[#FAFAFA] text-xs font-black uppercase border-2  border-[#404040]  shadow-[2px_2px_0px_#000000] flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50 active:translate-x-0.5 active:translate-y-0.5 transition-all"
+                            >
+                              <UserX className="w-4 h-4" />
+                              <span>Pas</span>
+                            </button>
                           </div>
                         </div>
-
-                        <div className="stamp-badge px-2 py-0.5 text-[11px] font-black  bg-[#EF4444]/15 border border-dashed  border-[#EF4444]  text-[#EF4444] whitespace-nowrap flex-shrink-0">
-                          %{item.compatibilityScore} UYUM
+                      ))
+                    )
+                  ) : (
+                    /* Outgoing Requests Sub-tab */
+                    outgoingRequests.length === 0 ? (
+                      <div className="py-12 text-center  text-[#A3A3A3] font-bold space-y-2">
+                        <div className="w-12 h-12 rounded-none  bg-[#262626] border-2  border-[#404040] mx-auto flex items-center justify-center  text-[#A3A3A3]">
+                          <CinemaTrustShieldIcon size={24} className="opacity-50 text-amber-500" />
                         </div>
-                      </div>
-
-                      {/* Request Message Quote */}
-                      {item.lastMessage?.content && (
-                        <div className=" bg-[#171717] p-2.5 border  border-[#404040] text-xs font-medium italic  text-neutral-300 font-sans">
-                          &ldquo;{item.lastMessage.content}&rdquo;
-                        </div>
-                      )}
-
-                      {/* Accept/reject failure feedback (match_respond RPC) */}
-                      {actionError?.matchId === item.matchId && (
-                        <p className="px-2.5 py-1.5  bg-rose-500/10 border-2  border-rose-600/40 text-[11px] font-bold text-rose-300">
-                          {actionError.message}
+                        <p className="text-xs uppercase font-black  text-[#FAFAFA]">GÖNDERİLMİŞ BEKLEYEN BİR İSTEĞİNİZ YOK.</p>
+                        <p className="text-[11px]  text-[#A3A3A3] max-w-xs mx-auto font-sans font-medium">
+                          Radardan bir sinemaseveri beğendiğinizde gönderdiğiniz istekler burada onay bekler.
                         </p>
-                      )}
-
-                      <div className="flex items-center gap-2 pt-2 border-t  border-[#404040]">
-                        <button
-                          onClick={() => handleAccept(item)}
-                          disabled={actionLoading === item.matchId}
-                          className="flex-1 h-11 min-h-[44px]   bg-[#EF4444] hover:bg-[#DC2626]  text-[#0A0A0A] text-xs font-black uppercase border-2  border-[#404040]  shadow-[2px_2px_0px_#000000] flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 active:translate-x-0.5 active:translate-y-0.5 transition-all"
-                        >
-                          {actionLoading === item.matchId ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <>
-                              <Check className="w-4 h-4 stroke-[3]" />
-                              <span>Kabul Et & Sohbete Başla</span>
-                            </>
-                          )}
-                        </button>
-
-                        <button
-                          onClick={() => handleReject(item)}
-                          disabled={actionLoading === item.matchId}
-                          className="h-11 min-h-[44px] px-4   bg-[#171717] hover:bg-[#333333]  text-[#FAFAFA] text-xs font-black uppercase border-2  border-[#404040]  shadow-[2px_2px_0px_#000000] flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50 active:translate-x-0.5 active:translate-y-0.5 transition-all"
-                        >
-                          <UserX className="w-4 h-4" />
-                          <span>Pas</span>
-                        </button>
                       </div>
-                    </div>
-                  ))
-                )
+                    ) : (
+                      outgoingRequests.map((item) => (
+                        <div
+                          key={item.matchId}
+                          className="p-4  bg-[#262626] border-2  border-[#404040]  shadow-[3px_3px_0px_#000000] space-y-3"
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <img
+                                src={item.partner.avatarUrl}
+                                alt={item.partner.fullName}
+                                className="w-10 h-10 object-cover border-2  border-[#404040] bg-[#0A0A0A] flex-shrink-0"
+                              />
+                              <div className="min-w-0">
+                                <h4 className="text-xs font-black uppercase  text-[#FAFAFA] truncate font-sans">{item.partner.fullName}</h4>
+                                <p className="text-[10px]  text-[#A3A3A3] font-bold truncate">
+                                  @{item.partner.username} • {(item.partner.favoriteGenres || []).slice(0, 2).join(', ')}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="stamp-badge px-2 py-0.5 text-[10px] font-black  bg-amber-500/15 border border-dashed  border-amber-500  text-amber-400 whitespace-nowrap flex-shrink-0">
+                              ONAY BEKLENİYOR
+                            </div>
+                          </div>
+
+                          {item.lastMessage?.content && (
+                            <div className=" bg-[#171717] p-2.5 border  border-[#404040] text-xs font-medium italic  text-neutral-300 font-sans">
+                              <span className="not-italic text-[10px] font-black uppercase text-[#A3A3A3] block mb-1">İlettiğiniz Not:</span>
+                              &ldquo;{item.lastMessage.content}&rdquo;
+                            </div>
+                          )}
+
+                          {actionError?.matchId === item.matchId && (
+                            <p className="px-2.5 py-1.5  bg-rose-500/10 border-2  border-rose-600/40 text-[11px] font-bold text-rose-300">
+                              {actionError.message}
+                            </p>
+                          )}
+
+                          <div className="flex items-center gap-2 pt-2 border-t  border-[#404040]">
+                            <button
+                              type="button"
+                              onClick={() => handleOpenConversation(item)}
+                              className="flex-1 h-11 min-h-[44px] bg-[#171717] hover:bg-[#333333] text-[#FAFAFA] text-xs font-black uppercase border-2 border-[#404040] shadow-[2px_2px_0px_#000000] flex items-center justify-center gap-1.5 cursor-pointer active:translate-x-0.5 active:translate-y-0.5 transition-all"
+                            >
+                              <MessageSquare className="w-4 h-4 text-[#EF4444]" />
+                              <span>Detayı Görüntüle</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleCancel(item)}
+                              disabled={actionLoading === item.matchId}
+                              className="h-11 min-h-[44px] px-4 bg-[#262626] hover:bg-rose-950 hover:text-rose-300 text-neutral-400 text-xs font-black uppercase border-2 border-[#404040] shadow-[2px_2px_0px_#000000] flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50 active:translate-x-0.5 active:translate-y-0.5 transition-all"
+                              title="İsteği İptal Et / Geri Çek"
+                            >
+                              {actionLoading === item.matchId ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <span>İptal Et</span>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )
+                  )}
+                </div>
               )}
             </div>
 

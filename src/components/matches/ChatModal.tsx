@@ -809,43 +809,53 @@ export function ChatModal({
           </div>
         )}
 
-        {/* Input Bar */}
-        <div className="p-3 pb-safe border-t-4  border-[#404040]  bg-[#262626] flex items-center gap-2">
-          <input
-            type="text"
-            value={input}
-            maxLength={500}
-            aria-label="Mesaj yazın"
-            disabled={!canCompose}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
-            placeholder={
-              !user
-                ? "Mesaj göndermek için giriş yapın"
-                : conversationClosed
-                  ? "Bu sohbet kapatıldı."
-                  : isPendingForMe
-                    ? "Mesaj yazmak için önce isteği kabul edin"
-                    : isPendingFromMe && messages.length > 0
-                      ? "Mesaj isteği iletildi, onay bekleniyor..."
-                      : "İlk mesaj isteğinizi daktilo edin..."
-            }
-            className="flex-1 h-11 min-h-[44px]  bg-[#171717] text-xs font-bold  text-[#FAFAFA] placeholder-[#737373] border-2  border-[#404040] px-3 py-2 focus:outline-none  focus:border-[#EF4444] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-          />
-          <button
-            onClick={handleSend}
-            disabled={sending || !input.trim() || !canCompose}
-            className="h-11 min-h-[44px] min-w-[44px] px-3.5   bg-[#EF4444] hover:bg-[#DC2626]  text-[#0A0A0A] border-2  border-[#404040]  shadow-[2px_2px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center flex-shrink-0"
-            title="Gönder"
-            aria-label="Gönder"
-          >
-            {sending ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Send className="w-4 h-4 stroke-[2.5]" />
-            )}
-          </button>
-        </div>
+        {/* Input Bar or Pending Notice */}
+        {isPendingFromMe && messages.length > 0 ? (
+          <div className="p-3.5 pb-safe border-t-4 border-[#404040] bg-[#171717] flex items-center justify-center gap-2 text-xs font-mono font-bold text-[#FAFAFA] text-center">
+            <CinemaTrustShieldIcon size={16} className="text-[#EF4444] shrink-0" />
+            <span>Mesaj isteğiniz iletildi. @{match.user.username} onayladığında sohbet aktifleşecektir.</span>
+          </div>
+        ) : isPendingForMe ? (
+          <div className="p-3.5 pb-safe border-t-4 border-[#404040] bg-[#171717] flex items-center justify-center gap-2 text-xs font-mono font-bold text-[#FAFAFA] text-center">
+            <CinemaTrustShieldIcon size={16} className="text-amber-400 shrink-0" />
+            <span>Mesaj yazmak için lütfen yukarıdaki panelden isteği kabul edin.</span>
+          </div>
+        ) : conversationClosed ? (
+          <div className="p-3.5 pb-safe border-t-4 border-[#404040] bg-[#171717] flex items-center justify-center gap-2 text-xs font-mono font-bold text-[#A3A3A3] text-center">
+            <span>Bu sohbet kapatılmıştır.</span>
+          </div>
+        ) : (
+          <div className="p-3 pb-safe border-t-4 border-[#404040] bg-[#262626] flex items-center gap-2">
+            <input
+              type="text"
+              value={input}
+              maxLength={500}
+              aria-label="Mesaj yazın"
+              disabled={!canCompose}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
+              placeholder={
+                !user
+                  ? "Mesaj göndermek için giriş yapın"
+                  : "İlk mesaj isteğinizi daktilo edin..."
+              }
+              className="flex-1 h-11 min-h-[44px] bg-[#171717] text-xs font-bold text-[#FAFAFA] placeholder-[#737373] border-2 border-[#404040] px-3 py-2 focus:outline-none focus:border-[#EF4444] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            />
+            <button
+              onClick={handleSend}
+              disabled={sending || !input.trim() || !canCompose}
+              className="h-11 min-h-[44px] min-w-[44px] px-3.5 bg-[#EF4444] hover:bg-[#DC2626] text-[#0A0A0A] border-2 border-[#404040] shadow-[2px_2px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center flex-shrink-0"
+              title="Gönder"
+              aria-label="Gönder"
+            >
+              {sending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Send className="w-4 h-4 stroke-[2.5]" />
+              )}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

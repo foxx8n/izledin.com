@@ -247,3 +247,25 @@ export async function rejectMatchRequest(
   }
   return { success: true };
 }
+
+/** Initiator-only pending→passed transition (withdraw request) via `match_respond`. */
+export async function cancelMatchRequest(
+  matchId: string,
+): Promise<MatchRespondResult> {
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc('match_respond', {
+    p_match_id: matchId,
+    p_action: 'cancel',
+  });
+
+  if (error) {
+    console.warn('cancelMatchRequest failed:', error.message);
+    return { success: false, error: describeRpcFailure(error) };
+  }
+
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row || row.status !== 'passed') {
+    return { success: false, error: 'Bu istek artık geçerli değil.' };
+  }
+  return { success: true };
+}
