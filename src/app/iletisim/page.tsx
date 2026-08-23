@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   title: 'İletişim & Sinefil Masası — izledin.com',
   description: 'izledin.com bağımsız sinema kulübü ile iletişime geçin. Destek, öneri, telif ve festival iş birliği talepleri.',
   alternates: {
-    canonical: 'https://izledin.com/iletisim',
+    canonical: 'https://www.izledin.com/iletisim',
   },
 };
 

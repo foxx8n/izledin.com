@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   title: 'Açık Rıza Metni — izledin.com',
   description: 'izledin.com Kişisel Verilerin İşlenmesine İlişkin Açık Rıza Metni.',
   alternates: {
-    canonical: 'https://izledin.com/acik-riza',
+    canonical: 'https://www.izledin.com/acik-riza',
   },
 };
 

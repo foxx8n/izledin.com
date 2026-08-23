@@ -3,7 +3,7 @@ import rawCatalog from '@/data/catalog.json';
 import rawUpcoming from '@/data/upcoming-master.json';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://izledin.com';
+  const baseUrl = 'https://www.izledin.com';
   const currentDate = new Date();
 
   // Core Platform Surfaces

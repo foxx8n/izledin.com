@@ -16,9 +16,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://izledin.com"),
+  metadataBase: new URL("https://www.izledin.com"),
   alternates: {
-    canonical: "https://izledin.com",
+    canonical: "https://www.izledin.com",
   },
   title: "izledin.com — Sosyal Sinema Kulübü & İzdaş Keşif Platformu",
   description:
@@ -39,13 +39,13 @@ export const metadata: Metadata = {
     title: "izledin.com — Sosyal Sinema Kulübü & İzdaş Keşif",
     description:
       "Film zevkine en yakın İzdaşlarını bul, izlediklerini puanla ve sinema günlüğünü oluştur.",
-    url: "https://izledin.com",
+    url: "https://www.izledin.com",
     siteName: "izledin.com",
     locale: "tr_TR",
     type: "website",
     images: [
       {
-        url: "https://izledin.com/signature.png",
+        url: "https://www.izledin.com/signature.png",
         width: 1200,
         height: 630,
         alt: "izledin.com 35mm Sinema Kulübü",
@@ -83,27 +83,27 @@ export default function RootLayout({
     "@graph": [
       {
         "@type": "WebSite",
-        "@id": "https://izledin.com/#website",
+        "@id": "https://www.izledin.com/#website",
         name: "izledin.com",
-        url: "https://izledin.com/",
+        url: "https://www.izledin.com/",
         description: "Sosyal Sinema Kulübü ve İzdaş Keşif Platformu",
         publisher: {
-          "@id": "https://izledin.com/#organization",
+          "@id": "https://www.izledin.com/#organization",
         },
         potentialAction: {
           "@type": "SearchAction",
-          target: "https://izledin.com/?q={search_term_string}",
+          target: "https://www.izledin.com/?q={search_term_string}",
           "query-input": "required name=search_term_string",
         },
       },
       {
         "@type": "Organization",
-        "@id": "https://izledin.com/#organization",
+        "@id": "https://www.izledin.com/#organization",
         name: "izledin.com",
-        url: "https://izledin.com/",
+        url: "https://www.izledin.com/",
         logo: {
           "@type": "ImageObject",
-          url: "https://izledin.com/icon.svg",
+          url: "https://www.izledin.com/icon.svg",
           width: 512,
           height: 512,
         },

@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   title: 'Gizlilik Politikası & KVKK — izledin.com',
   description: 'izledin.com 35mm sinema kulübü kişisel veri koruma, KVKK uyumu ve veri güvenliği protokolü.',
   alternates: {
-    canonical: 'https://izledin.com/gizlilik',
+    canonical: 'https://www.izledin.com/gizlilik',
   },
 };
 

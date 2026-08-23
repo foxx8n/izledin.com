@@ -60,7 +60,7 @@ export async function generateMetadata(
     title: `${movie.title}${yearSuffix} İnceleme ve Puanlar — izledin.com`,
     description: movie.overview.slice(0, 150) + '...',
     alternates: {
-      canonical: `https://izledin.com/film/${id}`,
+      canonical: `https://www.izledin.com/film/${id}`,
     },
     openGraph: {
       title: `${movie.title}${yearSuffix} — izledin.com`,
@@ -106,13 +106,13 @@ export default async function FilmDetailPage({ params }: Props) {
             "@type": "ListItem",
             "position": 1,
             "name": "Keşfet",
-            "item": "https://izledin.com"
+            "item": "https://www.izledin.com"
           },
           {
             "@type": "ListItem",
             "position": 2,
             "name": movie.title,
-            "item": `https://izledin.com/film/${id}`
+            "item": `https://www.izledin.com/film/${id}`
           }
         ]
       },

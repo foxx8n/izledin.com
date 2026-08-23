@@ -5,13 +5,13 @@ export const metadata: Metadata = {
   description:
     'Film, dizi ve anime zevkine en yakın sinema arkadaşlarını (İzdaşları) bul, ortak zevk yüzdesini gör ve sinema sohbetine başla.',
   alternates: {
-    canonical: 'https://izledin.com/matches',
+    canonical: 'https://www.izledin.com/matches',
   },
   openGraph: {
     title: 'İzdaş Eşleşmeleri & Sinema Arkadaşı Keşfi — izledin.com',
     description:
       'Film ve dizi zevkine en yakın sinema arkadaşlarını bul, ortak zevk yüzdesini gör ve sinema sohbetine başla.',
-    url: 'https://izledin.com/matches',
+    url: 'https://www.izledin.com/matches',
     type: 'website',
   },
 };

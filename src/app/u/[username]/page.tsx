@@ -74,7 +74,7 @@ export async function generateMetadata(
     title,
     description,
     alternates: {
-      canonical: `https://izledin.com/u/${profile.username}`,
+      canonical: `https://www.izledin.com/u/${profile.username}`,
     },
     openGraph: {
       title,

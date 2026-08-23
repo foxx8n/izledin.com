@@ -34,7 +34,7 @@ export async function generateMetadata(
     title: `${log.user?.fullName || 'İzdaş'} - ${log.title} (${log.year})${ratingText} — izledin.com`,
     description: truncatedReview,
     alternates: {
-      canonical: `https://izledin.com/log/${id}`,
+      canonical: `https://www.izledin.com/log/${id}`,
     },
     openGraph: {
       title: `${log.user?.fullName || 'İzdaş'} - ${log.title} (${log.year})${ratingText}`,

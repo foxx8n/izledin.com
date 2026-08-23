@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   title: 'Kullanım Koşulları & Üyelik Sözleşmesi — izledin.com',
   description: 'izledin.com hizmet şartları, topluluk kuralları, fikri mülkiyet ve kulüp kullanım sözleşmesi.',
   alternates: {
-    canonical: 'https://izledin.com/kullanim',
+    canonical: 'https://www.izledin.com/kullanim',
   },
 };
 

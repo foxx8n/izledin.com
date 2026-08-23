@@ -5,13 +5,13 @@ export const metadata: Metadata = {
   description:
     '2026 yılında vizyona girecek en yeni filmler, diziler ve animeleri keşfet. Vizyon takvimini takip et, heyecanla beklenen yapımlara hatırlatıcı kur.',
   alternates: {
-    canonical: 'https://izledin.com/upcoming',
+    canonical: 'https://www.izledin.com/upcoming',
   },
   openGraph: {
     title: '2026 Vizyondaki & Gelecek Filmler Takvimi — izledin.com',
     description:
       '2026 yılında vizyona girecek en yeni filmler, diziler ve animeleri keşfet. Vizyon takvimini takip et.',
-    url: 'https://izledin.com/upcoming',
+    url: 'https://www.izledin.com/upcoming',
     type: 'website',
   },
 };

@@ -139,7 +139,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const redirectTo = typeof window !== 'undefined'
       ? `${window.location.origin}/auth/callback`
-      : 'https://izledin.com/auth/callback';
+      : 'https://www.izledin.com/auth/callback';
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider,

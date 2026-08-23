@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   title: 'Topluluk Kuralları & Sinefil Adabı — izledin.com',
   description: 'izledin.com sinema kulübü etik ilkeleri, spoiler koruma kuralları, İzdaş adabı ve saygılı tartışma rehberi.',
   alternates: {
-    canonical: 'https://izledin.com/topluluk',
+    canonical: 'https://www.izledin.com/topluluk',
   },
 };
 

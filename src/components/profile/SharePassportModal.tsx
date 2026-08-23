@@ -22,7 +22,7 @@ export function SharePassportModal({
 
   if (!isOpen) return null;
 
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://izledin.com';
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.izledin.com';
   const profileUrl = `${origin}/u/${profile.username || 'sinefil'}`;
   // NOTE: no fabricated compatibility score — the passport shows real data only.
   const ogImageUrl = `${origin}/api/og/profile?username=${encodeURIComponent(profile.username || 'sinefil')}&name=${encodeURIComponent(profile.fullName || 'Sinefil Üye')}&location=${encodeURIComponent(profile.location || 'İstanbul')}&genres=${encodeURIComponent((profile.favoriteGenres || []).join(','))}&count=${watchCount}`;

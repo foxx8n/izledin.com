@@ -5,13 +5,13 @@ export const metadata: Metadata = {
   description:
     'Sınırsız İzdaş eşleşmesi, özel 35mm kulüp rozetleri, derin zevk profillemesi ve reklamsız bağımsız sinema deneyimi.',
   alternates: {
-    canonical: 'https://izledin.com/premium',
+    canonical: 'https://www.izledin.com/premium',
   },
   openGraph: {
     title: 'izledin+ Kulüp Üyeliği & Sinefil Ayrıcalıkları — izledin.com',
     description:
       'Sınırsız İzdaş eşleşmesi, özel 35mm kulüp rozetleri ve derin zevk profillemesi.',
-    url: 'https://izledin.com/premium',
+    url: 'https://www.izledin.com/premium',
     type: 'website',
   },
 };
