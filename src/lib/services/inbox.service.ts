@@ -25,7 +25,7 @@ export interface InboxSummary {
 export async function getInboxSummary(currentUserId: string): Promise<InboxSummary> {
   const supabase = createClient();
 
-  // 1. Matches + embedded last message in ONE round trip (was 3N+2 sequential).
+  // 1. Matches + embedded messages in ONE round trip.
   const { data: matchRows, error } = await supabase
     .from('movie_mate_matches')
     .select(
@@ -36,7 +36,7 @@ export async function getInboxSummary(currentUserId: string): Promise<InboxSumma
        status,
        initiator_id,
        updated_at,
-       last_message:messages(content, created_at, sender_id, is_read, order:created_at.desc, limit:1)`,
+       last_message:messages(content, created_at, sender_id, is_read)`,
     )
     .or(`user_id_1.eq.${currentUserId},user_id_2.eq.${currentUserId}`)
     .order('updated_at', { ascending: false });
@@ -107,9 +107,13 @@ export async function getInboxSummary(currentUserId: string): Promise<InboxSumma
     const partner = partnerMap.get(partnerId);
     if (!partner) continue; // profile deleted mid-flight
 
-    const lastMessageRaw = Array.isArray(row.last_message)
-      ? row.last_message[0]
-      : undefined;
+    let lastMessageRaw: any = undefined;
+    if (Array.isArray(row.last_message) && row.last_message.length > 0) {
+      const sorted = [...row.last_message].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      );
+      lastMessageRaw = sorted[0];
+    }
     const lastMessage = lastMessageRaw ? mapDbMessageToChat(lastMessageRaw) : undefined;
 
     // Only matched conversations contribute to the unread badge — otherwise
