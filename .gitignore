@@ -48,6 +48,10 @@ next-env.d.ts
 .impeccable-live/
 .impeccable*
 skills-lock.json
+AGENTS.md
+CLAUDE.md
+DESIGN.md
+PRODUCT.md
 
 # archives & local audit artifacts
 *.zip
