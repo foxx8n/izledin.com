@@ -1,0 +1,355 @@
+﻿================================================================================
+🎬 IZLEDIN.COM — 35MM ÖZEL SİNEMA İKON SETİ & KULLANIM REHBERİ
+Oluşturulma Tarihi: 2026-08-18 04:24:46
+Tasarım Sistemi: Gece Gösterimi (35mm Analog Fanzine & Cinema Red)
+Kaynak Dosya: src/components/icons/CinemaIcons.tsx
+Toplam İkon Sayısı: 38 adet özel SVG ikon ve glif
+================================================================================
+
+--------------------------------------------------------------------------------
+📌 İKON: CinemaLogoMark
+--------------------------------------------------------------------------------
+Kullanıldığı Dosyalar (7 yer):
+  • src\app\admin\page.tsx
+  • src\app\auth\page.tsx
+  • src\components\auth\AuthView.tsx
+  • src\components\contact\ContactView.tsx
+  • src\components\layout\Footer.tsx
+  • src\components\layout\Navbar.tsx
+  • src\components\profile\SharePassportModal.tsx
+
+--------------------------------------------------------------------------------
+📌 İKON: CinemaFullLogo
+--------------------------------------------------------------------------------
+Kullanıldığı Dosyalar: (İkon kütüphanesinde hazır / genel amaçlı)
+
+--------------------------------------------------------------------------------
+📌 İKON: CinemaProjectorBeamIcon
+--------------------------------------------------------------------------------
+Kullanıldığı Dosyalar (1 yer):
+  • src\components\layout\Navbar.tsx
+
+--------------------------------------------------------------------------------
+📌 İKON: CinemaDayApertureIcon
+--------------------------------------------------------------------------------
+Kullanıldığı Dosyalar (1 yer):
+  • src\components\layout\Navbar.tsx
+
+--------------------------------------------------------------------------------
+📌 İKON: FilmReelIcon
+--------------------------------------------------------------------------------
+Kullanıldığı Dosyalar (16 yer):
+  • src\app\diary\page.tsx
+  • src\app\matches\page.tsx
+  • src\app\premium\page.tsx
+  • src\app\profile\page.tsx
+  • src\app\upcoming\page.tsx
+  • src\app\page.tsx
+  • src\components\auth\AuthView.tsx
+  • src\components\community\CommunityView.tsx
+  • src\components\inbox\InboxModal.tsx
+  • src\components\layout\Navbar.tsx
+  • src\components\matches\ChatModal.tsx
+  • src\components\matches\MatchCard.tsx
+  • src\components\matches\SwipeMatchCard.tsx
+  • src\components\media\QuickLogModal.tsx
+  • src\components\onboarding\TasteProfilerModal.tsx
+  • src\components\premium\PremiumModal.tsx
+
+--------------------------------------------------------------------------------
+📌 İKON: ClapperboardIcon
+--------------------------------------------------------------------------------
+Kullanıldığı Dosyalar (7 yer):
+  • src\app\admin\page.tsx
+  • src\app\profile\page.tsx
+  • src\app\page.tsx
+  • src\components\auth\AuthView.tsx
+  • src\components\layout\Footer.tsx
+  • src\components\matches\ChatModal.tsx
+  • src\components\onboarding\TasteProfilerModal.tsx
+
+--------------------------------------------------------------------------------
+📌 İKON: CinemaTicketIcon
+--------------------------------------------------------------------------------
+Kullanıldığı Dosyalar (5 yer):
+  • src\app\premium\page.tsx
+  • src\app\profile\page.tsx
+  • src\app\upcoming\page.tsx
+  • src\components\contact\ContactView.tsx
+  • src\components\premium\PremiumModal.tsx
+
+--------------------------------------------------------------------------------
+📌 İKON: FilmStripIcon
+--------------------------------------------------------------------------------
+Kullanıldığı Dosyalar (5 yer):
+  • src\app\admin\page.tsx
+  • src\app\premium\page.tsx
+  • src\app\profile\page.tsx
+  • src\components\community\CommunityView.tsx
+  • src\components\layout\Navbar.tsx
+
+--------------------------------------------------------------------------------
+📌 İKON: CinemaSearchLensIcon
+--------------------------------------------------------------------------------
+Kullanıldığı Dosyalar (1 yer):
+  • src\components\layout\Navbar.tsx
+
+--------------------------------------------------------------------------------
+📌 İKON: MasterpieceLaurelIcon
+--------------------------------------------------------------------------------
+Kullanıldığı Dosyalar (19 yer):
+  • src\app\admin\page.tsx
+  • src\app\auth\page.tsx
+  • src\app\diary\page.tsx
+  • src\app\matches\page.tsx
+  • src\app\premium\page.tsx
+  • src\app\privacy\page.tsx
+  • src\app\profile\page.tsx
+  • src\app\terms\page.tsx
+  • src\app\upcoming\page.tsx
+  • src\app\page.tsx
+  • src\components\auth\AuthModal.tsx
+  • src\components\auth\AuthView.tsx
+  • src\components\community\CommunityView.tsx
+  • src\components\contact\ContactView.tsx
+  • src\components\matches\SwipeMatchCard.tsx
+  • src\components\media\QuickLogModal.tsx
+  • src\components\onboarding\TasteProfilerModal.tsx
+  • src\components\premium\PremiumModal.tsx
+  • src\components\ui\WatchDateSelector.tsx
+
+--------------------------------------------------------------------------------
+📌 İKON: CinemaFlameIcon
+--------------------------------------------------------------------------------
+Kullanıldığı Dosyalar (3 yer):
+  • src\app\upcoming\page.tsx
+  • src\app\page.tsx
+  • src\components\auth\AuthView.tsx
+
+--------------------------------------------------------------------------------
+📌 İKON: CinemaPopcornIcon
+--------------------------------------------------------------------------------
+Kullanıldığı Dosyalar (3 yer):
+  • src\app\page.tsx
+  • src\components\matches\ChatModal.tsx
+  • src\components\premium\PremiumModal.tsx
+
+--------------------------------------------------------------------------------
+📌 İKON: CinemaProjectorIcon
+--------------------------------------------------------------------------------
+Kullanıldığı Dosyalar (2 yer):
+  • src\app\profile\page.tsx
+  • src\components\matches\ChatModal.tsx
+
+--------------------------------------------------------------------------------
+📌 İKON: CinemaTrophyIcon
+--------------------------------------------------------------------------------
+Kullanıldığı Dosyalar (1 yer):
+  • src\components\matches\ChatModal.tsx
+
+--------------------------------------------------------------------------------
+📌 İKON: CinemaStarIcon
+--------------------------------------------------------------------------------
+Kullanıldığı Dosyalar (9 yer):
+  • src\app\admin\page.tsx
+  • src\app\diary\page.tsx
+  • src\app\premium\page.tsx
+  • src\app\profile\page.tsx
+  • src\app\upcoming\page.tsx
+  • src\app\page.tsx
+  • src\components\community\CommunityView.tsx
+  • src\components\media\QuickLogModal.tsx
+  • src\components\onboarding\TasteProfilerModal.tsx
+
+--------------------------------------------------------------------------------
+📌 İKON: SwissSparkleIcon
+--------------------------------------------------------------------------------
+Kullanıldığı Dosyalar (1 yer):
+  • src\app\premium\page.tsx
+
+--------------------------------------------------------------------------------
+📌 İKON: CinemaPlusPassIcon
+--------------------------------------------------------------------------------
+Kullanıldığı Dosyalar (5 yer):
+  • src\app\admin\page.tsx
+  • src\app\matches\page.tsx
+  • src\app\premium\page.tsx
+  • src\components\layout\Navbar.tsx
+  • src\components\premium\PremiumModal.tsx
+
+--------------------------------------------------------------------------------
+📌 İKON: CinemaHeartIcon
+--------------------------------------------------------------------------------
+Kullanıldığı Dosyalar: (İkon kütüphanesinde hazır / genel amaçlı)
+
+--------------------------------------------------------------------------------
+📌 İKON: CinemaChatIcon
+--------------------------------------------------------------------------------
+Kullanıldığı Dosyalar (4 yer):
+  • src\components\community\CommunityView.tsx
+  • src\components\inbox\InboxModal.tsx
+  • src\components\layout\Navbar.tsx
+  • src\components\matches\ChatModal.tsx
+
+--------------------------------------------------------------------------------
+📌 İKON: CinemaFrequencyIcon
+--------------------------------------------------------------------------------
+Kullanıldığı Dosyalar (5 yer):
+  • src\app\premium\page.tsx
+  • src\app\upcoming\page.tsx
+  • src\components\community\CommunityView.tsx
+  • src\components\layout\Navbar.tsx
+  • src\components\matches\ChatModal.tsx
+
+--------------------------------------------------------------------------------
+📌 İKON: CinemaCalendarIcon
+--------------------------------------------------------------------------------
+Kullanıldığı Dosyalar (4 yer):
+  • src\app\upcoming\page.tsx
+  • src\components\layout\Navbar.tsx
+  • src\components\ui\BirthDateSelector.tsx
+  • src\components\ui\WatchDateSelector.tsx
+
+--------------------------------------------------------------------------------
+📌 İKON: CinemaUserIcon
+--------------------------------------------------------------------------------
+Kullanıldığı Dosyalar (1 yer):
+  • src\components\layout\Navbar.tsx
+
+--------------------------------------------------------------------------------
+📌 İKON: CinemaQuoteIcon
+--------------------------------------------------------------------------------
+Kullanıldığı Dosyalar: (İkon kütüphanesinde hazır / genel amaçlı)
+
+--------------------------------------------------------------------------------
+📌 İKON: CinemaShieldIcon
+--------------------------------------------------------------------------------
+Kullanıldığı Dosyalar (2 yer):
+  • src\app\premium\page.tsx
+  • src\components\premium\PremiumModal.tsx
+
+--------------------------------------------------------------------------------
+📌 İKON: CinemaVerifiedSeal
+--------------------------------------------------------------------------------
+Kullanıldığı Dosyalar (11 yer):
+  • src\app\admin\page.tsx
+  • src\app\premium\page.tsx
+  • src\app\privacy\page.tsx
+  • src\app\terms\page.tsx
+  • src\components\auth\AuthView.tsx
+  • src\components\community\CommunityView.tsx
+  • src\components\contact\ContactView.tsx
+  • src\components\media\QuickLogModal.tsx
+  • src\components\onboarding\TasteProfilerModal.tsx
+  • src\components\premium\PremiumModal.tsx
+  • src\components\profile\SharePassportModal.tsx
+
+--------------------------------------------------------------------------------
+📌 İKON: CinemaCheckIcon
+--------------------------------------------------------------------------------
+Kullanıldığı Dosyalar (8 yer):
+  • src\app\premium\page.tsx
+  • src\app\privacy\page.tsx
+  • src\app\upcoming\page.tsx
+  • src\components\auth\AuthView.tsx
+  • src\components\community\CommunityView.tsx
+  • src\components\media\QuickLogModal.tsx
+  • src\components\onboarding\TasteProfilerModal.tsx
+  • src\components\premium\PremiumModal.tsx
+
+--------------------------------------------------------------------------------
+📌 İKON: IzledinPlusBadge
+--------------------------------------------------------------------------------
+Kullanıldığı Dosyalar (3 yer):
+  • src\app\premium\page.tsx
+  • src\app\page.tsx
+  • src\components\layout\Navbar.tsx
+
+--------------------------------------------------------------------------------
+📌 İKON: CinemaRadarScannerIllustration
+--------------------------------------------------------------------------------
+Kullanıldığı Dosyalar (2 yer):
+  • src\app\matches\page.tsx
+  • src\app\page.tsx
+
+--------------------------------------------------------------------------------
+📌 İKON: CinemaFriendshipIcon
+--------------------------------------------------------------------------------
+Kullanıldığı Dosyalar (6 yer):
+  • src\app\matches\page.tsx
+  • src\components\inbox\InboxModal.tsx
+  • src\components\matches\ChatModal.tsx
+  • src\components\matches\MatchCard.tsx
+  • src\components\matches\SwipeMatchCard.tsx
+  • src\components\onboarding\TasteProfilerModal.tsx
+
+--------------------------------------------------------------------------------
+📌 İKON: CinemaRomanceIcon
+--------------------------------------------------------------------------------
+Kullanıldığı Dosyalar (6 yer):
+  • src\app\matches\page.tsx
+  • src\components\inbox\InboxModal.tsx
+  • src\components\matches\ChatModal.tsx
+  • src\components\matches\MatchCard.tsx
+  • src\components\matches\SwipeMatchCard.tsx
+  • src\components\onboarding\TasteProfilerModal.tsx
+
+--------------------------------------------------------------------------------
+📌 İKON: CinemaDuoIntentIcon
+--------------------------------------------------------------------------------
+Kullanıldığı Dosyalar (6 yer):
+  • src\app\matches\page.tsx
+  • src\components\inbox\InboxModal.tsx
+  • src\components\matches\ChatModal.tsx
+  • src\components\matches\MatchCard.tsx
+  • src\components\matches\SwipeMatchCard.tsx
+  • src\components\onboarding\TasteProfilerModal.tsx
+
+--------------------------------------------------------------------------------
+📌 İKON: CinemaTrustShieldIcon
+--------------------------------------------------------------------------------
+Kullanıldığı Dosyalar (6 yer):
+  • src\app\matches\page.tsx
+  • src\components\inbox\InboxModal.tsx
+  • src\components\matches\ChatModal.tsx
+  • src\components\matches\MatchCard.tsx
+  • src\components\matches\SwipeMatchCard.tsx
+  • src\components\onboarding\TasteProfilerModal.tsx
+
+--------------------------------------------------------------------------------
+📌 İKON: CinemaDeckStackIcon
+--------------------------------------------------------------------------------
+Kullanıldığı Dosyalar (1 yer):
+  • src\app\matches\page.tsx
+
+--------------------------------------------------------------------------------
+📌 İKON: CinemaGridMatrixIcon
+--------------------------------------------------------------------------------
+Kullanıldığı Dosyalar (1 yer):
+  • src\app\matches\page.tsx
+
+--------------------------------------------------------------------------------
+📌 İKON: CinemaDnaHelixIcon
+--------------------------------------------------------------------------------
+Kullanıldığı Dosyalar (3 yer):
+  • src\app\matches\page.tsx
+  • src\app\profile\page.tsx
+  • src\components\onboarding\TasteProfilerModal.tsx
+
+--------------------------------------------------------------------------------
+📌 İKON: CinemaPassTicketIcon
+--------------------------------------------------------------------------------
+Kullanıldığı Dosyalar (2 yer):
+  • src\app\premium\page.tsx
+  • src\components\profile\SharePassportModal.tsx
+
+--------------------------------------------------------------------------------
+📌 İKON: CinemaRadarSweepIcon
+--------------------------------------------------------------------------------
+Kullanıldığı Dosyalar: (İkon kütüphanesinde hazır / genel amaçlı)
+
+--------------------------------------------------------------------------------
+📌 İKON: CinemaCelluloidSparkIcon
+--------------------------------------------------------------------------------
+Kullanıldığı Dosyalar: (İkon kütüphanesinde hazır / genel amaçlı)
+

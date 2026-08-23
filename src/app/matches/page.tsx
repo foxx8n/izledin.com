@@ -1,0 +1,1121 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { 
+  Filter, 
+  MessageSquare, 
+  Film, 
+  Loader2, 
+  RefreshCw, 
+  Inbox, 
+  RotateCcw,
+  Undo2,
+  ArrowRight,
+  SlidersHorizontal,
+  X
+} from 'lucide-react';
+import {
+  CinemaRadarScannerIllustration,
+  CinemaFriendshipIcon,
+  CinemaRomanceIcon,
+  CinemaDuoIntentIcon,
+  CinemaTrustShieldIcon,
+  CinemaDeckStackIcon,
+  CinemaGridMatrixIcon,
+  CinemaDnaHelixIcon,
+  FilmReelIcon,
+  MasterpieceLaurelIcon
+} from '@/components/icons/CinemaIcons';
+import { Navbar } from '@/components/layout/Navbar';
+import { Footer } from '@/components/layout/Footer';
+import { MatchCard } from '@/components/matches/MatchCard';
+import { SwipeMatchCard } from '@/components/matches/SwipeMatchCard';
+import { ChatModal } from '@/components/matches/ChatModal';
+import { InboxModal } from '@/components/inbox/InboxModal';
+import { TasteProfilerModal } from '@/components/onboarding/TasteProfilerModal';
+import { PremiumModal } from '@/components/premium/PremiumModal';
+import { SearchModal } from '@/components/media/SearchModal';
+import { QuickLogModal } from '@/components/media/QuickLogModal';
+import { MediaDetailModal } from '@/components/media/MediaDetailModal';
+import { AuthModal } from '@/components/auth/AuthModal';
+
+import { useAuth } from '@/context/AuthContext';
+import { computeDiscoverMatches, createOrUpdateMatch, requestMatch } from '@/lib/services/matches.service';
+import { getInboxSummary } from '@/lib/services/inbox.service';
+import { searchCatalog } from '@/lib/omdb';
+import { getAllProvinces, getDistricts } from '@/data/locations';
+import { POPULAR_GENRES } from '@/lib/constants';
+import { MovieMateMatch, MediaItem, MatchIntent } from '@/types';
+
+export default function MatchesPage() {
+  const { user, profile } = useAuth();
+  const [matches, setMatches] = useState<MovieMateMatch[]>([]);
+  const [selectedIntent, setSelectedIntent] = useState<'all' | 'friend' | 'dating' | 'both'>('all');
+  const [selectedGenre, setSelectedGenre] = useState<string>('Hepsi');
+  const [selectedAgeRange, setSelectedAgeRange] = useState<string>('Hepsi');
+  const [selectedCity, setSelectedCity] = useState<string>('Hepsi');
+  const [selectedDistrict, setSelectedDistrict] = useState<string>('Hepsi');
+  const [loading, setLoading] = useState(true);
+  const [unreadInboxCount, setUnreadInboxCount] = useState(0);
+
+  // Mobile Single Deck and View Mode State
+  const [displayLayout, setDisplayLayout] = useState<'deck' | 'grid'>('deck');
+  const [activeDeckIndex, setActiveDeckIndex] = useState(0);
+  // Deck history remembers WHAT happened so undo can reverse passes (which
+  // shrink the array) differently from likes (which only advance).
+  const [deckHistory, setDeckHistory] = useState<
+    (
+      | { type: 'like'; index: number }
+      | { type: 'pass'; index: number; match: MovieMateMatch }
+    )[]
+  >([]);
+
+  const provinces = getAllProvinces();
+  const cityDistricts = selectedCity !== 'Hepsi' ? getDistricts(selectedCity) : [];
+
+  // Modals state
+  const [activeChatMatch, setActiveChatMatch] = useState<MovieMateMatch | null>(null);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isTasteProfilerOpen, setIsTasteProfilerOpen] = useState(false);
+  const [isPremiumOpen, setIsPremiumOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isQuickLogOpen, setIsQuickLogOpen] = useState(false);
+  const [isInboxOpen, setIsInboxOpen] = useState(false);
+  const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
+  const [isMediaDetailOpen, setIsMediaDetailOpen] = useState(false);
+  const [detailMediaItem, setDetailMediaItem] = useState<MediaItem | null>(null);
+  const [gridUndoToast, setGridUndoToast] = useState<MovieMateMatch | null>(null);
+  // Calm Turkish feedback for failed likes (sticky rejection / RPC failure)
+  const [deckNotice, setDeckNotice] = useState<string | null>(null);
+  const deckNoticeTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Per-match undo timers live in gridUndoTimersRef (see handleGridPass)
+  // Stale-response guard for rapid profile changes / refetches
+  const matchesFetchSeqRef = React.useRef(0);
+
+  const fetchMatches = async (forceRefresh = false) => {
+    const seq = ++matchesFetchSeqRef.current;
+    setLoading(true);
+    try {
+      // Always fetch the full radar ('all') — per-tab counts were computed
+      // from the already-intent-filtered dataset, so TÜMÜ/Flört counts were
+      // wrong outside their own tab. The client-side filter handles tabs.
+      const cacheKey = user ? `izledin_matches_${user.id}_all` : null;
+
+      // Stale-while-revalidate: paint the cached radar instantly so there is no
+      // spinner flash, but ALWAYS recompute below so taste changes propagate
+      // (Bug #5 — previously a cache hit returned early forever).
+      if (cacheKey && !forceRefresh) {
+        try {
+          const cachedMatches = JSON.parse(
+            localStorage.getItem(cacheKey) || "null",
+          );
+          if (Array.isArray(cachedMatches) && cachedMatches.length > 0) {
+            setMatches(cachedMatches);
+            setLoading(false);
+          }
+        } catch {
+          // Invalid cache — fall through to a fresh fetch
+        }
+      }
+
+      const currentProfile = profile || {
+        id: user?.id || 'guest',
+        username: user?.user_metadata?.user_name || 'misafir',
+        fullName: user?.user_metadata?.full_name || 'Sinemasever',
+        avatarUrl: user?.user_metadata?.avatar_url || 'https://api.dicebear.com/7.x/initials/svg?seed=Sinemasever&backgroundColor=0A0A0A&textColor=DC2626&fontWeight=900',
+        favoriteGenres: ['Bilim Kurgu', 'Psikolojik Gerilim', 'Anime & Shonen'],
+        top4Favorites: [],
+        streamingServices: ['Netflix', 'BluTV', 'MUBI'],
+      };
+
+      const computed = await computeDiscoverMatches(currentProfile, "all");
+      if (seq !== matchesFetchSeqRef.current) return; // a newer fetch landed
+      setMatches(computed);
+
+      if (cacheKey) {
+        try {
+          localStorage.setItem(cacheKey, JSON.stringify(computed));
+        } catch {}
+      }
+
+      if (user) {
+        try {
+          const inboxSummary = await getInboxSummary(user.id);
+          setUnreadInboxCount(inboxSummary.totalUnreadCount);
+        } catch {}
+      }
+    } catch (error) {
+      console.error("Error fetching matches:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMatches(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile, user]);
+
+  useEffect(() => {
+    if (user && profile) {
+      try {
+        const isCompleted = localStorage.getItem(`izledin_onboarded_${user.id}`);
+        if (!isCompleted && (!profile.streamingServices?.length || !profile.top4Favorites?.length)) {
+          const timer = setTimeout(() => {
+            setIsTasteProfilerOpen(true);
+          }, 700);
+          return () => clearTimeout(timer);
+        }
+      } catch {}
+    }
+  }, [user, profile]);
+
+  const filteredMatches = matches.filter((m) => {
+    if (selectedIntent !== 'all') {
+      const intent = m.user.matchIntent || m.intent || 'friend';
+      // 'both' members are open to every intent
+      if (intent !== selectedIntent && intent !== 'both') return false;
+    }
+    // Filter on the candidate's OWN genres — sharedGenres is the pairwise
+    // intersection, so searching a genre you don't personally have always
+    // returned zero results.
+    if (
+      selectedGenre !== 'Hepsi' &&
+      !(m.user.favoriteGenres || []).includes(selectedGenre)
+    )
+      return false;
+    if (selectedAgeRange !== 'Hepsi') {
+      if (!m.user.age) return false;
+      if (selectedAgeRange === '18-24' && (m.user.age < 18 || m.user.age > 24)) return false;
+      if (selectedAgeRange === '25-34' && (m.user.age < 25 || m.user.age > 34)) return false;
+      if (selectedAgeRange === '35-44' && (m.user.age < 35 || m.user.age > 44)) return false;
+      if (selectedAgeRange === '45+' && m.user.age < 45) return false;
+    }
+    if (selectedCity !== 'Hepsi') {
+      // Turkish-aware casing: 'İstanbul'.toLowerCase() produces i̇stanbul
+      // (i + combining dot) and never matches plain 'istanbul'.
+      const trLower = (s: string) => s.toLocaleLowerCase('tr-TR');
+      const userLoc = trLower(m.user.location || '');
+      if (!userLoc.includes(trLower(selectedCity))) return false;
+      if (
+        selectedDistrict !== 'Hepsi' &&
+        !userLoc.includes(trLower(selectedDistrict))
+      )
+        return false;
+    }
+    return true;
+  });
+
+  const handleOpenChat = async (match: MovieMateMatch) => {
+    if (!user) {
+      setIsAuthOpen(true);
+      return;
+    }
+
+    setActiveChatMatch(match);
+    setIsChatOpen(true);
+  };
+
+  const showDeckNotice = (message: string) => {
+    setDeckNotice(message);
+    if (deckNoticeTimerRef.current) clearTimeout(deckNoticeTimerRef.current);
+    deckNoticeTimerRef.current = setTimeout(() => setDeckNotice(null), 6000);
+  };
+
+  const handleLikeMatch = async (match: MovieMateMatch) => {
+    if (!user) {
+      setIsAuthOpen(true);
+      return;
+    }
+
+    const result = await requestMatch(
+      user.id,
+      match.user.id,
+      'pending',
+      match.compatibilityScore,
+      match.sharedGenres,
+      match.sharedTitles
+    );
+
+    if (!result.ok || !result.matchId) {
+      // Sticky rejection (upsert_match_request v2): the OTHER person passed on
+      // this pair earlier and only they can revive it. No dead-end chat modal —
+      // calm Turkish feedback instead.
+      showDeckNotice(
+        result.rejected
+          ? `@${match.user.username} bu eşleşmeye daha önce pas geçmiş. Yeni bir mesaj isteği gönderilemedi.`
+          : 'Eşleşme talebi gönderilemedi. Lütfen tekrar deneyin.'
+      );
+      return;
+    }
+
+    match.id = result.matchId;
+    match.status = 'pending';
+    match.initiatorId = user.id;
+
+    setActiveChatMatch(match);
+    setIsChatOpen(true);
+  };
+
+  // The match cards hand over only (title, posterUrl), so resolve the REAL
+  // catalog entry by title before opening the detail modal. No invented
+  // stand-in item — if the lookup finds nothing we say so plainly.
+  const handleMovieClick = async (title: string, posterUrl: string) => {
+    try {
+      const results = await searchCatalog(title);
+      const normalized = title.trim().toLocaleLowerCase('tr-TR');
+      const realItem =
+        results.find(
+          (r) =>
+            r.title.toLocaleLowerCase('tr-TR') === normalized ||
+            r.originalTitle?.toLocaleLowerCase('tr-TR') === normalized,
+        ) || null;
+      if (!realItem) {
+        showDeckNotice(`"${title}" için detay bulunamadı.`);
+        return;
+      }
+      setDetailMediaItem(realItem);
+      setIsMediaDetailOpen(true);
+    } catch (err) {
+      console.warn('handleMovieClick failed:', err);
+      showDeckNotice(`"${title}" için detay bulunamadı.`);
+    }
+  };
+
+  // Per-match undo timers — a single shared ref silently dropped every pass
+  // except the most recent one when users passed several cards in a row.
+  const gridUndoTimersRef = React.useRef<Map<string, NodeJS.Timeout>>(new Map());
+
+  const handleGridPass = (match: MovieMateMatch) => {
+    setMatches((prev) => prev.filter((m) => m.id !== match.id));
+    setGridUndoToast(match);
+    const existingTimer = gridUndoTimersRef.current.get(match.id);
+    if (existingTimer) clearTimeout(existingTimer);
+    const timer = setTimeout(() => {
+      gridUndoTimersRef.current.delete(match.id);
+      setGridUndoToast((current) => (current?.id === match.id ? null : current));
+      if (user && !match.id.startsWith('prospective_')) {
+        createOrUpdateMatch(
+          user.id,
+          match.user.id,
+          'passed',
+          match.compatibilityScore,
+          match.sharedGenres,
+          match.sharedTitles
+        );
+      }
+    }, 4000);
+    gridUndoTimersRef.current.set(match.id, timer);
+  };
+
+  const handleGridUndo = () => {
+    if (!gridUndoToast) return;
+    const timer = gridUndoTimersRef.current.get(gridUndoToast.id);
+    if (timer) {
+      clearTimeout(timer);
+      gridUndoTimersRef.current.delete(gridUndoToast.id);
+    }
+    setMatches((prev) => [gridUndoToast, ...prev]);
+    setGridUndoToast(null);
+  };
+
+  const handlePassMatch = async (match: MovieMateMatch) => {
+    setMatches((prev) => prev.filter((m) => m.id !== match.id));
+    // Persist using the partner's REAL id — gating on match.id (which is
+    // 'prospective_…' for fallback cards) silently discarded passes.
+    if (user && match.user?.id) {
+      await createOrUpdateMatch(
+        user.id,
+        match.user.id,
+        'passed',
+        match.compatibilityScore,
+        match.sharedGenres,
+        match.sharedTitles
+      );
+    }
+  };
+
+  useEffect(() => {
+    setActiveDeckIndex(0);
+    setDeckHistory([]);
+  }, [selectedIntent, selectedGenre, selectedAgeRange, selectedCity, selectedDistrict]);
+
+  // Deck history entries remember WHAT happened so undo can reverse passes
+  // (which shrink the array) differently from likes (which only advance).
+  const handleDeckLike = (match: MovieMateMatch) => {
+    handleLikeMatch(match);
+    setDeckHistory((prev) => [...prev, { type: 'like', index: activeDeckIndex }]);
+    setActiveDeckIndex((prev) => prev + 1);
+  };
+
+  const handleDeckPass = (match: MovieMateMatch) => {
+    // The pass REMOVES the card from `matches`, so the next card slides into
+    // the same index — advancing here too would skip a card every pass.
+    const removedAtIndex = activeDeckIndex;
+    handlePassMatch(match);
+    setDeckHistory((prev) => [
+      ...prev,
+      { type: 'pass', index: removedAtIndex, match },
+    ]);
+  };
+
+  const handleDeckUndo = () => {
+    if (deckHistory.length === 0) return;
+    const last = deckHistory[deckHistory.length - 1];
+    setDeckHistory((prev) => prev.slice(0, -1));
+    if (last.type === 'pass') {
+      // Reinsert the passed card exactly where it was and resume there.
+      setMatches((prev) => {
+        if (prev.some((m) => m.id === last.match.id)) return prev;
+        const next = [...prev];
+        next.splice(Math.min(last.index, next.length), 0, last.match);
+        return next;
+      });
+      setActiveDeckIndex(last.index);
+    } else {
+      setActiveDeckIndex(last.index);
+    }
+  };
+
+  const handleDeckReset = () => {
+    setActiveDeckIndex(0);
+    setDeckHistory([]);
+  };
+
+  // Keyboard Accelerators for Desktop Deck Mode (Alex Power User)
+  useEffect(() => {
+    if (displayLayout !== 'deck') return;
+    if (isChatOpen || isAuthOpen || isPremiumOpen || isSearchOpen || isQuickLogOpen || isInboxOpen || isTasteProfilerOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeTag = document.activeElement?.tagName.toLowerCase();
+      if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') return;
+
+      if (activeDeckIndex >= filteredMatches.length) return;
+      const currentMatch = filteredMatches[activeDeckIndex];
+
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        handleDeckPass(currentMatch);
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        handleDeckLike(currentMatch);
+      } else if (e.key === ' ' || e.key === 'Spacebar') {
+        e.preventDefault();
+        handleOpenChat(currentMatch);
+      } else if (e.key === 'z' || e.key === 'Z') {
+        e.preventDefault();
+        handleDeckUndo();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [
+    displayLayout,
+    activeDeckIndex,
+    filteredMatches,
+    isChatOpen,
+    isAuthOpen,
+    isPremiumOpen,
+    isSearchOpen,
+    isQuickLogOpen,
+    isInboxOpen,
+    isTasteProfilerOpen,
+    deckHistory
+  ]);
+
+  const resetFilters = () => {
+    setSelectedCity('Hepsi');
+    setSelectedDistrict('Hepsi');
+    setSelectedGenre('Hepsi');
+    setSelectedAgeRange('Hepsi');
+    setActiveDeckIndex(0);
+    setDeckHistory([]);
+  };
+
+  const hasActiveFilters = 
+    selectedCity !== 'Hepsi' || 
+    selectedDistrict !== 'Hepsi' || 
+    selectedGenre !== 'Hepsi' || 
+    selectedAgeRange !== 'Hepsi';
+
+  return (
+    <div className="min-h-screen with-sidebar  bg-[#0A0A0A]  text-[#FAFAFA] flex flex-col justify-between selection:bg-[#DC2626] selection:text-white transition-colors duration-150">
+      <Navbar
+        onOpenQuickLog={() => {
+          setSelectedMedia(null);
+          setIsQuickLogOpen(true);
+        }}
+        onOpenSearch={() => setIsSearchOpen(true)}
+        onOpenAuth={() => setIsAuthOpen(true)}
+        onOpenPremium={() => setIsPremiumOpen(true)}
+        onOpenInbox={() => setIsInboxOpen(true)}
+      />
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full space-y-8">
+        
+        {/* Page Editorial Masthead Header */}
+        <div className=" bg-[#0A0A0A]  text-[#FAFAFA] border-2 sm:border-4  border-[#404040]  shadow-[8px_8px_0px_#EF4444] p-6 sm:p-10 space-y-4">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <span className="stamp-badge-solid px-2.5 py-1 text-xs font-black   bg-[#EF4444] text-[#0A0A0A] border-none shadow-[2px_2px_0px_#000000]">
+              İZDAŞ RADARI
+            </span>
+            <span className="text-xs font-mono font-bold text-[#A3A3A3] tracking-widest uppercase">
+              SİNEMA FREKANSI & KÜLT EŞLEŞMELER
+            </span>
+          </div>
+
+          <h1 className="text-2xl sm:text-4xl md:text-5xl font-black tracking-tight uppercase font-sans  text-white leading-[1.02]">
+            AYNI FİLMLERDE AĞLAYIP, <span className=" text-[#EF4444]">AYNI SAHNELERDE ÜRPERDİĞİN</span> İZDAŞINI BUL.
+          </h1>
+
+          <p className="text-xs sm:text-sm  text-[#D4D4D4] max-w-2xl font-sans font-medium leading-relaxed">
+            Film zevkine yakın insanları keşfet. İzleme günlüğün, favori 4 başyapıtın ve sinema tutkun arka planda harmanlanır; seninle aynı sinema frekansını paylaşan İzdaşlar listelenir.
+          </p>
+
+          <div className="pt-2 flex items-center gap-3 flex-wrap">
+            <button
+              onClick={() => {
+                if (!user) {
+                  setIsAuthOpen(true);
+                } else {
+                  setIsTasteProfilerOpen(true);
+                }
+              }}
+              className="h-11 min-h-[44px] px-5 py-2.5   bg-[#EF4444] hover:bg-[#DC2626]  text-[#0A0A0A] font-black text-xs uppercase font-mono tracking-wider border-2  border-white  shadow-[3px_3px_0px_#ffffff] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer inline-flex items-center gap-2"
+            >
+              <CinemaDnaHelixIcon size={16} className=" text-[#0A0A0A]" />
+              <span>SİNEMA DNA'SINI YENİDEN HESAPLA →</span>
+            </button>
+
+            <button
+              onClick={() => setIsInboxOpen(true)}
+              className="h-11 min-h-[44px] px-4 py-2.5  bg-[#171717]  hover:bg-[#262626]  text-white font-black text-xs uppercase font-mono tracking-wider border-2  border-[#404040]  shadow-[3px_3px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer inline-flex items-center gap-2 relative"
+            >
+              <Inbox className="w-4 h-4  text-[#EF4444]" />
+              <span>Gelen Kutusu</span>
+              {unreadInboxCount > 0 && (
+                <span className="px-1.5 py-0.5 bg-[#DC2626] text-white text-[10px] font-black rounded-full">
+                  {unreadInboxCount}
+                </span>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Intent Tabs Navigation Bar (Film Arkadaşlığı vs Sinematik Flört) */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3  bg-[#171717] p-2 border-2 sm:border-4  border-[#404040]  shadow-[5px_5px_0px_#000000] font-mono">
+          <div className="grid grid-cols-2 sm:flex sm:items-center gap-1.5 w-full sm:w-auto">
+            <button
+              type="button"
+              onClick={() => setSelectedIntent('all')}
+              className={`px-2 sm:px-3.5 py-2.5 min-h-[44px] text-[10px] sm:text-xs font-black uppercase transition-all cursor-pointer flex items-center justify-center text-center ${
+                selectedIntent === 'all'
+                  ? ' bg-[#EF4444] text-white  shadow-[2px_2px_0px_#000000]'
+                  : '  text-neutral-400 hover:text-[#FAFAFA]'
+              }`}
+            >
+              TÜMÜ ({matches.length})
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSelectedIntent('friend')}
+              className={`px-2 sm:px-3.5 py-2.5 min-h-[44px] text-[10px] sm:text-xs font-black uppercase transition-all cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 text-center ${
+                selectedIntent === 'friend'
+                  ? 'bg-[#10B981] text-[#0A0A0A]  shadow-[2px_2px_0px_#000000]'
+                  : '  text-neutral-400 hover:text-[#10B981]'
+              }`}
+            >
+              <CinemaFriendshipIcon size={14} className="shrink-0" />
+              <span className="truncate">Film Arkadaşı ({matches.filter(m => (m.user.matchIntent || m.intent || 'friend') === 'friend').length})</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSelectedIntent('dating')}
+              className={`px-2 sm:px-3.5 py-2.5 min-h-[44px] text-[10px] sm:text-xs font-black uppercase transition-all cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 text-center ${
+                selectedIntent === 'dating'
+                  ? 'bg-[#E11D48] text-white  shadow-[2px_2px_0px_#000000]'
+                  : '  text-neutral-400 hover:text-[#E11D48]'
+              }`}
+            >
+              <CinemaRomanceIcon size={14} className="shrink-0" />
+              <span className="truncate">Sinematik Flört ({matches.filter(m => (m.user.matchIntent || m.intent) === 'dating').length})</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSelectedIntent('both')}
+              className={`px-2 sm:px-3.5 py-2.5 min-h-[44px] text-[10px] sm:text-xs font-black uppercase transition-all cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 text-center ${
+                selectedIntent === 'both'
+                  ? 'bg-[#F59E0B] text-[#0A0A0A]  shadow-[2px_2px_0px_#000000]'
+                  : '  text-neutral-400 hover:text-[#F59E0B]'
+              }`}
+            >
+              <CinemaDuoIntentIcon size={14} className="shrink-0" />
+              <span className="truncate">Farketmez ({matches.filter(m => (m.user.matchIntent || m.intent) === 'both').length})</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Intent Context Info Alert */}
+        {selectedIntent === 'friend' && (
+          <div className="p-3 bg-emerald-500/10 border-2 border-emerald-600  text-emerald-300 text-xs font-bold font-mono flex items-start gap-2.5 animate-in fade-in">
+            <CinemaFriendshipIcon size={18} className="text-emerald-400 shrink-0 mt-0.5" />
+            <div>
+              <span className="font-black uppercase block">Film Arkadaşlığı & Ortak İzleme Frekansı</span>
+              <p className="text-[11px] font-sans font-medium mt-0.5 leading-relaxed">
+                Platonik sinema sohbeti, festival yoldaşlığı ve kült film tartışması arayan sinemaseverler listelenmektedir.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {selectedIntent === 'dating' && (
+          <div className="p-3 bg-rose-500/10 border-2 border-rose-600  text-rose-300 text-xs font-bold font-mono flex items-start gap-2.5 animate-in fade-in">
+            <CinemaRomanceIcon size={18} className=" text-rose-400 shrink-0 mt-0.5" />
+            <div>
+              <span className="font-black uppercase block">Sinematik Flört & Estetik Uyum</span>
+              <p className="text-[11px] font-sans font-medium mt-0.5 leading-relaxed">
+                Ortak film zevki, estetik frekans ve derin sinema tutkusu üzerinden romantik bağ kurmak isteyen sinemaseverler.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Filter Controls Bar — Distilled & Ergonomic */}
+        <div className=" bg-[#171717]  text-[#FAFAFA] border-2 sm:border-4  border-[#404040] p-3 sm:p-4 flex flex-col md:flex-row md:items-center justify-between gap-3  shadow-[6px_6px_0px_#000000] font-mono">
+          
+          {/* Left: Quick Genre & Detailed Filter Trigger */}
+          <div className="flex items-center gap-2.5 flex-wrap">
+            {/* Quick Genre Select */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-black uppercase  text-[#EF4444] hidden sm:inline">TÜR:</span>
+              <select
+                aria-label="Film Türü Filtresi"
+                value={selectedGenre}
+                onChange={(e) => setSelectedGenre(e.target.value)}
+                className="h-11 min-h-[44px]  bg-[#262626] border-2  border-[#404040] px-3 py-2 text-xs font-black uppercase  text-[#FAFAFA] focus:outline-none  focus:border-[#EF4444] cursor-pointer"
+              >
+                <option value="Hepsi">TÜM TÜRLER</option>
+                {POPULAR_GENRES.map((g) => (
+                  <option key={g} value={g}>{g.toUpperCase()}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Detailed Filter Button Trigger */}
+            <button
+              type="button"
+              onClick={() => setIsFilterDrawerOpen(true)}
+              aria-label="Detaylı Filtreleri Aç"
+              className={`h-11 min-h-[44px] px-3.5 border-2  border-[#404040] text-xs font-black uppercase flex items-center gap-2 cursor-pointer transition-all active:translate-x-0.5 active:translate-y-0.5 ${
+                (selectedCity !== 'Hepsi' || selectedDistrict !== 'Hepsi' || selectedAgeRange !== 'Hepsi')
+                  ? 'bg-[#DC2626] text-white shadow-[2px_2px_0px_#000000]'
+                  : ' bg-[#262626]  hover:bg-[#333333]  text-[#FAFAFA]  shadow-[2px_2px_0px_#000000]'
+              }`}
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>DETAYLI FİLTRE</span>
+              {(selectedCity !== 'Hepsi' || selectedDistrict !== 'Hepsi' || selectedAgeRange !== 'Hepsi') && (
+                <span className="px-1.5 py-0.5 text-[10px] font-black bg-white text-[#0A0A0A]">
+                  {(selectedCity !== 'Hepsi' ? 1 : 0) + (selectedDistrict !== 'Hepsi' ? 1 : 0) + (selectedAgeRange !== 'Hepsi' ? 1 : 0)}
+                </span>
+              )}
+            </button>
+
+            {hasActiveFilters && (
+              <button
+                onClick={resetFilters}
+                aria-label="Filtreleri Sıfırla"
+                className="h-11 min-h-[44px] px-3  bg-[#262626]  hover:bg-[#333333] border-2  border-[#404040] text-xs font-black uppercase  text-[#EF4444] cursor-pointer flex items-center gap-1.5 transition-colors"
+                title="Filtreleri Sıfırla"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Sıfırla</span>
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2.5 justify-between md:justify-end flex-wrap">
+            {/* Layout Mode Switcher (Deck vs Grid) */}
+            <div className="flex items-center border-2  border-[#404040]  bg-[#262626]">
+              <button
+                type="button"
+                onClick={() => setDisplayLayout('deck')}
+                className={`h-10 px-3 text-xs font-black uppercase flex items-center gap-1.5 cursor-pointer transition-all ${
+                  displayLayout === 'deck'
+                    ? 'bg-[#DC2626] text-white shadow-[2px_2px_0px_#000000]'
+                    : ' text-[#A3A3A3]  hover:text-white'
+                }`}
+                title="Tekil Sinefil Kartı ve Kaydırma (Swipe) Modu"
+              >
+                <CinemaDeckStackIcon size={14} />
+                <span>DESTE</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setDisplayLayout('grid')}
+                className={`h-10 px-3 text-xs font-black uppercase flex items-center gap-1.5 cursor-pointer transition-all ${
+                  displayLayout === 'grid'
+                    ? 'bg-[#DC2626] text-white shadow-[2px_2px_0px_#000000]'
+                    : ' text-[#A3A3A3]  hover:text-white'
+                }`}
+                title="Tüm Kartları Izgara Olarak Gör"
+              >
+                <CinemaGridMatrixIcon size={14} />
+                <span>GRID</span>
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {profile?.isPremium && (
+                <span className="px-2 py-1 text-[11px] font-black uppercase font-mono border bg-amber-500/10 text-amber-500 border-amber-500">
+                  IZLEDIN+ ÜYESİ
+                </span>
+              )}
+              <span className="text-xs font-black uppercase  text-[#A3A3A3]">
+                {filteredMatches.length} SİNEFİL
+              </span>
+            </div>
+
+            <button
+              onClick={() => fetchMatches(true)}
+              disabled={loading}
+              aria-label="Radarı Yenile"
+              className="h-11 min-h-[44px] px-3  bg-[#262626]  hover:bg-[#333333] border-2  border-[#404040]  shadow-[2px_2px_0px_#000000] text-xs font-black uppercase  text-[#FAFAFA] flex items-center gap-1.5 cursor-pointer disabled:opacity-50 active:translate-x-0.5 active:translate-y-0.5 transition-all"
+              title="Radarı Yenile"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin  text-[#EF4444]' : ''}`} />
+              <span className="hidden sm:inline">Yenile</span>
+            </button>
+          </div>
+
+        </div>
+
+        {/* Matches Grid / Single Deck & Rich Hardened Empty States */}
+        {loading ? (
+          <div className="py-24 flex flex-col items-center justify-center gap-3 font-mono">
+            <Loader2 className="w-10 h-10  text-[#EF4444] animate-spin" />
+            <span className="text-xs font-black uppercase tracking-widest  text-[#FAFAFA]">
+              SİNEMA FREKANSI & KÜLT EŞLEŞMELER HESAPLANIYOR...
+            </span>
+          </div>
+        ) : matches.length === 0 ? (
+          /* STATE B: EMPTY RADAR — no daily-limit framing, no upsell: no
+             discovery cap exists that could have been "completed". */
+          <div className="py-16 text-center  bg-[#171717]  text-[#FAFAFA] border-2 sm:border-4  border-[#404040]  shadow-[8px_8px_0px_#EF4444] p-8 sm:p-12 font-mono space-y-5">
+            <CinemaRadarScannerIllustration size={72} className="mx-auto" />
+            
+            <div className="space-y-2 max-w-lg mx-auto">
+              <h3 className="text-lg sm:text-xl font-black uppercase tracking-tight  text-[#FAFAFA] pt-2">
+                ŞU AN RADARDA İZDAŞ YOK
+              </h3>
+              <p className="text-xs  text-[#A3A3A3] font-bold leading-relaxed">
+                Sinema DNA'nla eşleşen bir profil bulunamadı. DNA'nı güncelleyerek yeni türler ekleyebilir veya radarı yeniden tarayabilirsin.
+              </p>
+            </div>
+
+            <div className="pt-3 flex items-center justify-center gap-3 flex-wrap">
+              <button
+                onClick={() => {
+                  if (!user) {
+                    setIsAuthOpen(true);
+                  } else {
+                    setIsTasteProfilerOpen(true);
+                  }
+                }}
+                className="h-11 min-h-[44px] px-5   bg-[#EF4444] hover:bg-[#DC2626]  text-[#0A0A0A] text-xs font-black uppercase border-2  border-[#404040]  shadow-[3px_3px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer flex items-center gap-2"
+              >
+                <CinemaDnaHelixIcon size={16} className=" text-[#0A0A0A]" />
+                <span>SİNEMA DNA'SINI GÜNCELLE</span>
+              </button>
+
+              <button
+                onClick={() => fetchMatches(true)}
+                className="h-11 min-h-[44px] px-4  bg-[#262626]  hover:bg-[#333333]  text-[#FAFAFA] text-xs font-black uppercase border-2  border-[#404040]  shadow-[2px_2px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer flex items-center gap-1.5"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>Radarı Yeniden Tara</span>
+              </button>
+            </div>
+          </div>
+        ) : filteredMatches.length === 0 ? (
+          /* STATE A: FILTER MISMATCH EMPTY STATE */
+          <div className="py-16 text-center  bg-[#171717]  text-[#FAFAFA] border-2 sm:border-4  border-[#404040]  shadow-[6px_6px_0px_#000000] p-8 sm:p-10 font-mono space-y-4">
+            <CinemaRadarScannerIllustration size={64} className="mx-auto" />
+            
+            <div className="space-y-1 max-w-md mx-auto">
+              <h3 className="text-sm sm:text-base font-black uppercase tracking-tight  text-[#FAFAFA]">
+                BU KRİTERLERE UYGUN İZDAŞ BULUNAMADI
+              </h3>
+              <p className="text-xs  text-[#A3A3A3] font-bold">
+                Şehir, yaş veya tür filtrelerini sıfırlayarak veya genişleterek daha fazla İzdaş keşfedebilirsiniz.
+              </p>
+            </div>
+
+            <div className="pt-2">
+              <button
+                onClick={resetFilters}
+                className="h-11 min-h-[44px] px-5   bg-[#EF4444] hover:bg-[#DC2626]  text-[#0A0A0A] text-xs font-black uppercase border-2  border-[#404040]  shadow-[3px_3px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer inline-flex items-center gap-2"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>FİLTRELERİ SIFIRLA</span>
+              </button>
+            </div>
+          </div>
+        ) : displayLayout === 'deck' ? (
+          /* ========================================================================= */
+          /* MOBILE-FIRST SINGLE CARD SWIPE DECK MODE (TINDER / LETTERBOXD CARDS) */
+          /* ========================================================================= */
+          <div className="max-w-md mx-auto w-full font-mono space-y-4">
+            {activeDeckIndex < filteredMatches.length ? (
+              <>
+                {/* Deck Progress & Undo Header Bar */}
+                <div className="flex items-center justify-between gap-3 bg-[#0A0A0A] text-white p-3 border-2  border-[#404040]  shadow-[4px_4px_0px_#000000]">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-black uppercase tracking-wider  text-[#EF4444]">
+                      KART {activeDeckIndex + 1} / {filteredMatches.length}
+                    </span>
+                  </div>
+
+                  {/* Progress Line */}
+                  <div className="flex-1 max-w-[140px] h-2 bg-neutral-800 border border-neutral-700 overflow-hidden">
+                    <div 
+                      className="h-full bg-[#DC2626] transition-all duration-300"
+                      style={{ width: `${((activeDeckIndex + 1) / filteredMatches.length) * 100}%` }}
+                    />
+                  </div>
+
+                  {/* Ergonomic Undo Button */}
+                  <button
+                    type="button"
+                    onClick={handleDeckUndo}
+                    disabled={deckHistory.length === 0}
+                    aria-label="Önceki Profile Geri Dön"
+                    className="px-3 py-1.5 min-h-[36px] text-xs font-black uppercase border border-neutral-600 bg-neutral-900 text-neutral-300 hover:text-white disabled:opacity-40 disabled:pointer-events-none flex items-center gap-1.5 cursor-pointer transition-colors"
+                    title="Önceki Profile Geri Dön"
+                  >
+                    <Undo2 className="w-3.5 h-3.5" />
+                    <span>Geri Al</span>
+                  </button>
+                </div>
+
+                {/* Single Active Card with Swipe Gesture & Next Underneath */}
+                <div className="w-full">
+                  <SwipeMatchCard
+                    key={filteredMatches[activeDeckIndex].id}
+                    match={filteredMatches[activeDeckIndex]}
+                    nextMatch={filteredMatches[activeDeckIndex + 1]}
+                    onChatClick={handleOpenChat}
+                    onLike={handleDeckLike}
+                    onPass={handleDeckPass}
+                    onMovieClick={handleMovieClick}
+                  />
+                </div>
+
+                {/* Screen Reader Live Status Announcement */}
+                <div aria-live="polite" className="sr-only">
+                  {`${filteredMatches[activeDeckIndex].user.fullName}, yüzde ${filteredMatches[activeDeckIndex].compatibilityScore} uyum ile görüntülendi.`}
+                </div>
+
+                {/* Swipe Helper & Desktop Keyboard Shortcuts Legend */}
+                <div className="text-center space-y-1 font-mono">
+                  <p className="text-[11px] font-black uppercase text-neutral-500 tracking-wider">
+                    ← SOLA KAYDIR: PAS &nbsp;&nbsp;•&nbsp;&nbsp; SAĞA KAYDIR: İZDAŞ →
+                  </p>
+                  <p className="hidden sm:block text-[10px] font-bold  text-neutral-500 uppercase tracking-widest">
+                    KLAVYE: <kbd className="px-1.5 py-0.5  bg-neutral-800 border  border-neutral-700  text-[#FAFAFA]">←</kbd> PAS &nbsp;•&nbsp; <kbd className="px-1.5 py-0.5  bg-neutral-800 border  border-neutral-700  text-[#FAFAFA]">→</kbd> İZDAŞ &nbsp;•&nbsp; <kbd className="px-1.5 py-0.5  bg-neutral-800 border  border-neutral-700  text-[#FAFAFA]">BOŞLUK</kbd> SOHBET &nbsp;•&nbsp; <kbd className="px-1.5 py-0.5  bg-neutral-800 border  border-neutral-700  text-[#FAFAFA]">Z</kbd> GERİ AL
+                  </p>
+                </div>
+              </>
+            ) : (
+              /* All Deck Cards Examined Screen */
+              <div className="p-8  bg-[#171717] border-4  border-[#404040]  shadow-[6px_6px_0px_#000000] text-center space-y-4">
+                <CinemaRadarScannerIllustration size={64} className="mx-auto" />
+                <h3 className="text-base font-black uppercase tracking-tight">
+                  TÜM İZDAŞ KARTLARINI İNCELEDİNİZ!
+                </h3>
+                <p className="text-xs  text-neutral-400 font-bold leading-relaxed">
+                  Bu filtrelerdeki tüm profilleri tamamladınız. Baştan tekrar tarayabilir veya filtrelerinizi genişletebilirsiniz.
+                </p>
+                <div className="pt-2 flex items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={handleDeckReset}
+                    className="px-5 py-2.5 bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-black uppercase border-2  border-[#404040] shadow-[2px_2px_0px_#000000] cursor-pointer flex items-center gap-1.5"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>BAŞTAN TARA</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={resetFilters}
+                    className="px-4 py-2.5  bg-neutral-800  text-white text-xs font-black uppercase border-2 border-neutral-700 cursor-pointer"
+                  >
+                    Filtreleri Sıfırla
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          /* ========================================================================= */
+          /* DESKTOP MULTI-COLUMN EQUAL-HEIGHT GRID MODE */
+          /* ========================================================================= */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
+            {filteredMatches.map((match) => (
+              <div key={match.id} className="h-full flex flex-col">
+                <MatchCard
+                  match={match}
+                  onChatClick={handleOpenChat}
+                  onLike={handleLikeMatch}
+                  onPass={handleGridPass}
+                  onMovieClick={handleMovieClick}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Transient Grid Mode Undo Toast (P3 harden) */}
+        {gridUndoToast && (
+          <div className="fixed bottom-6 right-6 z-50 bg-[#0A0A0A] text-white border-2 border-white shadow-[4px_4px_0px_#DC2626] px-4 py-3 font-mono text-xs flex items-center gap-3 animate-in slide-in-from-bottom-3 duration-150">
+            <span className="font-bold truncate max-w-[200px]">
+              @{gridUndoToast.user.username} pas geçildi.
+            </span>
+            <button
+              type="button"
+              onClick={handleGridUndo}
+              className="px-2.5 py-1 bg-[#DC2626] hover:bg-[#B91C1C] text-white font-black uppercase border border-white text-[11px] cursor-pointer flex items-center gap-1"
+            >
+              <Undo2 className="w-3 h-3" />
+              <span>Geri Al</span>
+            </button>
+          </div>
+        )}
+
+        {/* Failed-like notice (sticky rejection / RPC failure) */}
+        {deckNotice && (
+          <div
+            role="status"
+            className="fixed bottom-6 left-6 z-50 bg-[#0A0A0A] text-white border-2 border-[#404040] shadow-[4px_4px_0px_#DC2626] px-4 py-3 font-mono text-xs flex items-start gap-3 animate-in slide-in-from-bottom-3 duration-150 max-w-sm"
+          >
+            <CinemaTrustShieldIcon size={14} className="text-[#EF4444] shrink-0 mt-0.5" />
+            <span className="font-bold leading-snug">{deckNotice}</span>
+            <button
+              type="button"
+              onClick={() => setDeckNotice(null)}
+              aria-label="Bildirimi kapat"
+              className="text-neutral-400 hover:text-white cursor-pointer shrink-0"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
+      </main>
+
+      <Footer />
+
+      {/* Detaylı Filtre Modal / Drawer */}
+      {isFilterDrawerOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150 font-mono">
+          <div 
+            className="w-full max-w-md  bg-[#171717]  text-[#FAFAFA] border-4  border-[#404040]  shadow-[8px_8px_0px_#000000] p-6 space-y-5 animate-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-3 border-b-2  border-[#404040]">
+              <div className="flex items-center gap-2">
+                <SlidersHorizontal className="w-5 h-5  text-[#EF4444]" />
+                <h3 className="text-sm font-black uppercase tracking-tight font-sans">
+                  DETAYLI SİNEFİL FİLTRESİ
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsFilterDrawerOpen(false)}
+                aria-label="Filtreleri Kapat"
+                className="w-9 h-9 flex items-center justify-center border-2  border-[#404040] hover:bg-[#DC2626] hover:text-white cursor-pointer"
+              >
+                <X className="w-4 h-4 stroke-[3]" />
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs">
+              {/* Şehir */}
+              <div className="space-y-1.5">
+                <label className="font-black uppercase  text-[#A3A3A3] block">
+                  Şehir:
+                </label>
+                <select
+                  aria-label="Şehir Seçimi"
+                  value={selectedCity}
+                  onChange={(e) => {
+                    setSelectedCity(e.target.value);
+                    setSelectedDistrict('Hepsi');
+                  }}
+                  className="w-full h-11  bg-[#262626] border-2  border-[#404040] px-3 font-bold uppercase  text-[#FAFAFA] focus:outline-none focus:border-[#DC2626]"
+                >
+                  <option value="Hepsi">TÜM ŞEHİRLER</option>
+                  {provinces.map((city) => (
+                    <option key={city} value={city}>{city.toUpperCase()}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* İlçe */}
+              {selectedCity !== 'Hepsi' && cityDistricts.length > 0 && (
+                <div className="space-y-1.5">
+                  <label className="font-black uppercase  text-[#A3A3A3] block">
+                    İlçe:
+                  </label>
+                  <select
+                    aria-label="İlçe Seçimi"
+                    value={selectedDistrict}
+                    onChange={(e) => setSelectedDistrict(e.target.value)}
+                    className="w-full h-11  bg-[#262626] border-2  border-[#404040] px-3 font-bold uppercase  text-[#FAFAFA] focus:outline-none focus:border-[#DC2626]"
+                  >
+                    <option value="Hepsi">TÜM İLÇELER</option>
+                    {cityDistricts.map((d) => (
+                      <option key={d} value={d}>{d.toUpperCase()}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Yaş Aralığı */}
+              <div className="space-y-1.5">
+                <label className="font-black uppercase  text-[#A3A3A3] block">
+                  Yaş Aralığı:
+                </label>
+                <select
+                  aria-label="Yaş Grubu Seçimi"
+                  value={selectedAgeRange}
+                  onChange={(e) => setSelectedAgeRange(e.target.value)}
+                  className="w-full h-11  bg-[#262626] border-2  border-[#404040] px-3 font-bold uppercase  text-[#FAFAFA] focus:outline-none focus:border-[#DC2626]"
+                >
+                  <option value="Hepsi">TÜM YAŞLAR</option>
+                  <option value="18-24">18 - 24 YAŞ</option>
+                  <option value="25-34">25 - 34 YAŞ</option>
+                  <option value="35-44">35 - 44 YAŞ</option>
+                  <option value="45+">45+ YAŞ</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="pt-2 flex items-center justify-between gap-3 border-t-2  border-[#404040]">
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedCity('Hepsi');
+                  setSelectedDistrict('Hepsi');
+                  setSelectedAgeRange('Hepsi');
+                }}
+                className="px-4 py-2.5  bg-[#262626] hover:bg-[#E5E5E5]  text-[#EF4444] text-xs font-black uppercase border  border-[#404040] cursor-pointer"
+              >
+                Temizle
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsFilterDrawerOpen(false)}
+                className="flex-1 py-2.5   bg-[#EF4444] hover:bg-[#DC2626]  text-[#0A0A0A] text-xs font-black uppercase border-2 border-[#0A0A0A] shadow-[2px_2px_0px_#000000] cursor-pointer"
+              >
+                Filtreleri Uygula
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modals */}
+      <ChatModal
+        match={activeChatMatch}
+        isOpen={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+        onOpenAuth={() => setIsAuthOpen(true)}
+        onRequestSent={(sentMatch) => {
+          setIsChatOpen(false);
+          setMatches((prev) =>
+            prev.filter(
+              (m) =>
+                m.id !== sentMatch.id && m.user.id !== sentMatch.user.id,
+            ),
+          );
+          showDeckNotice(
+            `@${sentMatch.user.username} kullanıcısına İzdaşlık isteğiniz iletildi.`,
+          );
+        }}
+      />
+
+      <TasteProfilerModal
+        isOpen={isTasteProfilerOpen}
+        onClose={() => setIsTasteProfilerOpen(false)}
+        onOpenAuth={() => setIsAuthOpen(true)}
+      />
+
+      <PremiumModal
+        isOpen={isPremiumOpen}
+        onClose={() => setIsPremiumOpen(false)}
+      />
+
+      <AuthModal
+        isOpen={isAuthOpen}
+        onClose={() => setIsAuthOpen(false)}
+      />
+
+      <QuickLogModal
+        item={selectedMedia}
+        isOpen={isQuickLogOpen}
+        onClose={() => setIsQuickLogOpen(false)}
+        onOpenAuth={() => setIsAuthOpen(true)}
+        onChangeMovie={() => setIsSearchOpen(true)}
+      />
+
+      <MediaDetailModal
+        item={detailMediaItem}
+        isOpen={isMediaDetailOpen}
+        onClose={() => setIsMediaDetailOpen(false)}
+        onOpenLog={(item) => {
+          setSelectedMedia(item);
+          setIsMediaDetailOpen(false);
+          setIsQuickLogOpen(true);
+        }}
+        onOpenTasteProfiler={() => {
+          setIsMediaDetailOpen(false);
+          setIsTasteProfilerOpen(true);
+        }}
+      />
+
+      <InboxModal
+        isOpen={isInboxOpen}
+        onClose={() => {
+          setIsInboxOpen(false);
+          if (user) {
+            getInboxSummary(user.id).then((summary) => setUnreadInboxCount(summary.totalUnreadCount)).catch(() => {});
+          }
+        }}
+        onOpenChat={(match) => {
+          setActiveChatMatch(match);
+          setIsChatOpen(true);
+        }}
+        onOpenAuth={() => setIsAuthOpen(true)}
+      />
+
+      <SearchModal
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        onSelectMedia={(item) => {
+          setSelectedMedia(item);
+          setIsQuickLogOpen(true);
+        }}
+      />
+    </div>
+  );
+}
+

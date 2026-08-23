@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-18T02:33:00.000Z",
+  "title": "Design System: izledin.com",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Velvet Cinema Red",
+        "canonical": "#DC2626",
+        "tonalRamp": ["#450A0A", "#7F1D1D", "#991B1B", "#B91C1C", "#DC2626", "#EF4444", "#F87171", "#FCA5A5", "#FEE2E2"]
+      },
+      "amber": {
+        "role": "secondary",
+        "displayName": "Star Rating Amber Gold",
+        "canonical": "#F59E0B",
+        "tonalRamp": ["#451A03", "#78350F", "#92400E", "#B45309", "#D97706", "#F59E0B", "#FBBF24", "#FCD34D", "#FEF3C7"]
+      },
+      "obsidian": {
+        "role": "neutral",
+        "displayName": "Pure Obsidian Ink",
+        "canonical": "#0A0A0A",
+        "tonalRamp": ["#000000", "#0A0A0A", "#171717", "#262626", "#404040", "#525252", "#737373", "#A3A3A3", "#D4D4D4", "#E5E5E5", "#F4F4F5", "#FAFAFA", "#FFFFFF"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display Heavy", "purpose": "Hero mastheads and branding titles." },
+      "headline": { "displayName": "Headline Sans", "purpose": "Major section headers." },
+      "title": { "displayName": "Title Bold", "purpose": "Film titles and modal card headers." },
+      "body": { "displayName": "Body Sans", "purpose": "Review paragraphs and descriptions." },
+      "label": { "displayName": "Monospaced Label", "purpose": "Stamp badges, ratings, and typewriter timestamps." }
+    },
+    "shadows": [
+      { "name": "offset-xs", "value": "1px 1px 0px var(--hard-shadow)", "purpose": "Micro badges and indicators." },
+      { "name": "offset-sm", "value": "2px 2px 0px var(--hard-shadow)", "purpose": "Small badge and active button press." },
+      { "name": "offset-md", "value": "4px 4px 0px var(--hard-shadow)", "purpose": "Default card and primary button elevation." },
+      { "name": "offset-lg", "value": "6px 6px 0px var(--hard-shadow)", "purpose": "Hover card elevation and fanzine containers." },
+      { "name": "offset-xl", "value": "8px 8px 0px var(--hard-shadow)", "purpose": "Modal dialogs and feature hero stages." },
+      { "name": "offset-red", "value": "8px 8px 0px var(--accent-red)", "purpose": "Signature marquee hero highlighting." }
+    ],
+    "motion": [
+      { "name": "ease-out-expo", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Snappy tactical transitions." },
+      { "name": "ease-spring", "value": "cubic-bezier(0.22, 1, 0.36, 1)", "purpose": "Card swipe gesture spring return." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Action Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Cinema Red solid action button with 4px physical offset shadow.",
+      "html": "<button class=\"ds-btn-primary\">GÜNLÜĞE EKLE</button>",
+      "css": ".ds-btn-primary { background: #0A0A0A; color: #DC2626; padding: 10px 20px; font-family: var(--font-geist-sans), sans-serif; font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; border: 2px solid #0A0A0A; border-radius: 0; box-shadow: 4px 4px 0px #0A0A0A; cursor: pointer; transition: all 0.15s ease; } .ds-btn-primary:hover { background: #DC2626; color: #FFFFFF; transform: translate(-2px, -2px); box-shadow: 6px 6px 0px #0A0A0A; } .ds-btn-primary:active { transform: translate(1px, 1px); box-shadow: 2px 2px 0px #0A0A0A; }"
+    },
+    {
+      "name": "Accent Marquee Button",
+      "kind": "button",
+      "refersTo": "button-accent",
+      "description": "Velvet red button for shuffle, matching, and rating actions.",
+      "html": "<button class=\"ds-btn-accent\">🎬 İZDAŞ BUL</button>",
+      "css": ".ds-btn-accent { background: #DC2626; color: #FFFFFF; padding: 10px 18px; font-family: var(--font-geist-sans), sans-serif; font-size: 12px; font-weight: 900; text-transform: uppercase; border: 2px solid #0A0A0A; border-radius: 0; box-shadow: 4px 4px 0px #0A0A0A; cursor: pointer; transition: all 0.15s ease; } .ds-btn-accent:hover { background: #B91C1C; transform: translate(-2px, -2px); box-shadow: 6px 6px 0px #0A0A0A; }"
+    },
+    {
+      "name": "Genre Stamp Badge",
+      "kind": "chip",
+      "refersTo": "stamp-badge",
+      "description": "Solid inked fanzine stamp displaying the movie's primary genre.",
+      "html": "<span class=\"ds-stamp-badge\">BİLİM KURGU</span>",
+      "css": ".ds-stamp-badge { display: inline-block; background: #0A0A0A; color: #EF4444; padding: 2px 8px; font-family: var(--font-geist-mono), monospace; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; border: 1px solid #0A0A0A; box-shadow: 1px 1px 0px #000000; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Gece Gösterimi — 35mm Analog Fanzin & Velvet Cinema Red",
+    "overview": "izledin.com (EST. '26) is built around the raw, tactile aesthetic of independent cinema fanzines, 35mm film negatives, dark cinema marquees, and typewriter review logs. The interface purposefully rejects generic AI web tropes in favor of physical offset drop-shadows, stamped verification tags, and authentic typewriter annotations.",
+    "keyCharacteristics": [
+      "Tactile Materiality: Physical offset ink drop-shadows and 35mm film perforations.",
+      "Dual Typographic Soul: Bold Geist Sans headlines paired with archival Geist Mono data details.",
+      "High-Contrast Legibility: High density layout with clear contrast between pure obsidian (#0A0A0A) and clean white canvas (#FAFAFA/#FFFFFF)."
+    ],
+    "rules": [
+      { "name": "The Hard-Ink Rule", "body": "All borders, dividers, and offset drop shadows must use solid Ink (#0A0A0A in light / #404040 in dark). Soft blurred gradients or grey semi-transparent borders are prohibited.", "section": "colors" },
+      { "name": "The Editorial Title Rule", "body": "All major headings, button labels, and genre tags are strictly uppercase. Monospaced type is reserved for data fields, code stamps, and typewriter diary logs.", "section": "typography" },
+      { "name": "The Hard-Edge Elevation Rule", "body": "No Gaussian blurs or shadow-lg soft drop-shadows. Every surface is physically grounded by a solid pitch-black offset shadow.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do use solid hard offset shadows (4px 4px 0px var(--hard-shadow)) for all cards and buttons.",
+      "Do display the actual primary genre on media card stamp badges (e.g. KORKU, BİLİM KURGU, SANAT & FESTİVAL).",
+      "Do keep headings in bold Geist Sans and timestamps/badges in Geist Mono.",
+      "Do maintain responsive grids with 12 items default and '+12 Daha Fazla Göster' expansion."
+    ],
+    "donts": [
+      "Don't use purple or violet accents on dark backgrounds (Forbidden AI Trope).",
+      "Don't use soft blurred glow filters, glassmorphism, or gradient text.",
+      "Don't use round pill buttons or floating bubbly shapes.",
+      "Don't add font-mono to root containers which distorts global header navigation."
+    ]
+  }
+}

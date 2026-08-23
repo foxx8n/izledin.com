@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none">
+  <!-- Neobrutalist Hard Red Shadow -->
+  <rect x="56" y="118" width="416" height="296" rx="10" fill="#DC2626" />
+  
+  <!-- 35mm Celluloid Frame -->
+  <rect x="40" y="102" width="416" height="296" rx="10" fill="#0A0A0A" stroke="#0A0A0A" stroke-width="4" />
+  
+  <!-- Sprocket Perforation Holes (Left) -->
+  <rect x="62" y="126" width="44" height="38" rx="4" fill="#FFFFFF" />
+  <rect x="62" y="184" width="44" height="38" rx="4" fill="#FFFFFF" />
+  <rect x="62" y="278" width="44" height="38" rx="4" fill="#FFFFFF" />
+  <rect x="62" y="336" width="44" height="38" rx="4" fill="#FFFFFF" />
+  
+  <!-- Sprocket Perforation Holes (Right) -->
+  <rect x="390" y="126" width="44" height="38" rx="4" fill="#FFFFFF" />
+  <rect x="390" y="184" width="44" height="38" rx="4" fill="#FFFFFF" />
+  <rect x="390" y="278" width="44" height="38" rx="4" fill="#FFFFFF" />
+  <rect x="390" y="336" width="44" height="38" rx="4" fill="#FFFFFF" />
+  
+  <!-- Projector Eye -->
+  <path d="M130 250C176 182 230 148 256 148S336 182 382 250c-46 68-100 102-126 102S176 318 130 250Z" fill="#FAFAFA" />
+  
+  <!-- Iris (Outer Obsidian + Inner Cinema Red) -->
+  <circle cx="256" cy="250" r="68" fill="#0A0A0A" />
+  <circle cx="256" cy="250" r="54" fill="#DC2626" />
+  
+  <!-- Sharp Play Triangle -->
+  <polygon points="242,218 288,250 242,282" fill="#FFFFFF" />
+  
+  <!-- Film-Cut Notches -->
+  <rect x="40" y="232" width="16" height="36" fill="#FFFFFF" />
+  <rect x="440" y="232" width="16" height="36" fill="#FFFFFF" />
+</svg>

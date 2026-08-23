@@ -1,0 +1,227 @@
+@import "tailwindcss";
+
+/* ========================================================================= */
+/* GECE GÖSTERİMİ — PURE OBSIDIAN & CINEMA RED                              */
+/* Single permanent theme: the 35mm night projection. No light mode.        */
+/* ========================================================================= */
+:root {
+  --bg-canvas: #0a0a0a;
+  --bg-surface: #171717;
+  --bg-surface-secondary: #262626;
+  --bg-dark-panel: #0a0a0a;
+
+  --ink-primary: #fafafa;
+  --ink-secondary: #d4d4d4;
+  --ink-muted: #737373;
+
+  --accent-red: #ef4444;
+  --accent-red-dark: #dc2626;
+  --accent-red-bg: rgba(239, 68, 68, 0.16);
+  --accent-gold: #fbbf24;
+
+  --border-ink: #404040;
+  --border-subtle: #262626;
+  --hard-shadow: #000000;
+
+  /* ── Layout Tokens ── */
+  --sidebar-width: 240px;
+  --bottom-bar-height: 64px;
+  --touch-target: 44px;
+
+  /* ── Shadow Scale ── */
+  --shadow-xs: 1px 1px 0 var(--hard-shadow);
+  --shadow-sm: 2px 2px 0 var(--hard-shadow);
+  --shadow-md: 4px 4px 0 var(--hard-shadow);
+  --shadow-lg: 6px 6px 0 var(--hard-shadow);
+  --shadow-xl: 8px 8px 0 var(--hard-shadow);
+  --shadow-red: 8px 8px 0 #ef4444;
+
+  /* ── Motion ── */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-slow: 300ms;
+}
+
+body {
+  background-color: var(--bg-canvas);
+  color: var(--ink-primary);
+  font-family:
+    var(--font-geist-sans),
+    system-ui,
+    -apple-system,
+    sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  letter-spacing: -0.015em;
+}
+
+/* ── Desktop Sidebar Layout Offset ── */
+/* Applied to all page <main> elements on desktop to sit beside the fixed sidebar */
+@media (min-width: 1024px) {
+  .with-sidebar {
+    margin-left: var(--sidebar-width);
+  }
+}
+
+/* 🎬 iOS safe area for bottom nav 🎬 */
+.pb-safe {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+
+.pb-mobile-nav {
+  padding-bottom: calc(72px + max(0.5rem, env(safe-area-inset-bottom)));
+}
+
+@media (min-width: 1024px) {
+  .pb-mobile-nav {
+    padding-bottom: 0;
+  }
+}
+
+/* ── Swipe Card: touch-action prevents scroll interference ── */
+.swipe-card {
+  touch-action: pan-y;
+  user-select: none;
+  will-change: transform;
+  transition:
+    transform var(--duration-base) var(--ease-spring),
+    box-shadow var(--duration-base) var(--ease-spring);
+}
+
+.swipe-card.is-dragging {
+  transition: none;
+  cursor: grabbing;
+}
+
+/* ── Swipe overlays ── */
+.swipe-overlay-pass,
+.swipe-overlay-like {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 16px;
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease-out-expo);
+  z-index: 10;
+}
+.swipe-overlay-pass {
+  background: rgba(220, 38, 38, 0.12);
+  justify-content: flex-start;
+}
+.swipe-overlay-like {
+  background: rgba(245, 158, 11, 0.12);
+}
+.swipe-overlay-pass.visible,
+.swipe-overlay-like.visible {
+  opacity: 1;
+}
+
+/* Gallery Canvas */
+.fanzine-canvas {
+  background-color: #ffffff;
+}
+
+/* Printed Paper Card with crisp physical border */
+.fanzine-card {
+  background-color: var(--bg-surface);
+  border: 2px solid var(--border-ink);
+  box-shadow: 4px 4px 0px var(--hard-shadow);
+  transition: all 0.15s ease-in-out;
+}
+
+.fanzine-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px var(--hard-shadow);
+}
+
+/* 35mm Film Strip */
+.film-strip {
+  background-color: #000000;
+  border-top: 4px solid #404040;
+  border-bottom: 4px solid #404040;
+  position: relative;
+}
+
+.film-perforations {
+  border-left: 2px dashed #404040;
+  border-right: 2px dashed #404040;
+}
+
+/* Stamped Ink Badge */
+.stamp-badge {
+  border: 2px dashed var(--accent-red);
+  color: var(--ink-primary);
+  font-family: var(--font-geist-mono), monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.stamp-badge-solid {
+  background-color: #171717;
+  color: #ef4444;
+  font-family: var(--font-geist-mono), monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  box-shadow: 2px 2px 0px #0a0a0a;
+  border: 2px solid #404040;
+}
+
+/* Red Highlighter Circle Effect */
+.marker-highlight {
+  position: relative;
+  display: inline-block;
+}
+
+.marker-highlight::before {
+  content: "";
+  position: absolute;
+  inset: -2px -6px;
+  background-color: #ffffff;
+  border-radius: 9999px;
+  opacity: 0.25;
+  transform: rotate(-1deg);
+  z-index: -1;
+}
+
+/* Typewriter / Courier Font utility */
+.typewriter-font {
+  font-family: var(--font-geist-mono), "Courier New", Courier, monospace;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+::-webkit-scrollbar-thumb {
+  background: #404040;
+  border: 1px solid #0a0a0a;
+}
+
+/* ========================================================================= */
+/* FORM CONTROLS — forced obsidian surfaces                                  */
+/* ========================================================================= */
+input,
+textarea,
+select {
+  background-color: #262626 !important;
+  color: #fafafa !important;
+  border-color: #404040 !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #737373 !important;
+}
+
+[class*="shadow-["] {
+  --tw-shadow-color: #000000;
+}
