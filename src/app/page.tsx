@@ -518,6 +518,8 @@ export default function HomePage() {
                 <img
                   src={activeFeatured.posterPath || activeFeatured.backdropPath}
                   alt={activeFeatured.title}
+                  width={400}
+                  height={600}
                   fetchPriority="high"
                   onError={(e) => {
                     const target = e.currentTarget;
@@ -530,6 +532,7 @@ export default function HomePage() {
                   }}
                   className="w-full h-full object-cover object-center filter contrast-105 brightness-95 group-hover:scale-105 transition-transform duration-500"
                   loading="eager"
+                  decoding="sync"
                 />
 
                 {/* Subtle cinematic gradient vignette for depth */}

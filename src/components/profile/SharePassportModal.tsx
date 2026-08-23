@@ -89,8 +89,11 @@ export function SharePassportModal({
             <img
               src={ogImageUrl}
               alt={`${profile.fullName} Sinema Pasaportu`}
+              width={600}
+              height={315}
               className="w-full h-full object-cover"
               loading="lazy"
+              decoding="async"
             />
           </div>
         </div>

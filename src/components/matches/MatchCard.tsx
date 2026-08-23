@@ -43,6 +43,10 @@ export function MatchCard({ match, onChatClick, onLike, onPass, onMovieClick }: 
               <img 
                 src={imgError ? `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user.fullName || 'User')}&backgroundColor=0A0A0A&textColor=DC2626` : user.avatarUrl} 
                 alt={user.fullName} 
+                width={48}
+                height={48}
+                loading="lazy"
+                decoding="async"
                 onError={() => setImgError(true)}
                 className="w-full h-full object-cover" 
               />
@@ -166,6 +170,10 @@ export function MatchCard({ match, onChatClick, onLike, onPass, onMovieClick }: 
                   <img 
                     src={fav.posterUrl} 
                     alt={fav.title} 
+                    width={48}
+                    height={72}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover group-hover/poster:scale-105 transition-transform duration-200" 
                   />
                   {/* Always visible subtle bottom badge on touch, full overlay on hover */}

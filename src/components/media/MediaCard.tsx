@@ -79,6 +79,8 @@ export function MediaCard({
           <img
             src={item.posterPath}
             alt={item.title}
+            width={300}
+            height={450}
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105 filter contrast-105 brightness-95 group-hover:brightness-100"
             loading="lazy"
             decoding="async"

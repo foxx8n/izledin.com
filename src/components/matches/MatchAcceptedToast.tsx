@@ -57,6 +57,10 @@ export function MatchAcceptedToast({ match, isOpen, onClose, onOpenChat }: Match
             <img 
               src={match.user?.avatarUrl} 
               alt={partnerName} 
+              width={44}
+              height={44}
+              loading="lazy"
+              decoding="async"
               className="w-full h-full object-cover" 
             />
           </div>

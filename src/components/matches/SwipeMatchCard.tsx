@@ -128,7 +128,7 @@ export function SwipeMatchCard({ match, nextMatch, onChatClick, onLike, onPass, 
           <div className=" bg-[#171717] border-2 sm:border-4  border-[#404040] p-4 opacity-50 font-mono  shadow-[3px_3px_0px_#000000]">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 border-2  border-[#404040] bg-[#0A0A0A] overflow-hidden shrink-0">
-                <img src={nextAvatarSrc} alt={nextMatch.user.fullName} onError={() => setNextImgError(true)} className="w-full h-full object-cover" />
+                <img src={nextAvatarSrc} alt={nextMatch.user.fullName} width={40} height={40} loading="lazy" decoding="async" onError={() => setNextImgError(true)} className="w-full h-full object-cover" />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-black uppercase  text-[#FAFAFA] truncate">{nextMatch.user.fullName}</p>
@@ -214,7 +214,7 @@ export function SwipeMatchCard({ match, nextMatch, onChatClick, onLike, onPass, 
           <div className="flex items-start justify-between gap-3 pb-2 sm:pb-3 border-b-2  border-[#404040]">
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-11 h-11 sm:w-13 sm:h-13 overflow-hidden border-2  border-[#404040] bg-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A] flex-shrink-0">
-                <img src={avatarSrc} alt={user.fullName} onError={() => setImgError(true)} className="w-full h-full object-cover" />
+                <img src={avatarSrc} alt={user.fullName} width={52} height={52} loading="lazy" decoding="async" onError={() => setImgError(true)} className="w-full h-full object-cover" />
               </div>
               <div className="min-w-0 flex-1">
                 <h3 className="text-xs sm:text-sm font-black uppercase  text-[#FAFAFA] truncate tracking-tight font-sans">
@@ -350,7 +350,7 @@ export function SwipeMatchCard({ match, nextMatch, onChatClick, onLike, onPass, 
                     className="group/poster relative aspect-[2/3] h-[64px] sm:h-[72px] mx-auto overflow-hidden bg-[#171717] border border-[#404040] focus:outline-none focus:ring-2 focus:ring-[#DC2626] cursor-pointer" 
                     title={`${fav.title} — İncelemek için tıkla`}
                   >
-                    <img src={fav.posterUrl} alt={fav.title} className="w-full h-full object-cover group-hover/poster:scale-105 transition-transform duration-200" />
+                    <img src={fav.posterUrl} alt={fav.title} width={48} height={72} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover/poster:scale-105 transition-transform duration-200" />
                     {/* Always visible subtle bottom badge on touch, full overlay on hover */}
                     <div className="absolute inset-x-0 bottom-0 bg-black/85 px-1 py-0.5 text-center pointer-events-none group-hover/poster:opacity-0 transition-opacity">
                       <span className="text-[10px] font-bold text-white uppercase leading-none block truncate tracking-tight">{fav.title}</span>

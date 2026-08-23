@@ -7,12 +7,16 @@ const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
   display: "swap",
+  preload: true,
+  fallback: ["system-ui", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
   display: "swap",
+  preload: true,
+  fallback: ["monospace", "Courier New"],
 });
 
 export const metadata: Metadata = {
@@ -122,11 +126,11 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/icon.svg" type="image/svg+xml" />
         <link rel="apple-touch-icon" href="/icon.svg" />
-        <link rel="preconnect" href="https://image.tmdb.org" />
-        <link rel="preconnect" href="https://m.media-amazon.com" />
+        <link rel="preconnect" href="https://m.media-amazon.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://lh3.googleusercontent.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://hipavaiaumdkpqqwvlzp.supabase.co" />
-        <link rel="dns-prefetch" href="https://image.tmdb.org" />
         <link rel="dns-prefetch" href="https://m.media-amazon.com" />
+        <link rel="dns-prefetch" href="https://lh3.googleusercontent.com" />
         <link rel="dns-prefetch" href="https://hipavaiaumdkpqqwvlzp.supabase.co" />
       </head>
       <body className="min-h-screen bg-[#0A0A0A] text-[#FAFAFA] pb-mobile-nav selection:bg-[#DC2626] selection:text-white overflow-x-hidden">

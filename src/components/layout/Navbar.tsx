@@ -468,6 +468,10 @@ export function Navbar({
                     <img
                       src={avatarUrl}
                       alt={displayName}
+                      width={28}
+                      height={28}
+                      loading="lazy"
+                      decoding="async"
                       className="w-7 h-7 object-cover border border-[#0A0A0A] bg-black shrink-0"
                     />
                     <span className="hidden xl:inline text-xs font-black  text-[#FAFAFA] uppercase font-mono max-w-[80px] truncate">
@@ -848,6 +852,10 @@ export function Navbar({
                   <img
                     src={avatarUrl}
                     alt={displayName}
+                    width={32}
+                    height={32}
+                    loading="lazy"
+                    decoding="async"
                     className="w-8 h-8 object-cover border border-[#0A0A0A] bg-black"
                   />
                   {unreadCount > 0 && (
