@@ -205,10 +205,15 @@ export async function getUserWatchLogs(userId: string, searchQuery: string = '')
   return data.map(mapDbLogToWatchLog);
 }
 
+export interface CreateWatchLogResult {
+  data: WatchLog | null;
+  error: string | null;
+}
+
 export async function createWatchLog(logData: {
   userId: string;
   mediaId: string;
-  mediaType: 'movie' | 'tv' | 'anime';
+  mediaType?: string;
   title: string;
   year?: number;
   posterUrl?: string;
@@ -218,33 +223,70 @@ export async function createWatchLog(logData: {
   review?: string;
   isFavorite?: boolean;
   isRewatch?: boolean;
-  status?: 'watched' | 'watching' | 'plan_to_watch' | 'dropped';
+  status?: string;
   watchedDate?: string;
-}): Promise<WatchLog | null> {
+}): Promise<CreateWatchLogResult> {
+  if (!logData.userId || !UUID_REGEX.test(logData.userId)) {
+    return { data: null, error: 'Geçersiz kullanıcı oturumu. Lütfen tekrar giriş yapın.' };
+  }
+  if (!logData.mediaId || !logData.title?.trim()) {
+    return { data: null, error: 'Film bilgileri eksik veya geçersiz.' };
+  }
+
   const supabase = createClient();
 
-  // Anti-Spam Rate Limit Guard (Max 6 logs/min per user)
+  // 1. Preflight Auth & Token Verification
+  try {
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !sessionData?.session?.user) {
+      const { error: refreshError } = await supabase.auth.refreshSession();
+      if (refreshError) {
+        return { data: null, error: 'Oturumunuzun süresi dolmuş. Lütfen tekrar giriş yapın.' };
+      }
+    }
+  } catch (_) {
+    // Non-blocking preflight fallback
+  }
+
+  // 2. Anti-Spam Rate Limit Guard (Max 6 logs/min per user)
   const rateLimit = await checkRateLimit(`diary:${logData.userId}`, RATE_LIMIT_PROFILES.DIARY_LOG);
   if (!rateLimit.success) {
-    console.warn(`Rate limit exceeded for user ${logData.userId}`);
-    return null;
+    return { data: null, error: 'Çok sık işlem yaptınız. Lütfen 1 dakika sonra tekrar deneyin.' };
   }
+
+  // 3. Normalize & Sanitize payload
+  const rawType = logData.mediaType === 'series' ? 'tv' : (logData.mediaType || 'movie');
+  const validMediaType = ['movie', 'tv', 'anime', 'series'].includes(rawType) ? rawType : 'movie';
+  const rawStatus = logData.status || 'watched';
+  const validStatus = ['watched', 'watching', 'plan_to_watch', 'dropped', 'watchlist'].includes(rawStatus)
+    ? rawStatus
+    : 'watched';
+
+  const clampedRating =
+    typeof logData.rating === 'number' && !Number.isNaN(logData.rating)
+      ? Math.max(0, Math.min(10, Number(logData.rating.toFixed(1))))
+      : null;
+
+  const validWatchedDate =
+    logData.watchedDate && /^\d{4}-\d{2}-\d{2}$/.test(logData.watchedDate)
+      ? logData.watchedDate
+      : localTodayISO();
 
   const insertPayload = {
     user_id: logData.userId,
     media_id: logData.mediaId,
-    media_type: logData.mediaType,
-    title: logData.title,
-    year: logData.year ?? null,
-    poster_url: logData.posterUrl,
-    backdrop_url: logData.backdropUrl,
-    genres: logData.genres || [],
-    rating: logData.rating,
-    review: logData.review,
+    media_type: validMediaType,
+    title: logData.title.trim(),
+    year: typeof logData.year === 'number' && !Number.isNaN(logData.year) ? logData.year : null,
+    poster_url: logData.posterUrl || null,
+    backdrop_url: logData.backdropUrl || logData.posterUrl || null,
+    genres: Array.isArray(logData.genres) ? logData.genres : [],
+    rating: clampedRating,
+    review: logData.review?.trim() || null,
     is_favorite: Boolean(logData.isFavorite),
     is_rewatch: Boolean(logData.isRewatch),
-    status: logData.status || 'watched',
-    watched_date: logData.watchedDate || localTodayISO(),
+    status: validStatus,
+    watched_date: validWatchedDate,
   };
 
   const { data, error } = await supabase
@@ -256,16 +298,28 @@ export async function createWatchLog(logData: {
     `)
     .single();
 
-  if (error || !data) {
+  if (error) {
     console.error('Error creating watch log:', error);
-    return null;
+    if (error.code === '42501' || error.message?.includes('row-level security')) {
+      return { data: null, error: 'Oturum yetkilendirmesi başarısız oldu. Lütfen tekrar giriş yapın.' };
+    }
+    if (error.code === '23503' || error.message?.includes('foreign key')) {
+      return { data: null, error: 'Kullanıcı profil kaydı bulunamadı. Lütfen profilinizi güncelleyin.' };
+    }
+    if (error.code === '23514' || error.message?.includes('check constraint')) {
+      return { data: null, error: 'Girilen bilgiler geçersiz değer içeriyor.' };
+    }
+    return { data: null, error: error.message || 'Kayıt oluşturulurken bir hata oluştu.' };
+  }
+
+  if (!data) {
+    return { data: null, error: 'Kayıt oluşturulamadı. Lütfen tekrar deneyin.' };
   }
 
   // Profile counters (total_watched_count / total_watch_hours) are maintained
   // by the trg_bump_profile_watch_stats trigger — atomic and decremented on
   // delete. No manual client-side bookkeeping.
-
-  return mapDbLogToWatchLog(data);
+  return { data: mapDbLogToWatchLog(data), error: null };
 }
 
 export async function deleteWatchLog(logId: string): Promise<boolean> {

@@ -140,7 +140,7 @@ export function QuickLogModal({
     setErrorMsg(null);
 
     try {
-      const newLog = await createWatchLog({
+      const result = await createWatchLog({
         userId: user.id,
         mediaId: item.id,
         mediaType: item.type,
@@ -157,22 +157,23 @@ export function QuickLogModal({
         watchedDate,
       });
 
-      if (newLog) {
+      if (result.data) {
         if (typeof window !== "undefined") {
           sessionStorage.removeItem(`izledin_log_draft_${item.id}`);
         }
         setSuccessSaved(true);
-        onSaveLog?.(newLog);
+        onSaveLog?.(result.data);
         setTimeout(() => {
           onClose();
         }, 600);
       } else {
         setErrorMsg(
-          "Kayıt oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.",
+          result.error ||
+            "Kayıt oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.",
         );
       }
     } catch (err: any) {
-      setErrorMsg(err.message || "Kayıt sırasında hata oluştu.");
+      setErrorMsg(err.message || "Kayıt sırasında bir hata oluştu.");
     } finally {
       setSaving(false);
     }
