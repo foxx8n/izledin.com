@@ -66,6 +66,10 @@ const TasteProfilerModal = dynamic(
   () => import("@/components/onboarding/TasteProfilerModal").then((mod) => mod.TasteProfilerModal),
   { ssr: false }
 );
+const CinemaDnaModal = dynamic(
+  () => import("@/components/profile/CinemaDnaModal").then((mod) => mod.CinemaDnaModal),
+  { ssr: false }
+);
 const PremiumModal = dynamic(
   () => import("@/components/premium/PremiumModal").then((mod) => mod.PremiumModal),
   { ssr: false }
@@ -1289,17 +1293,24 @@ export default function HomePage() {
         }}
       />
 
-      <TasteProfilerModal
-        isOpen={isTasteProfilerOpen}
-        onClose={() => setIsTasteProfilerOpen(false)}
-        onComplete={() => {
-          setIsTasteProfilerOpen(false);
-        }}
-        onOpenAuth={() => {
-          setAuthMode("login");
-          setIsAuthOpen(true);
-        }}
-      />
+      {user ? (
+        <CinemaDnaModal
+          isOpen={isTasteProfilerOpen}
+          onClose={() => setIsTasteProfilerOpen(false)}
+        />
+      ) : (
+        <TasteProfilerModal
+          isOpen={isTasteProfilerOpen}
+          onClose={() => setIsTasteProfilerOpen(false)}
+          onComplete={() => {
+            setIsTasteProfilerOpen(false);
+          }}
+          onOpenAuth={() => {
+            setAuthMode("login");
+            setIsAuthOpen(true);
+          }}
+        />
+      )}
 
       <PremiumModal
         isOpen={isPremiumOpen}

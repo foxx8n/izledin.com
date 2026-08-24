@@ -33,6 +33,7 @@ import { SwipeMatchCard } from '@/components/matches/SwipeMatchCard';
 import { ChatModal } from '@/components/matches/ChatModal';
 import { InboxModal } from '@/components/inbox/InboxModal';
 import { TasteProfilerModal } from '@/components/onboarding/TasteProfilerModal';
+import { CinemaDnaModal } from '@/components/profile/CinemaDnaModal';
 import { PremiumModal } from '@/components/premium/PremiumModal';
 import { SearchModal } from '@/components/media/SearchModal';
 import { QuickLogModal } from '@/components/media/QuickLogModal';
@@ -1053,11 +1054,18 @@ export default function MatchesPage() {
         }}
       />
 
-      <TasteProfilerModal
-        isOpen={isTasteProfilerOpen}
-        onClose={() => setIsTasteProfilerOpen(false)}
-        onOpenAuth={() => setIsAuthOpen(true)}
-      />
+      {user ? (
+        <CinemaDnaModal
+          isOpen={isTasteProfilerOpen}
+          onClose={() => setIsTasteProfilerOpen(false)}
+        />
+      ) : (
+        <TasteProfilerModal
+          isOpen={isTasteProfilerOpen}
+          onClose={() => setIsTasteProfilerOpen(false)}
+          onOpenAuth={() => setIsAuthOpen(true)}
+        />
+      )}
 
       <PremiumModal
         isOpen={isPremiumOpen}

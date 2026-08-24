@@ -37,6 +37,7 @@ import { QuickLogModal } from "@/components/media/QuickLogModal";
 import { SearchModal } from "@/components/media/SearchModal";
 import { MediaDetailModal } from "@/components/media/MediaDetailModal";
 import { TasteProfilerModal } from "@/components/onboarding/TasteProfilerModal";
+import { CinemaDnaModal } from "@/components/profile/CinemaDnaModal";
 import { PremiumModal } from "@/components/premium/PremiumModal";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { InboxModal } from "@/components/inbox/InboxModal";
@@ -790,11 +791,18 @@ export default function DiaryPage() {
         onSelectMedia={handleSelectMediaForLog}
       />
 
-      <TasteProfilerModal
-        isOpen={isTasteProfilerOpen}
-        onClose={() => setIsTasteProfilerOpen(false)}
-        onOpenAuth={() => setIsAuthOpen(true)}
-      />
+      {user ? (
+        <CinemaDnaModal
+          isOpen={isTasteProfilerOpen}
+          onClose={() => setIsTasteProfilerOpen(false)}
+        />
+      ) : (
+        <TasteProfilerModal
+          isOpen={isTasteProfilerOpen}
+          onClose={() => setIsTasteProfilerOpen(false)}
+          onOpenAuth={() => setIsAuthOpen(true)}
+        />
+      )}
 
       <PremiumModal
         isOpen={isPremiumOpen}

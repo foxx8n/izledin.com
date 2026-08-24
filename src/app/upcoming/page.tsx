@@ -36,6 +36,7 @@ import {
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { TasteProfilerModal } from '@/components/onboarding/TasteProfilerModal';
+import { CinemaDnaModal } from '@/components/profile/CinemaDnaModal';
 import { PremiumModal } from '@/components/premium/PremiumModal';
 import { SearchModal } from '@/components/media/SearchModal';
 import { QuickLogModal } from '@/components/media/QuickLogModal';
@@ -43,6 +44,7 @@ import { MediaDetailModal } from '@/components/media/MediaDetailModal';
 import { AuthModal } from '@/components/auth/AuthModal';
 import { InboxModal } from '@/components/inbox/InboxModal';
 import { ChatModal } from '@/components/matches/ChatModal';
+import { useAuth } from '@/context/AuthContext';
 
 import { getUpcomingReleases, formatTurkishReleaseDate, trDateToISO, STATIC_UPCOMING_CATALOG } from '@/lib/omdb';
 import { MediaItem, MovieMateMatch } from '@/types';
@@ -207,6 +209,7 @@ function downloadICS(item: MediaItem) {
 }
 
 export default function UpcomingPage() {
+  const { user } = useAuth();
   const [upcomingItems, setUpcomingItems] = useState<MediaItem[]>(STATIC_UPCOMING_CATALOG);
   const [reminders, setReminders] = useState<string[]>([]);
   const [activeFilter, setActiveFilter] = useState<'all' | 'movies' | 'anime' | 'reminders'>('all');
@@ -754,10 +757,17 @@ export default function UpcomingPage() {
       <Footer />
 
       {/* Modals */}
-      <TasteProfilerModal
-        isOpen={isTasteProfilerOpen}
-        onClose={() => setIsTasteProfilerOpen(false)}
-      />
+      {user ? (
+        <CinemaDnaModal
+          isOpen={isTasteProfilerOpen}
+          onClose={() => setIsTasteProfilerOpen(false)}
+        />
+      ) : (
+        <TasteProfilerModal
+          isOpen={isTasteProfilerOpen}
+          onClose={() => setIsTasteProfilerOpen(false)}
+        />
+      )}
 
       <MediaDetailModal
         item={selectedMedia}

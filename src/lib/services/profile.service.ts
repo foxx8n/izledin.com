@@ -17,6 +17,7 @@ export const PROFILE_SELECT_COLUMNS = [
   'avatar_url',
   'bio',
   'location',
+  'birth_date',
   'favorite_genres',
   'top_4_favorites',
   'streaming_services',
@@ -31,6 +32,7 @@ export const PROFILE_SELECT_COLUMNS = [
   'intent_last_changed_at',
   'intent_integrity_score',
   'intent_strikes_count',
+  'intent_agreed_at',
 ].join(',');
 
 export function calculateAge(birthDateStr?: string): number | undefined {
