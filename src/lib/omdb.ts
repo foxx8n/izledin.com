@@ -473,7 +473,19 @@ export async function searchCatalog(query: string, limit: number = 15): Promise<
     }
   }
 
-  // 1. Instant in-memory search from master catalog with relevance scoring & Turkish normalization
+  // 1. Primary: Search Supabase media_catalog (Single Source of Truth with weighted ranking)
+  let dbMatches: MediaItem[] = [];
+  try {
+    dbMatches = await searchDbCatalog(query, limit);
+  } catch (err) {
+    console.warn('DB search error:', err);
+  }
+
+  if (dbMatches.length > 0) {
+    return dbMatches.slice(0, limit);
+  }
+
+  // 2. Fallback to in-memory static catalog if DB is unreachable or returns 0
   const scoredMatches: { item: MediaItem; score: number }[] = [];
   const compactQuery = normalized.replace(/\s+/g, '');
 
@@ -512,7 +524,6 @@ export async function searchCatalog(query: string, limit: number = 15): Promise<
     }
 
     if (score > 0) {
-      // Add slight boost based on rating
       score += Math.min(10, item.voteAverage || 0);
       scoredMatches.push({ item, score });
     }
@@ -521,28 +532,8 @@ export async function searchCatalog(query: string, limit: number = 15): Promise<
   scoredMatches.sort((a, b) => b.score - a.score);
   const localMatches = scoredMatches.slice(0, limit).map((m) => m.item);
 
-  // 2. Query Supabase media_catalog database with full-text search & trigram index
-  let dbMatches: MediaItem[] = [];
-  try {
-    dbMatches = await searchDbCatalog(query, limit);
-  } catch (err) {
-    console.warn('DB search error:', err);
-  }
-
-  // Merge local matches and DB matches without duplicate IDs
-  const seenIds = new Set<string>();
-  const combinedLocal: MediaItem[] = [];
-
-  for (const item of [...dbMatches, ...localMatches]) {
-    if (!seenIds.has(item.id)) {
-      seenIds.add(item.id);
-      combinedLocal.push(item);
-    }
-  }
-
-  // If local or database returns solid matches, return them with ZERO OMDb API calls!
-  if (combinedLocal.length >= 1) {
-    return combinedLocal.slice(0, limit);
+  if (localMatches.length > 0) {
+    return localMatches.slice(0, limit);
   }
 
   // 3. Server-side fallback: query OMDB API once, auto-cache to Supabase for all future users
@@ -557,7 +548,7 @@ export async function searchCatalog(query: string, limit: number = 15): Promise<
       const data = await res.json();
 
       if (data.Response === 'False' || !data.Search) {
-        return combinedLocal.slice(0, limit);
+        return [];
       }
 
       // Fetch full details for top results to obtain genre, rating, and director
@@ -573,18 +564,20 @@ export async function searchCatalog(query: string, limit: number = 15): Promise<
 
       const fetched = await Promise.all(detailPromises);
 
-      // Merge results without duplicate IDs
+      // Deduplicate
+      const seenIds = new Set<string>();
+      const combined: MediaItem[] = [];
       for (const item of fetched) {
         if (!seenIds.has(item.id)) {
           seenIds.add(item.id);
-          combinedLocal.push(item);
+          combined.push(item);
         }
       }
 
-      return combinedLocal.slice(0, limit);
+      return combined.slice(0, limit);
     } catch (err) {
       console.warn('OMDB search error:', err);
-      return combinedLocal.slice(0, limit);
+      return [];
     }
   });
 }
