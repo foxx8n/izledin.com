@@ -46,14 +46,14 @@ export const OMDB_GENRE_TRANSLATION: Record<string, string> = {
 };
 
 const MASTERPIECE_BACKDROPS: Record<string, string> = {
-  'tt15239678': 'https://image.tmdb.org/t/p/original/xOMo8BRK7PfcJv9JCnx7s520DRq.jpg', // Dune 2
-  'tt15398776': 'https://image.tmdb.org/t/p/original/fm6KqXpk3M2HVveHwCrBSSBaO0V.jpg', // Oppenheimer
-  'tt0816692': 'https://image.tmdb.org/t/p/original/xJHokMbljvjADYdit5fK5VQsXEG.jpg', // Interstellar
-  'tt1856010': 'https://image.tmdb.org/t/p/original/sAtoMqDVhNDQBc3QJL3RF6hlxGq.jpg', // Blade Runner 2049
-  'tt0468569': 'https://image.tmdb.org/t/p/original/dqK9Hag1054tghRQSqLSfrkvQnA.jpg', // The Dark Knight
-  'tt6751668': 'https://image.tmdb.org/t/p/original/hiKmpZMGZsrkA3cdEvyeqpAnMoC.jpg', // Parasite
-  'tt1375666': 'https://image.tmdb.org/t/p/original/8ZTVqvKDQ8emSGUEMjsS4yHAwrp.jpg', // Inception (Iconic folding Paris / Leonardo DiCaprio still)
-  'tt0110912': 'https://image.tmdb.org/t/p/original/suaEOtk1N1sgg2MTM7oZd2cfVp3.jpg', // Pulp Fiction
+  'tt15239678': 'https://m.media-amazon.com/images/M/MV5BN2QyZGUgkLw1Y2YtNmUzOC00N2FkLWI2YTQtZGIxMjYxNmFmNWYxXkEyXkFqcGdeQXVyMTkxNjUyNQ@@._V1_SX1200.jpg', // Dune 2
+  'tt15398776': 'https://m.media-amazon.com/images/M/MV5BMDBmYTZjNjUtN2M1MS00MTQ2LTk2ODgtNzc2M2QyZGE5NTVjXkEyXkFqcGdeQXVyNzAwMjU2MTY@._V1_SX1200.jpg', // Oppenheimer
+  'tt0816692': 'https://m.media-amazon.com/images/M/MV5BZjdkOTU3MDktN2IxOS00OGEyLWFmMjktY2FiMmZkNWIyODZiXkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_SX1200.jpg', // Interstellar
+  'tt1856010': 'https://m.media-amazon.com/images/M/MV5BNzA1Njg4NzYxOV5BMl5BanBnXkFtZTgwODk5NjU3MzI@._V1_SX1200.jpg', // Blade Runner 2049
+  'tt0468569': 'https://m.media-amazon.com/images/M/MV5BMTMxNTMwODM0NF5BMl5BanBnXkFtZTcwODAyMTk2Mw@@._V1_SX1200.jpg', // The Dark Knight
+  'tt6751668': 'https://m.media-amazon.com/images/M/MV5BYWZjMjk3ZTItODQ2ZC00Ti05LWE0ZGMtODU3NmIxZGU0NTg3XkEyXkFqcGdeQXVyODE5NzE3OTE@._V1_SX1200.jpg', // Parasite
+  'tt1375666': 'https://m.media-amazon.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_SX1200.jpg', // Inception
+  'tt0110912': 'https://m.media-amazon.com/images/M/MV5BNGNhMDIzZTUtNTBlZi00MTRlLWFjM2ItYzViMjE3YzI5MjljXkEyXkFqcGdeQXVyNzkwMjQ5NzM@._V1_SX1200.jpg', // Pulp Fiction
 };
 
 const CUSTOM_POSTERS: Record<string, string> = {

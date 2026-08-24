@@ -1,17 +1,83 @@
 import { MediaItem, Profile } from '@/types';
 
 /**
+ * Fast 32-bit Mulberry32 seeded pseudo-random number generator.
+ * Produces deterministic pseudo-random sequences given a string seed.
+ */
+function createPRNG(seedString: string) {
+  let h = 1779033703 ^ seedString.length;
+  for (let i = 0; i < seedString.length; i++) {
+    h = Math.imul(h ^ seedString.charCodeAt(i), 3432918353);
+    h = (h << 13) | (h >>> 19);
+  }
+  return function () {
+    h = Math.imul(h ^ (h >>> 16), 2246822507);
+    h = Math.imul(h ^ (h >>> 13), 3266489909);
+    return ((h ^= h >>> 16) >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * Seeded Fisher-Yates shuffle algorithm.
+ * Guarantees zero duplicates and stable deterministic order for a given seed.
+ */
+export function seededShuffle<T>(array: T[], seed: string): T[] {
+  const copy = [...array];
+  const random = createPRNG(seed);
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+const DISCOVERY_SEED_KEY = 'izledin_discovery_session_seed_v2';
+const DISCOVERY_SEED_TIME_KEY = 'izledin_seed_created_at_v2';
+const SEED_MAX_AGE_MS = 12 * 60 * 60 * 1000; // 12 hours TTL
+
+/**
+ * Retrieves or generates a stable session seed for the user.
+ * - Stored in sessionStorage so navigating between pages never causes layout jumps or re-shuffles.
+ * - Expires after 12 hours or when user hard refreshes / opens a new session.
+ * - 0 Server load, 0 API calls, 0 DB queries.
+ */
+export function getOrCreateDiscoverySeed(userId?: string, forceNew: boolean = false): string {
+  if (typeof window === 'undefined') {
+    return 'server_seed_' + (userId || 'guest');
+  }
+
+  try {
+    if (!forceNew) {
+      const stored = sessionStorage.getItem(DISCOVERY_SEED_KEY);
+      const createdAt = sessionStorage.getItem(DISCOVERY_SEED_TIME_KEY);
+      const now = Date.now();
+
+      if (stored && createdAt && now - parseInt(createdAt, 10) < SEED_MAX_AGE_MS) {
+        return userId ? `${stored}_${userId}` : stored;
+      }
+    }
+
+    // Generate fresh unique seed
+    const newSeed = `seed_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+    sessionStorage.setItem(DISCOVERY_SEED_KEY, newSeed);
+    sessionStorage.setItem(DISCOVERY_SEED_TIME_KEY, Date.now().toString());
+
+    return userId ? `${newSeed}_${userId}` : newSeed;
+  } catch {
+    return `fallback_${Date.now()}`;
+  }
+}
+
+/**
  * Calculates a dynamic cinephile discovery score (CineScore) for a media item.
  * Balances:
  * 1. Base Quality (IMDb rating >= 7.0 gets high exponential weighting)
  * 2. Cultural Reach & Prestige (vote count, Oscar / festival awards)
  * 3. User Cinephile DNA (if user profile has matching favoriteGenres, +25 boost)
- * 4. Temporal Variety (deterministic weekly cycle seed so every week features fresh gems)
  */
 export function calculateCineScore(
   item: MediaItem,
-  userProfile?: Profile | null,
-  seedDate: Date = new Date()
+  userProfile?: Profile | null
 ): number {
   let score = 0;
 
@@ -60,19 +126,6 @@ export function calculateCineScore(
     }
   }
 
-  // 5. Deterministic Weekly Freshness Rotation (0 - 12 pts)
-  // Generates a stable hash for (weekNumber + item.id) so movies rotate gently week by week
-  const startOfYear = new Date(seedDate.getFullYear(), 0, 1);
-  const weekNumber = Math.floor(((seedDate.getTime() - startOfYear.getTime()) / 86400000 + startOfYear.getDay() + 1) / 7);
-  let hash = 0;
-  const hashKey = `${weekNumber}-${item.id}`;
-  for (let i = 0; i < hashKey.length; i++) {
-    hash = (hash << 5) - hash + hashKey.charCodeAt(i);
-    hash |= 0;
-  }
-  const rotationBonus = Math.abs(hash % 12);
-  score += rotationBonus;
-
   return score;
 }
 
@@ -80,11 +133,15 @@ export type DiscoverySortOption = 'recommended' | 'rating' | 'newest' | 'popular
 
 /**
  * Sorts a list of media items according to the selected discovery mode.
+ * - 'recommended': Uses quality-bracketed seeded random discovery.
+ *   The first 15 and subsequent +15 items are uniquely randomized per user session,
+ *   guaranteeing top quality at the top with zero duplicates and zero server load.
  */
 export function sortMediaCatalog(
   items: MediaItem[],
   sortBy: DiscoverySortOption = 'recommended',
-  userProfile?: Profile | null
+  userProfile?: Profile | null,
+  seed: string = 'default_seed'
 ): MediaItem[] {
   const copy = [...items];
 
@@ -108,11 +165,35 @@ export function sortMediaCatalog(
       });
 
     case 'recommended':
-    default:
-      return copy.sort((a, b) => {
-        const scoreA = calculateCineScore(a, userProfile);
-        const scoreB = calculateCineScore(b, userProfile);
-        return scoreB - scoreA;
-      });
+    default: {
+      // Score each item
+      const scored = copy.map((item) => ({
+        item,
+        score: calculateCineScore(item, userProfile),
+      }));
+
+      // Group into 3 quality tiers so top-rated masterpieces & favorites always appear first,
+      // but shuffled in a unique combination for each user session.
+      const tier1: MediaItem[] = []; // Masterpieces & high matches (Score >= 55)
+      const tier2: MediaItem[] = []; // Acclaimed & solid films (40 <= Score < 55)
+      const tier3: MediaItem[] = []; // Broader catalog (Score < 40)
+
+      for (const { item, score } of scored) {
+        if (score >= 55) {
+          tier1.push(item);
+        } else if (score >= 40) {
+          tier2.push(item);
+        } else {
+          tier3.push(item);
+        }
+      }
+
+      // Seeded-shuffle each tier deterministically
+      const shuffledTier1 = seededShuffle(tier1, `${seed}_tier1`);
+      const shuffledTier2 = seededShuffle(tier2, `${seed}_tier2`);
+      const shuffledTier3 = seededShuffle(tier3, `${seed}_tier3`);
+
+      return [...shuffledTier1, ...shuffledTier2, ...shuffledTier3];
+    }
   }
 }

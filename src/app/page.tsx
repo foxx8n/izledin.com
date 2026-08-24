@@ -95,7 +95,11 @@ import {
   createOrUpdateMatch,
 } from "@/lib/services/matches.service";
 import { POPULAR_GENRES } from "@/lib/constants";
-import { sortMediaCatalog, DiscoverySortOption } from "@/lib/algorithms/discovery";
+import {
+  sortMediaCatalog,
+  getOrCreateDiscoverySeed,
+  DiscoverySortOption,
+} from "@/lib/algorithms/discovery";
 import { MediaItem, MovieMateMatch, WatchLog, Profile } from "@/types";
 
 export default function HomePage() {
@@ -103,6 +107,9 @@ export default function HomePage() {
 
   const [mediaItems, setMediaItems] = useState<MediaItem[]>(
     STATIC_MASTER_CATALOG,
+  );
+  const [discoverySeed, setDiscoverySeed] = useState<string>(() =>
+    typeof window !== "undefined" ? getOrCreateDiscoverySeed() : "default_seed"
   );
   const [logs, setLogs] = useState<WatchLog[]>([]);
   const [likedLogIds, setLikedLogIds] = useState<Set<string>>(new Set());
@@ -342,8 +349,8 @@ export default function HomePage() {
       return true;
     });
 
-    return sortMediaCatalog(filtered, sortBy, profile);
-  }, [mediaItems, activeTab, selectedGenre, catalogSearch, sortBy, profile]);
+    return sortMediaCatalog(filtered, sortBy, profile, discoverySeed);
+  }, [mediaItems, activeTab, selectedGenre, catalogSearch, sortBy, profile, discoverySeed]);
 
   const displayedMedia = filteredMedia.slice(0, visibleCount);
 
@@ -360,14 +367,8 @@ export default function HomePage() {
   const handleShuffle = () => {
     setIsShuffling(true);
     setTimeout(() => setIsShuffling(false), 500);
-    setMediaItems((prev) => {
-      const copy = [...prev];
-      for (let i = copy.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [copy[i], copy[j]] = [copy[j], copy[i]];
-      }
-      return copy;
-    });
+    const newSeed = getOrCreateDiscoverySeed(user?.id, true);
+    setDiscoverySeed(newSeed);
     setVisibleCount(DISCOVERY_PAGE_SIZE);
   };
 
