@@ -31,7 +31,7 @@ import {
 } from '@/components/icons/CinemaIcons';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
-import { TasteProfilerModal } from '@/components/onboarding/TasteProfilerModal';
+import { CinemaDnaModal } from '@/components/profile/CinemaDnaModal';
 import { PremiumModal } from '@/components/premium/PremiumModal';
 import { SearchModal } from '@/components/media/SearchModal';
 import { QuickLogModal } from '@/components/media/QuickLogModal';
@@ -859,7 +859,7 @@ export default function ProfilePage() {
       <Footer />
 
       {/* Modals */}
-      <TasteProfilerModal
+      <CinemaDnaModal
         isOpen={isTasteProfilerOpen}
         onClose={() => setIsTasteProfilerOpen(false)}
       />

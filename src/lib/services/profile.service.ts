@@ -28,6 +28,7 @@ export const PROFILE_SELECT_COLUMNS = [
   'updated_at',
   'is_verified',
   'match_intent',
+  'intent_last_changed_at',
   'intent_integrity_score',
   'intent_strikes_count',
 ].join(',');
@@ -71,6 +72,7 @@ export function mapDbProfileToProfile(row: any): Profile {
     isPremium: Boolean(row.is_premium),
     matchEnabled: row.match_enabled !== false,
     matchIntent: (row.match_intent || row.matchIntent || 'friend') as any,
+    intentLastChangedAt: row.intent_last_changed_at || undefined,
     intentIntegrityScore: row.intent_integrity_score ?? 98,
     intentStrikesCount: row.intent_strikes_count ?? 0,
     intentAgreedAt: row.intent_agreed_at || undefined,

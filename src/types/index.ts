@@ -72,6 +72,7 @@ export interface Profile {
   isPremium?: boolean;
   matchEnabled?: boolean;
   matchIntent?: MatchIntent; // 'friend' (Sadece Film Arkadaşı), 'dating' (Sinematik Flört/İlişki), 'both' (Her İkisi)
+  intentLastChangedAt?: string; // ISO timestamp of last intent change (24h cooldown)
   intentIntegrityScore?: number; // 0 to 100 (Topluluk Dürüstlük & Güven Puanı)
   intentStrikesCount?: number; // Niyet ihlali şikayet sayısı
   intentAgreedAt?: string;
