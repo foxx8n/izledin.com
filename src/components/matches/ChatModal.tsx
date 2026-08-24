@@ -335,13 +335,13 @@ export function ChatModal({
     setTimeout(() => scrollToBottom("smooth"), 30);
 
     const sent = await sendDirectMessage(matchIdToUse, user.id, messageContent);
-    if (sent) {
+    if (sent.data) {
       // Drop BOTH the optimistic bubble and the realtime echo (which carries
       // the real id and may land before this HTTP response) before appending,
       // or the message renders twice with colliding React keys.
       setMessages((prev) => [
-        ...prev.filter((m) => m.id !== tempId && m.id !== sent.id),
-        sent,
+        ...prev.filter((m) => m.id !== tempId && m.id !== sent.data!.id),
+        sent.data!,
       ]);
       onRequestSent?.(match);
     } else {
@@ -355,7 +355,8 @@ export function ChatModal({
         );
       } else {
         setSendError(
-          "Mesaj gönderilemedi. Bağlantınızı kontrol edip tekrar deneyin.",
+          sent.error ||
+            "Mesaj gönderilemedi. Bağlantınızı kontrol edip tekrar deneyin.",
         );
       }
     }

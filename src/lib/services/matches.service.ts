@@ -221,7 +221,11 @@ async function upsertMatchRequest(
   }
 
   const row = Array.isArray(data) ? data[0] : data;
-  return { ok: true, matchId: row?.match_id || null };
+  const matchId =
+    typeof row === 'string'
+      ? row
+      : (row?.match_id || row?.id || (typeof row === 'object' && row ? Object.values(row)[0] : null));
+  return { ok: true, matchId: matchId ? String(matchId) : null };
 }
 
 /**

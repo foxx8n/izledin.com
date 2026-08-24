@@ -336,6 +336,7 @@ export function SwipeMatchCard({ match, nextMatch, onChatClick, onLike, onPass, 
                     role="button"
                     tabIndex={0}
                     aria-label={`Favori başyapıt: ${fav.title}. Detaylar için tıkla.`}
+                    onPointerDown={(e) => e.stopPropagation()}
                     onClick={(e) => {
                       e.stopPropagation();
                       onMovieClick?.(fav.title, fav.posterUrl);
@@ -375,7 +376,11 @@ export function SwipeMatchCard({ match, nextMatch, onChatClick, onLike, onPass, 
             {/* Pass Action */}
             <button
               type="button"
-              onClick={() => exitCard('pass')}
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation();
+                exitCard('pass');
+              }}
               className="h-12 w-12 min-w-[48px] min-h-[48px] flex items-center justify-center  bg-[#262626]   hover:bg-[#EF4444] hover:text-[#0A0A0A]  text-[#FAFAFA] border-2  border-[#404040]  shadow-[2px_2px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer shrink-0"
               title="Pas Geç"
               aria-label="Pas Geç"
@@ -386,7 +391,11 @@ export function SwipeMatchCard({ match, nextMatch, onChatClick, onLike, onPass, 
             {/* Primary Unified Cinephile Match & Chat Action */}
             <button
               type="button"
-              onClick={() => onChatClick(match)}
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation();
+                onChatClick(match);
+              }}
               className="flex-1 h-12 min-h-[48px] px-4   bg-[#EF4444] hover:bg-[#DC2626]  text-[#0A0A0A] text-xs font-black uppercase tracking-wider border-2  border-[#404040]  shadow-[3px_3px_0px_#000000] hover:shadow-[1px_1px_0px_#0A0A0A] active:translate-x-0.5 active:translate-y-0.5 transition-all flex items-center justify-center gap-2 cursor-pointer font-mono"
               title="İzdaş Ol & Not Bırak"
               aria-label="İzdaş Ol ve Not Bırak"

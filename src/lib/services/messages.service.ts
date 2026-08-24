@@ -32,37 +32,79 @@ export async function getMatchMessages(matchId: string): Promise<ChatMessage[]> 
   return data.map(mapDbMessageToChat);
 }
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export interface SendMessageResult {
+  data: ChatMessage | null;
+  error: string | null;
+}
+
 export async function sendDirectMessage(
   matchId: string,
   senderId: string,
   content: string
-): Promise<ChatMessage | null> {
-  // Anti-Spam Rate Limiter (Max 25 messages/min)
-  const rateLimit = await checkRateLimit(`chat:${senderId}`, RATE_LIMIT_PROFILES.CHAT_MESSAGE);
-  if (!rateLimit.success) {
-    console.warn(`Rate limit exceeded for chat messages by user ${senderId}`);
-    return null;
+): Promise<SendMessageResult> {
+  if (!content || !content.trim()) {
+    return { data: null, error: 'Mesaj içeriği boş olamaz.' };
+  }
+
+  if (!matchId || !UUID_REGEX.test(matchId)) {
+    return { data: null, error: 'Geçersiz eşleşme oturumu.' };
+  }
+
+  if (!senderId || !UUID_REGEX.test(senderId)) {
+    return { data: null, error: 'Geçersiz kullanıcı oturumu. Lütfen tekrar giriş yapın.' };
   }
 
   const supabase = createClient();
+
+  // 1. Preflight Auth & Token Verification
+  try {
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !sessionData?.session?.user) {
+      const { error: refreshError } = await supabase.auth.refreshSession();
+      if (refreshError) {
+        return { data: null, error: 'Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.' };
+      }
+    }
+  } catch (_) {
+    // Non-blocking preflight fallback
+  }
+
+  // 2. Anti-Spam Rate Limiter (Max 25 messages/min)
+  const rateLimit = await checkRateLimit(`chat:${senderId}`, RATE_LIMIT_PROFILES.CHAT_MESSAGE);
+  if (!rateLimit.success) {
+    return { data: null, error: 'Çok hızlı mesaj gönderiyorsunuz. Lütfen biraz bekleyin.' };
+  }
 
   const { data, error } = await supabase
     .from('messages')
     .insert({
       match_id: matchId,
       sender_id: senderId,
-      content,
+      content: content.trim(),
       is_read: false,
     })
     .select()
     .single();
 
-  if (error || !data) {
+  if (error) {
     console.error('Error sending message:', error);
-    return null;
+    if (error.code === '42501' || error.message?.includes('row-level security')) {
+      return {
+        data: null,
+        error:
+          'Mesaj gönderilemedi. Bu istek henüz karşı tarafça onaylanmamış veya reddedilmiş olabilir.',
+      };
+    }
+    return { data: null, error: error.message || 'Mesaj gönderilemedi. Lütfen tekrar deneyin.' };
   }
 
-  return mapDbMessageToChat(data);
+  if (!data) {
+    return { data: null, error: 'Mesaj iletilemedi. Lütfen tekrar deneyin.' };
+  }
+
+  return { data: mapDbMessageToChat(data), error: null };
 }
 
 export function subscribeToMatchMessages(
