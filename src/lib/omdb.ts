@@ -345,13 +345,26 @@ const TOP_IMDB_MASTERPIECES: MediaItem[] = STATIC_CATALOG
   .sort((a, b) => (b.voteAverage || 0) - (a.voteAverage || 0));
 
 /**
+ * Standard ISO-8601 calendar week number calculation.
+ * Monday is the first day of the week; week 1 is the week containing the first Thursday of the year.
+ */
+export function getIsoWeekNumber(date: Date = new Date()): number {
+  const target = new Date(date.valueOf());
+  const dayNr = (date.getDay() + 6) % 7; // Monday = 0, Sunday = 6
+  target.setDate(target.getDate() - dayNr + 3); // Nearest Thursday
+  const firstThursday = target.valueOf();
+  target.setMonth(0, 1);
+  if (target.getDay() !== 4) {
+    target.setMonth(0, 1 + ((4 - target.getDay()) + 7) % 7);
+  }
+  return 1 + Math.ceil((firstThursday - target.valueOf()) / 604800000);
+}
+
+/**
  * Synchronous instant Masterpiece of the Week for 0ms initial render (prevents flash of fallback).
  */
 export function getMasterpieceOfTheWeekSync(): MediaItem {
-  const now = new Date();
-  const startOfYear = new Date(now.getFullYear(), 0, 1);
-  const weekNumber = Math.floor(((now.getTime() - startOfYear.getTime()) / 86400000 + startOfYear.getDay() + 1) / 7);
-
+  const weekNumber = getIsoWeekNumber(new Date());
   const pool = TOP_IMDB_MASTERPIECES.length > 0 ? TOP_IMDB_MASTERPIECES : STATIC_CATALOG;
   const selected = pool[weekNumber % pool.length];
 

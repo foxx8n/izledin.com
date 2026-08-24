@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
-import { getMasterpieceOfTheWeek, getMasterpieceOfTheWeekSync } from '@/lib/omdb';
+import { getMasterpieceOfTheWeekSync } from '@/lib/omdb';
+import { getWeeklyFeaturedMasterpiece } from '@/lib/services/watch-logs.service';
 
-export const revalidate = 604800; // 7 days (Weekly cycle)
+export const revalidate = 86400; // Daily revalidation
 
 export async function GET() {
   try {
-    const item = await getMasterpieceOfTheWeek();
+    const item = await getWeeklyFeaturedMasterpiece();
 
     return NextResponse.json(
       {

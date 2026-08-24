@@ -134,7 +134,15 @@ export function Navbar({
         handleOpenAuth();
         return;
       }
-      setInternalQuickLogItem(getMasterpieceOfTheWeekSync());
+      let quickItem: MediaItem = getMasterpieceOfTheWeekSync();
+      try {
+        const cached = localStorage.getItem('izledin_cached_featured_masterpiece');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed?.id && parsed?.title) quickItem = parsed;
+        }
+      } catch {}
+      setInternalQuickLogItem(quickItem);
       setInternalQuickLogOpen(true);
     }
   };

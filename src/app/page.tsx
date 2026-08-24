@@ -148,9 +148,18 @@ export default function HomePage() {
   );
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isInboxOpen, setIsInboxOpen] = useState(false);
-  const [featuredMedia, setFeaturedMedia] = useState<MediaItem>(
-    getMasterpieceOfTheWeekSync,
-  );
+  const [featuredMedia, setFeaturedMedia] = useState<MediaItem>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('izledin_cached_featured_masterpiece');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed?.id && parsed?.title) return parsed;
+        }
+      } catch {}
+    }
+    return getMasterpieceOfTheWeekSync();
+  });
 
   // Real watchlist state for the discovery grid (media_ids the user has
   // watchlisted) + transient toast feedback for card actions.
@@ -179,20 +188,8 @@ export default function HomePage() {
       });
   }, [activeTab]);
 
-  // 1b. On client mount: restore cached or live masterpiece seamlessly
+  // 1b. On client mount: fetch live featured masterpiece and update cache seamlessly
   useEffect(() => {
-    try {
-      const cached = localStorage.getItem(
-        "izledin_cached_featured_masterpiece",
-      );
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (parsed?.id && parsed?.title) {
-          setFeaturedMedia((prev) => (prev.id === parsed.id ? prev : parsed));
-        }
-      }
-    } catch {}
-
     getWeeklyFeaturedMasterpiece().then((masterpiece) => {
       if (masterpiece && masterpiece.id) {
         setFeaturedMedia((prev) => {
@@ -206,7 +203,7 @@ export default function HomePage() {
         });
         try {
           localStorage.setItem(
-            "izledin_cached_featured_masterpiece",
+            'izledin_cached_featured_masterpiece',
             JSON.stringify(masterpiece),
           );
         } catch {}

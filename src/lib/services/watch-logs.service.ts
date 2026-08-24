@@ -398,18 +398,19 @@ export async function getWeeklyFeaturedMasterpiece(): Promise<MediaItem> {
     
     // Check logs from the last 30 days
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-    const { data: logs, error } = await supabase
+    const { data: logs } = await supabase
       .from('watch_logs')
-      .select('media_id, rating, is_favorite, review, likes_count, created_at')
+      .select('media_id, user_id, rating, is_favorite, review, likes_count, created_at')
       .gte('created_at', thirtyDaysAgo);
 
     let logsToScore = logs || [];
 
     // If recent logs are scarce, consider all-time community logs
-    if (logsToScore.length < 2) {
+    if (logsToScore.length < 3) {
       const { data: allLogs } = await supabase
         .from('watch_logs')
-        .select('media_id, rating, is_favorite, review, likes_count, created_at')
+        .select('media_id, user_id, rating, is_favorite, review, likes_count, created_at')
+        .order('likes_count', { ascending: false })
         .limit(100);
       if (allLogs && allLogs.length > 0) {
         logsToScore = allLogs;
@@ -417,35 +418,76 @@ export async function getWeeklyFeaturedMasterpiece(): Promise<MediaItem> {
     }
 
     if (logsToScore.length >= 2) {
-      // Score each unique media_id based on rating, favorites, reviews and likes
-      const scoreMap: Record<string, { totalScore: number; count: number; highRatings: number }> = {};
+      // Score each unique media_id with 10-point scale & multi-user consensus
+      interface MediaScoreData {
+        totalRawScore: number;
+        users: Set<string>;
+        ratingSum: number;
+        ratingCount: number;
+      }
+      const scoreMap: Record<string, MediaScoreData> = {};
       
       for (const log of logsToScore) {
         if (!log.media_id) continue;
-        if (!scoreMap[log.media_id]) {
-          scoreMap[log.media_id] = { totalScore: 0, count: 0, highRatings: 0 };
-        }
-        const rating = Number(log.rating) || 4;
-        if (rating >= 4 || log.is_favorite) {
-          const weight = (rating * 2) + (log.is_favorite ? 5 : 0) + (log.review ? 3 : 0) + (log.likes_count || 0);
-          scoreMap[log.media_id].totalScore += weight;
-          scoreMap[log.media_id].count += 1;
-          if (rating >= 4.5) scoreMap[log.media_id].highRatings += 1;
+        const rating = Number(log.rating) || 0;
+
+        // Only logs with rating >= 7.5 or marked as favorite count towards Masterpiece status
+        if (rating >= 7.5 || log.is_favorite) {
+          if (!scoreMap[log.media_id]) {
+            scoreMap[log.media_id] = {
+              totalRawScore: 0,
+              users: new Set<string>(),
+              ratingSum: 0,
+              ratingCount: 0,
+            };
+          }
+
+          const entry = scoreMap[log.media_id];
+          if (log.user_id) entry.users.add(log.user_id);
+
+          const ratingScore = rating >= 5 ? (rating - 5) * 2 : 0; // 8/10 -> 6, 9/10 -> 8, 10/10 -> 10
+          const favoriteScore = log.is_favorite ? 6 : 0;
+          const reviewLen = (log.review || '').trim().length;
+          const reviewScore = reviewLen >= 50 ? 4 : reviewLen >= 15 ? 2 : 0;
+          const likesScore = Math.min(15, (Number(log.likes_count) || 0) * 1.5);
+
+          entry.totalRawScore += (ratingScore + favoriteScore + reviewScore + likesScore);
+          if (rating > 0) {
+            entry.ratingSum += rating;
+            entry.ratingCount += 1;
+          }
         }
       }
 
-      const sorted = Object.entries(scoreMap).sort((a, b) => b[1].totalScore - a[1].totalScore);
-      if (sorted.length > 0 && sorted[0][1].totalScore >= 8) {
-        const topMediaId = sorted[0][0];
-        const details = await getOMDBDetails(topMediaId);
-        if (details) return details;
+      // Rank by weighted score multiplied by distinct user consensus
+      const sorted = Object.entries(scoreMap)
+        .map(([mediaId, data]) => {
+          const distinctUserMultiplier = Math.log2(data.users.size + 1); // 1 user = 1x, 3 users = 2x, 7 users = 3x
+          const finalScore = data.totalRawScore * distinctUserMultiplier;
+          const avgRating = data.ratingCount > 0 ? data.ratingSum / data.ratingCount : 0;
+          return {
+            mediaId,
+            finalScore,
+            avgRating,
+            uniqueUsers: data.users.size,
+          };
+        })
+        .sort((a, b) => b.finalScore - a.finalScore);
+
+      // Must meet minimum consensus threshold (at least 2 users OR very high total score) and avg rating >= 7.5
+      if (sorted.length > 0) {
+        const top = sorted[0];
+        if (top.finalScore >= 18 && (top.uniqueUsers >= 2 || top.finalScore >= 35) && (top.avgRating === 0 || top.avgRating >= 7.5)) {
+          const details = await getOMDBDetails(top.mediaId);
+          if (details) return details;
+        }
       }
     }
   } catch (err) {
     console.warn('Community weekly masterpiece calculation fallback:', err);
   }
 
-  // Fallback: Rotating IMDb Top 100 masterpiece based on week of the year
+  // Fallback: Rotating IMDb Top 100 masterpiece based on ISO calendar week of the year
   return getMasterpieceOfTheWeek();
 }
 
