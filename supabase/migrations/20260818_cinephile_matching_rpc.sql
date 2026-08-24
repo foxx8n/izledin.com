@@ -99,17 +99,14 @@ BEGIN
             p.is_premium,
             COALESCE(p.match_intent, 'friend') AS c_intent,
             COALESCE(p.intent_integrity_score, 88) AS c_integrity,
-            COALESCE(p.intent_strikes_count, 0) AS c_strikes,
-            -- Existing match status if any
-            m.id AS existing_match_id,
-            m.status AS existing_status
+            COALESCE(p.intent_strikes_count, 0) AS c_strikes
         FROM public.profiles p
         LEFT JOIN public.movie_mate_matches m 
             ON (m.user_id_1 = LEAST(p_user_id, p.id) AND m.user_id_2 = GREATEST(p_user_id, p.id))
         WHERE p.id <> p_user_id
           AND p.match_enabled = TRUE
-          AND (p_intent_filter IS NULL OR p_intent_filter = 'all' OR p.match_intent = p_intent_filter)
-          AND (m.status IS NULL OR m.status <> 'passed')
+          AND (p_intent_filter IS NULL OR p_intent_filter = 'all' OR p.match_intent = p_intent_filter OR p.match_intent = 'both' OR v_user_intent = 'both')
+          AND m.id IS NULL
     ),
     scored_candidates AS (
         SELECT 
@@ -150,8 +147,7 @@ BEGIN
             s.c_intent,
             s.c_integrity,
             s.c_strikes,
-            s.existing_match_id,
-            COALESCE(s.existing_status, 'pending') AS match_status,
+            'pending'::text AS match_status,
             s.overlap_genres,
             -- Jaccard Genre Similarity Score (0-35 points)
             CASE 
@@ -173,7 +169,7 @@ BEGIN
         FROM scored_candidates s
     )
     SELECT 
-        COALESCE(f.existing_match_id::TEXT, 'prospective_' || f.candidate_id::TEXT) AS match_id,
+        ('prospective_' || f.candidate_id::TEXT) AS match_id,
         f.candidate_id AS partner_id,
         f.username,
         f.full_name,
