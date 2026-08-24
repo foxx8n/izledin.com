@@ -42,8 +42,6 @@ import { ChatModal } from '@/components/matches/ChatModal';
 import { SharePassportModal } from '@/components/profile/SharePassportModal';
 
 import { useAuth } from '@/context/AuthContext';
-import { LocationSelector } from '@/components/common/LocationSelector';
-import { BirthDateSelector } from '@/components/ui/BirthDateSelector';
 import { getUserWatchLogs } from '@/lib/services/watch-logs.service';
 import { getOMDBDetails } from '@/lib/omdb';
 import { WatchLog, MediaItem, Profile, MovieMateMatch } from '@/types';
@@ -67,8 +65,6 @@ export default function ProfilePage() {
   const [isSharePassportOpen, setIsSharePassportOpen] = useState(false);
   const [isEditingBio, setIsEditingBio] = useState(false);
   const [bioInput, setBioInput] = useState('');
-  const [locationInput, setLocationInput] = useState('');
-  const [birthDateInput, setBirthDateInput] = useState('');
   const [isSavingBio, setIsSavingBio] = useState(false);
   const [selectingTop4Index, setSelectingTop4Index] = useState<number | null>(null);
   const [loadingLogs, setLoadingLogs] = useState(false);
@@ -93,31 +89,26 @@ export default function ProfilePage() {
     }
   }, [user]);
 
-  // Künye inputs are seeded ON OPEN (see handleToggleBioEditor), not via an
-  // effect on `profile` — an effect-driven re-seed silently reverted in-progress
-  // edits whenever another surface (e.g. TasteProfilerModal) saved concurrently
-  // and refreshed the context profile.
+  const handleStartEditBio = () => {
+    setBioInput(profile?.bio || '');
+    setIsEditingBio(true);
+  };
 
-  const handleToggleBioEditor = () => {
-    if (!isEditingBio && profile) {
-      setBioInput(profile.bio || '');
-      setLocationInput(profile.location || 'İstanbul, TR');
-      setBirthDateInput(profile.birthDate || '');
-    }
-    setIsEditingBio(!isEditingBio);
+  const handleCancelBio = () => {
+    setBioInput(profile?.bio || '');
+    setIsEditingBio(false);
   };
 
   const handleSaveBio = async () => {
     if (isSavingBio) return;
     setIsSavingBio(true);
     try {
-      await updateUserProfile({
-        bio: bioInput.slice(0, 280),
-        location: locationInput.slice(0, 60),
-        // Empty string intentionally clears the birth date (mapper writes NULL)
-        birthDate: birthDateInput,
+      const res = await updateUserProfile({
+        bio: bioInput.trim().slice(0, 280),
       });
-      setIsEditingBio(false);
+      if (res?.success) {
+        setIsEditingBio(false);
+      }
     } catch (err) {
       console.error('Failed to save bio:', err);
     } finally {
@@ -336,55 +327,7 @@ export default function ProfilePage() {
                 </div>
               </button>
 
-              {/* 2. DAKTİLO KÜNYE & BİYO BUTONU */}
-              <button
-                onClick={handleToggleBioEditor}
-                className={`group relative cursor-pointer overflow-hidden border-2 p-0.5 text-[#FAFAFA] transition-all duration-150 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 ${
-                  isEditingBio 
-                    ? ' border-[#EF4444] bg-[#0A0A0A]  shadow-[4px_4px_0px_#EF4444]' 
-                    : ' border-[#525252] bg-[#0A0A0A]  shadow-[4px_4px_0px_#404040] hover:border-[#DC2626] hover:shadow-[5px_5px_0px_#DC2626]'
-                }`}
-                title={isEditingBio ? 'Düzenleme modunu kapat' : 'Biyografi, şehir ve doğum tarihinizi düzenleyin'}
-              >
-                <div className={`flex items-center px-3 py-2 border transition-colors ${
-                  isEditingBio 
-                    ? 'bg-[#2A0E0E] border-[#DC2626]/60' 
-                    : 'bg-[#171717] border-[#262626] group-hover:border-[#DC2626]/50'
-                }`}>
-                  <div className="flex items-center gap-2.5">
-                    <div className={`flex h-7 w-7 items-center justify-center border shadow-[1px_1px_0px_#000000] shrink-0 ${
-                      isEditingBio 
-                        ? 'border-[#DC2626] bg-[#DC2626] text-white' 
-                        : 'border-[#404040] bg-[#262626] text-[#D4D4D4] group-hover:text-[#DC2626] group-hover:border-[#DC2626]/60'
-                    }`}>
-                      {isEditingBio ? (
-                        <Check className="w-3.5 h-3.5 stroke-[3]" />
-                      ) : (
-                        <ClapperboardIcon size={14} />
-                      )}
-                    </div>
-                    <div className="text-left leading-none">
-                      <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-[#A3A3A3] group-hover:text-[#D4D4D4]">
-                        <span>DAKTİLO KÜNYE</span>
-                      </div>
-                      <div className="text-xs font-black uppercase tracking-wider text-white mt-0.5 font-sans">
-                        {isEditingBio ? 'DÜZENLEMEYİ KAPAT' : 'BİYO DÜZENLE'}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="ml-3 pl-2.5 border-l border-[#333333] flex items-center">
-                    <span className={`px-1.5 py-0.5 text-[10px] font-black uppercase tracking-tighter ${
-                      isEditingBio 
-                        ? 'bg-[#DC2626] text-white' 
-                        : 'bg-[#262626] text-[#A3A3A3] group-hover:bg-[#DC2626] group-hover:text-white'
-                    }`}>
-                      {isEditingBio ? 'AÇIK' : 'KÜNYE'}
-                    </span>
-                  </div>
-                </div>
-              </button>
-
-              {/* 3. 35MM PASAPORT PAYLAŞ BUTONU */}
+              {/* 2. 35MM PASAPORT PAYLAŞ BUTONU */}
               <button
                 type="button"
                 onClick={() => setIsSharePassportOpen(true)}
@@ -410,80 +353,109 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Bio Edit Mode */}
-          {isEditingBio ? (
-            <div className="bg-[#171717] p-5 border border-[#404040] space-y-4 font-mono">
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-[11px] font-black uppercase text-[#D4D4D4]">
-                  <label>BİYOGRAFİ:</label>
-                  <span className="text-[10px] text-[#737373]">{bioInput.length}/280</span>
-                </div>
-                <textarea
-                  value={bioInput}
-                  onChange={(e) => setBioInput(e.target.value.slice(0, 280))}
-                  rows={2}
-                  maxLength={280}
-                  className="w-full bg-[#0A0A0A] text-white border border-[#404040] focus:border-[#DC2626] p-3 text-xs font-mono placeholder-[#737373] focus:outline-none leading-relaxed"
-                  placeholder="Sinema zevkinizi, favori yönetmenlerinizi ve film izleme alışkanlıklarınızı anlatın..."
-                />
-              </div>
-
-              <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-black uppercase text-[#D4D4D4] flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5  text-[#EF4444]" />
-                    <span>DOĞUM TARİHİ SEÇİMİ:</span>
-                  </label>
-                  <BirthDateSelector
-                    value={birthDateInput}
-                    onChange={(val) => setBirthDateInput(val)}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-black uppercase text-[#D4D4D4] flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5  text-[#EF4444]" />
-                    <span>ŞEHİR / BÖLGE:</span>
-                  </label>
-                  <LocationSelector
-                    value={locationInput || 'Kadıköy, İstanbul'}
-                    onChange={(loc) => setLocationInput(loc.slice(0, 60))}
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={handleSaveBio}
-                  disabled={isSavingBio}
-                  className="px-5 py-2.5 min-h-[44px] bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-black uppercase tracking-wider border-2 border-white shadow-[3px_3px_0px_#ffffff] cursor-pointer flex items-center gap-2 transition-transform active:translate-x-0.5 active:translate-y-0.5 disabled:opacity-50"
-                >
-                  {isSavingBio ? (
-                    <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>KAYDEDİLİYOR...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Check className="w-3.5 h-3.5 stroke-[3]" />
-                      <span>KÜNYEYİ KAYDET</span>
-                    </>
+          {/* Bio Section: Click to Edit Inline */}
+          {!isEditingBio ? (
+            <div
+              onClick={handleStartEditBio}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleStartEditBio();
+                }
+              }}
+              className="group relative cursor-pointer border border-dashed border-transparent hover:border-[#DC2626]/60 hover:bg-[#141414] p-3 -m-3 transition-all duration-150 rounded-none text-left"
+              title="Biyografinizi düzenlemek için tıklayın"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="space-y-1 flex-1 min-w-0">
+                  <p className="text-xs sm:text-sm text-[#D4D4D4] leading-relaxed italic max-w-3xl font-mono whitespace-pre-wrap break-words">
+                    {profile?.bio ? (
+                      <>&ldquo;{profile.bio}&rdquo;</>
+                    ) : (
+                      <span className="text-[#888888] not-italic">
+                        &ldquo;{generateDynamicBio(profile)}&rdquo;
+                      </span>
+                    )}
+                  </p>
+                  {!profile?.bio && (
+                    <p className="text-[10px] text-[#737373] font-mono flex items-center gap-1">
+                      <Edit3 className="w-3 h-3 text-[#DC2626]" />
+                      <span>(Özel sinema biyografinizi eklemek için tıklayın)</span>
+                    </p>
                   )}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsEditingBio(false)}
-                  className="px-4 py-2.5 min-h-[44px] text-xs font-black uppercase text-[#A3A3A3] hover:text-white border border-[#404040] bg-[#262626] cursor-pointer"
-                >
-                  Vazgeç
-                </button>
+                </div>
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 flex items-center gap-1.5 text-[10px] font-mono font-bold text-[#D4D4D4] bg-[#1E1E1E] px-2 py-1 border border-[#404040]">
+                  <Edit3 className="w-3 h-3 text-[#DC2626]" />
+                  <span>DÜZENLE</span>
+                </div>
               </div>
             </div>
           ) : (
-            <div className="space-y-3 font-mono">
-              <p className="text-xs sm:text-sm text-[#D4D4D4] leading-relaxed italic max-w-3xl">
-                &ldquo;{profile?.bio || generateDynamicBio(profile)}&rdquo;
-              </p>
+            <div className="space-y-3 font-mono bg-[#141414] border-2 border-[#DC2626] p-4 shadow-[4px_4px_0px_#000000] animate-in fade-in duration-150">
+              <div className="flex items-center justify-between text-[11px] font-black uppercase text-[#D4D4D4]">
+                <label className="flex items-center gap-1.5 text-[#EF4444]">
+                  <Edit3 className="w-3.5 h-3.5" />
+                  <span>SİNEMA BİYOGRAFİSİ:</span>
+                </label>
+                <span className={`text-[10px] font-mono ${bioInput.length > 240 ? 'text-[#EF4444] font-bold' : 'text-[#737373]'}`}>
+                  {bioInput.length}/280
+                </span>
+              </div>
+              <textarea
+                value={bioInput}
+                onChange={(e) => setBioInput(e.target.value.slice(0, 280))}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                    e.preventDefault();
+                    handleSaveBio();
+                  } else if (e.key === 'Escape') {
+                    handleCancelBio();
+                  }
+                }}
+                rows={3}
+                maxLength={280}
+                autoFocus
+                className="w-full bg-[#0A0A0A] text-white border border-[#404040] focus:border-[#DC2626] p-3 text-xs sm:text-sm font-mono placeholder-[#737373] focus:outline-none leading-relaxed resize-y"
+                placeholder="Sinema zevkinizi, favori yönetmenlerinizi ve film izleme alışkanlıklarınızı anlatın..."
+              />
+              <div className="flex items-center justify-between gap-3 pt-1 flex-wrap">
+                <div className="flex items-center gap-2.5">
+                  <button
+                    type="button"
+                    onClick={handleSaveBio}
+                    disabled={isSavingBio}
+                    className="px-4 py-2 bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-black uppercase tracking-wider border-2 border-white shadow-[3px_3px_0px_#ffffff] cursor-pointer flex items-center gap-2 transition-transform active:translate-x-0.5 active:translate-y-0.5 disabled:opacity-50"
+                    title="Biyografiyi Kaydet (Ctrl+Enter)"
+                  >
+                    {isSavingBio ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin stroke-[2.5]" />
+                        <span>KAYDEDİLİYOR...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Check className="w-3.5 h-3.5 stroke-[3]" />
+                        <span>KAYDET</span>
+                      </>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCancelBio}
+                    disabled={isSavingBio}
+                    className="px-3.5 py-2 text-xs font-black uppercase text-[#A3A3A3] hover:text-white border border-[#404040] bg-[#262626] hover:bg-[#333333] cursor-pointer flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                    title="Vazgeç (Esc)"
+                  >
+                    <X className="w-3.5 h-3.5 stroke-[2.5]" />
+                    <span>VAZGEÇ</span>
+                  </button>
+                </div>
+                <span className="text-[10px] text-[#737373] hidden sm:inline-block">
+                  Kaydetmek için <kbd className="px-1 py-0.5 bg-[#262626] text-[#A3A3A3] border border-[#404040] text-[9px]">Ctrl</kbd> + <kbd className="px-1 py-0.5 bg-[#262626] text-[#A3A3A3] border border-[#404040] text-[9px]">Enter</kbd>
+                </span>
+              </div>
             </div>
           )}
 
