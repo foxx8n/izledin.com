@@ -942,7 +942,7 @@ export default function AdminPage() {
                           </span>
 
                           <span className="text-neutral-500 text-[10px]">
-                            {p.matchIntent === 'dating' ? '💑 Romantik' : '🎬 Sinefil İzdaş'}
+                            {p.matchIntent === 'dating' ? 'Romantik' : 'Sinefil İzdaş'}
                           </span>
                         </div>
 
@@ -966,7 +966,7 @@ export default function AdminPage() {
                         )}
 
                         <div className="flex items-center gap-2 text-[11px] text-neutral-500 font-mono pt-1">
-                          <span>🎬 {p.totalWatchedCount || 0} İzleme</span>
+                          <span>{p.totalWatchedCount || 0} İzleme</span>
                           <span>•</span>
                           <span>Katılım: {p.createdAt ? new Date(p.createdAt).toLocaleDateString('tr-TR') : '—'}</span>
                         </div>

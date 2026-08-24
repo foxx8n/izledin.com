@@ -27,7 +27,7 @@ export function SharePassportModal({
   // NOTE: no fabricated compatibility score — the passport shows real data only.
   const ogImageUrl = `${origin}/api/og/profile?username=${encodeURIComponent(profile.username || 'sinefil')}&name=${encodeURIComponent(profile.fullName || 'Sinefil Üye')}&location=${encodeURIComponent(profile.location || 'İstanbul')}&genres=${encodeURIComponent((profile.favoriteGenres || []).join(','))}&count=${watchCount}`;
 
-  const shareText = `🎬 Benim izledin.com 35mm Sinema Pasaportum!\nFilm zevklerimiz ne kadar uyuşuyor? İzdaş eşleşme skoruna bak:\n${profileUrl}\n\n#izledin #sinefil #filmgunlugu`;
+  const shareText = `Benim izledin.com 35mm Sinema Pasaportum!\nFilm zevklerimiz ne kadar uyuşuyor? İzdaş eşleşme skoruna bak:\n${profileUrl}\n\n#izledin #sinefil #filmgunlugu`;
 
   const handleCopy = async () => {
     try {

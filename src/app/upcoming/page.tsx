@@ -185,7 +185,7 @@ function downloadICS(item: MediaItem) {
     'BEGIN:VEVENT',
     `UID:${uidSource}@izledin.com`,
     `DTSTAMP:${dtStamp}`,
-    `SUMMARY:🎬 ${title} Vizyon Prömiyeri`,
+    `SUMMARY:${title} Vizyon Prömiyeri`,
     `DESCRIPTION:${description}`,
     `LOCATION:${location}`,
     `DTSTART:${startDate}`,
@@ -291,14 +291,14 @@ export default function UpcomingPage() {
     const isAndroid = typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent);
 
     if (isAndroid) {
-      const gCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('🎬 ' + title + ' Vizyon Prömiyeri')}&dates=${startDate}/${endDate}&details=${encodeURIComponent(description)}&location=${encodeURIComponent(location)}`;
+      const gCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title + ' Vizyon Prömiyeri')}&dates=${startDate}/${endDate}&details=${encodeURIComponent(description)}&location=${encodeURIComponent(location)}`;
       window.open(gCalUrl, '_blank', 'noopener');
       showToast(`"${item.title}" Android takviminize aktarılıyor...`);
     } else if (isIOS) {
       downloadICS(item);
       showToast(`"${item.title}" Apple Takvim'e aktarıldı!`);
     } else {
-      const gCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('🎬 ' + title + ' Vizyon Prömiyeri')}&dates=${startDate}/${endDate}&details=${encodeURIComponent(description)}&location=${encodeURIComponent(location)}`;
+      const gCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title + ' Vizyon Prömiyeri')}&dates=${startDate}/${endDate}&details=${encodeURIComponent(description)}&location=${encodeURIComponent(location)}`;
       window.open(gCalUrl, '_blank', 'noopener');
       showToast(`"${item.title}" takviminize aktarılıyor...`);
     }
