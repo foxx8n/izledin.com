@@ -1,5 +1,6 @@
 import { MediaItem, MediaType } from '@/types';
 import { movieDetailsCache, searchQueryCache, trendingCatalogCache } from './cache';
+import { searchDbCatalog, getDbCatalogItem, saveMediaItemToDb } from '@/lib/services/media-catalog.service';
 import rawCatalog from '@/data/catalog.json';
 import rawUpcomingCatalog from '@/data/upcoming-master.json';
 
@@ -82,6 +83,34 @@ export function formatTurkishReleaseDate(dateStr?: string, year?: number): strin
     formatted = formatted.replace(new RegExp(`\\b${en}\\b`, 'i'), tr);
   }
   return formatted;
+}
+
+/**
+ * Normalizes Turkish characters and diacritics into plain ASCII equivalents
+ * for resilient, case-insensitive, and accent-insensitive matching.
+ */
+export function normalizeTurkishText(text?: string): string {
+  if (!text) return '';
+  return text
+    .replace(/İ/g, 'i')
+    .replace(/I/g, 'i')
+    .replace(/ı/g, 'i')
+    .replace(/Ğ/g, 'g')
+    .replace(/ğ/g, 'g')
+    .replace(/Ü/g, 'u')
+    .replace(/ü/g, 'u')
+    .replace(/Ş/g, 's')
+    .replace(/ş/g, 's')
+    .replace(/Ö/g, 'o')
+    .replace(/ö/g, 'o')
+    .replace(/Ç/g, 'c')
+    .replace(/ç/g, 'c')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 const NEO_NOIR_IDS = new Set([
@@ -269,7 +298,14 @@ export async function getOMDBDetails(imdbId: string): Promise<MediaItem | null> 
     }
   }
 
-  // 3. Server-side: fetch from cache or live API
+  // 3. Check Supabase media_catalog database (5-10ms)
+  const dbMatch = await getDbCatalogItem(imdbId);
+  if (dbMatch) {
+    movieDetailsCache.set(imdbId, dbMatch);
+    return dbMatch;
+  }
+
+  // 4. Server-side: fetch from cache or live API and auto-cache to Supabase
   return movieDetailsCache.getOrFetch(imdbId, async () => {
     try {
       const res = await fetch(`${OMDB_BASE_URL}?apikey=${OMDB_API_KEY}&i=${encodeURIComponent(imdbId)}&plot=full`, {
@@ -286,6 +322,10 @@ export async function getOMDBDetails(imdbId: string): Promise<MediaItem | null> 
           item.overviewEn = data.Plot;
         }
       }
+
+      // Auto-cache to Supabase media_catalog table asynchronously
+      saveMediaItemToDb(item);
+
       return item;
     } catch (err) {
       console.warn(`Failed to fetch OMDB item ${imdbId}:`, err);
@@ -418,7 +458,7 @@ export async function getUpcomingReleases(): Promise<MediaItem[]> {
  * then falls back to OMDB worldwide live search with caching.
  */
 export async function searchCatalog(query: string, limit: number = 15): Promise<MediaItem[]> {
-  const normalized = query.trim().toLowerCase();
+  const normalized = normalizeTurkishText(query);
   if (!normalized) return [];
 
   // In the browser, query via the cached Edge API proxy
@@ -433,25 +473,41 @@ export async function searchCatalog(query: string, limit: number = 15): Promise<
     }
   }
 
-  // 1. Instant in-memory search from master catalog with relevance scoring
+  // 1. Instant in-memory search from master catalog with relevance scoring & Turkish normalization
   const scoredMatches: { item: MediaItem; score: number }[] = [];
+  const compactQuery = normalized.replace(/\s+/g, '');
 
   for (const item of STATIC_CATALOG) {
-    const title = item.title.toLowerCase();
-    const originalTitle = item.originalTitle?.toLowerCase() || '';
-    const director = item.director?.toLowerCase() || '';
-    const actors = item.actors?.toLowerCase() || '';
+    const titleNorm = normalizeTurkishText(item.title);
+    const originalTitleNorm = normalizeTurkishText(item.originalTitle);
+    const directorNorm = normalizeTurkishText(item.director);
+    const actorsNorm = normalizeTurkishText(item.actors);
+    const compactTitle = titleNorm.replace(/\s+/g, '');
+    const compactOriginal = originalTitleNorm.replace(/\s+/g, '');
 
     let score = 0;
-    if (title === normalized || originalTitle === normalized) {
+    if (
+      titleNorm === normalized ||
+      originalTitleNorm === normalized ||
+      compactTitle === compactQuery ||
+      compactOriginal === compactQuery
+    ) {
       score = 100;
-    } else if (title.startsWith(normalized) || originalTitle.startsWith(normalized)) {
+    } else if (
+      titleNorm.startsWith(normalized) ||
+      originalTitleNorm.startsWith(normalized) ||
+      compactTitle.startsWith(compactQuery)
+    ) {
       score = 80;
-    } else if (title.includes(normalized) || originalTitle.includes(normalized)) {
+    } else if (
+      titleNorm.includes(normalized) ||
+      originalTitleNorm.includes(normalized) ||
+      compactTitle.includes(compactQuery)
+    ) {
       score = 60;
-    } else if (director.includes(normalized) || actors.includes(normalized)) {
+    } else if (directorNorm.includes(normalized) || actorsNorm.includes(normalized)) {
       score = 40;
-    } else if (item.genres.some((g) => g.toLowerCase().includes(normalized))) {
+    } else if (item.genres.some((g) => normalizeTurkishText(g).includes(normalized))) {
       score = 20;
     }
 
@@ -465,13 +521,34 @@ export async function searchCatalog(query: string, limit: number = 15): Promise<
   scoredMatches.sort((a, b) => b.score - a.score);
   const localMatches = scoredMatches.slice(0, limit).map((m) => m.item);
 
-  if (localMatches.length >= Math.min(6, limit)) {
-    return localMatches.slice(0, limit);
+  // 2. Query Supabase media_catalog database with full-text search & trigram index
+  let dbMatches: MediaItem[] = [];
+  try {
+    dbMatches = await searchDbCatalog(query, limit);
+  } catch (err) {
+    console.warn('DB search error:', err);
   }
 
-  // 3. Server-side: query OMDB API with cache to discover any external film
+  // Merge local matches and DB matches without duplicate IDs
+  const seenIds = new Set<string>();
+  const combinedLocal: MediaItem[] = [];
+
+  for (const item of [...dbMatches, ...localMatches]) {
+    if (!seenIds.has(item.id)) {
+      seenIds.add(item.id);
+      combinedLocal.push(item);
+    }
+  }
+
+  // If local or database returns solid matches, return them with ZERO OMDb API calls!
+  if (combinedLocal.length >= 1) {
+    return combinedLocal.slice(0, limit);
+  }
+
+  // 3. Server-side fallback: query OMDB API once, auto-cache to Supabase for all future users
   return searchQueryCache.getOrFetch(`${normalized}_${limit}`, async () => {
     try {
+      // Send ASCII normalized query to OMDB so it matches standard titles on IMDb
       const res = await fetch(
         `${OMDB_BASE_URL}?apikey=${OMDB_API_KEY}&s=${encodeURIComponent(normalized)}`,
         { cache: 'no-store' }
@@ -480,7 +557,7 @@ export async function searchCatalog(query: string, limit: number = 15): Promise<
       const data = await res.json();
 
       if (data.Response === 'False' || !data.Search) {
-        return localMatches.slice(0, limit);
+        return combinedLocal.slice(0, limit);
       }
 
       // Fetch full details for top results to obtain genre, rating, and director
@@ -488,26 +565,26 @@ export async function searchCatalog(query: string, limit: number = 15): Promise<
       const detailPromises = topResults.map(async (searchItem: any) => {
         const fullDetail = await getOMDBDetails(searchItem.imdbID);
         if (fullDetail) return fullDetail;
-        return mapOMDBToMediaItem(searchItem);
+        const mapped = mapOMDBToMediaItem(searchItem);
+        // Auto-cache to Supabase
+        saveMediaItemToDb(mapped);
+        return mapped;
       });
 
       const fetched = await Promise.all(detailPromises);
 
-      // Merge local matches and fetched results without duplicate IDs
-      const seenIds = new Set<string>();
-      const combined: MediaItem[] = [];
-
-      for (const item of [...localMatches, ...fetched]) {
+      // Merge results without duplicate IDs
+      for (const item of fetched) {
         if (!seenIds.has(item.id)) {
           seenIds.add(item.id);
-          combined.push(item);
+          combinedLocal.push(item);
         }
       }
 
-      return combined.slice(0, limit);
+      return combinedLocal.slice(0, limit);
     } catch (err) {
       console.warn('OMDB search error:', err);
-      return localMatches.slice(0, limit);
+      return combinedLocal.slice(0, limit);
     }
   });
 }

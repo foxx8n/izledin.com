@@ -80,6 +80,7 @@ import {
   getTrendingMedia,
   getMasterpieceOfTheWeekSync,
   STATIC_MASTER_CATALOG,
+  normalizeTurkishText,
 } from "@/lib/omdb";
 import {
   getCommunityWatchLogs,
@@ -325,14 +326,14 @@ export default function HomePage() {
       if (!match) return false;
     }
     if (catalogSearch.trim()) {
-      const q = catalogSearch.trim().toLowerCase();
+      const q = normalizeTurkishText(catalogSearch);
       const matchQuery =
-        item.title.toLowerCase().includes(q) ||
-        (item.originalTitle && item.originalTitle.toLowerCase().includes(q)) ||
-        (item.director && item.director.toLowerCase().includes(q)) ||
-        (item.actors && item.actors.toLowerCase().includes(q)) ||
+        normalizeTurkishText(item.title).includes(q) ||
+        (item.originalTitle && normalizeTurkishText(item.originalTitle).includes(q)) ||
+        (item.director && normalizeTurkishText(item.director).includes(q)) ||
+        (item.actors && normalizeTurkishText(item.actors).includes(q)) ||
         (item.year && item.year.toString().includes(q)) ||
-        item.genres.some((g) => g.toLowerCase().includes(q));
+        item.genres.some((g) => normalizeTurkishText(g).includes(q));
       if (!matchQuery) return false;
     }
     return true;
