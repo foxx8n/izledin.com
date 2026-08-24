@@ -95,6 +95,7 @@ import {
   createOrUpdateMatch,
 } from "@/lib/services/matches.service";
 import { POPULAR_GENRES } from "@/lib/constants";
+import { sortMediaCatalog, DiscoverySortOption } from "@/lib/algorithms/discovery";
 import { MediaItem, MovieMateMatch, WatchLog, Profile } from "@/types";
 
 export default function HomePage() {
@@ -113,6 +114,7 @@ export default function HomePage() {
   const [activeTab, setActiveTab] = useState<"all" | "movie" | "tv" | "anime">(
     "all",
   );
+  const [sortBy, setSortBy] = useState<DiscoverySortOption>("recommended");
   const [visibleCount, setVisibleCount] = useState(DISCOVERY_PAGE_SIZE);
   const [loading, setLoading] = useState(false);
   const [isShuffling, setIsShuffling] = useState(false);
@@ -314,30 +316,34 @@ export default function HomePage() {
 
   const activeFeatured: MediaItem = featuredMedia || mediaItems[0];
 
-  const filteredMedia = mediaItems.filter((item) => {
-    if (activeTab !== "all" && item.type !== activeTab) return false;
-    if (selectedGenre !== "Hepsi") {
-      const match = item.genres.some(
-        (g) =>
-          g.toLowerCase() === selectedGenre.toLowerCase() ||
-          g.toLowerCase().includes(selectedGenre.toLowerCase()) ||
-          selectedGenre.toLowerCase().includes(g.toLowerCase()),
-      );
-      if (!match) return false;
-    }
-    if (catalogSearch.trim()) {
-      const q = normalizeTurkishText(catalogSearch);
-      const matchQuery =
-        normalizeTurkishText(item.title).includes(q) ||
-        (item.originalTitle && normalizeTurkishText(item.originalTitle).includes(q)) ||
-        (item.director && normalizeTurkishText(item.director).includes(q)) ||
-        (item.actors && normalizeTurkishText(item.actors).includes(q)) ||
-        (item.year && item.year.toString().includes(q)) ||
-        item.genres.some((g) => normalizeTurkishText(g).includes(q));
-      if (!matchQuery) return false;
-    }
-    return true;
-  });
+  const filteredMedia = React.useMemo(() => {
+    const filtered = mediaItems.filter((item) => {
+      if (activeTab !== "all" && item.type !== activeTab) return false;
+      if (selectedGenre !== "Hepsi") {
+        const match = item.genres.some(
+          (g) =>
+            g.toLowerCase() === selectedGenre.toLowerCase() ||
+            g.toLowerCase().includes(selectedGenre.toLowerCase()) ||
+            selectedGenre.toLowerCase().includes(g.toLowerCase()),
+        );
+        if (!match) return false;
+      }
+      if (catalogSearch.trim()) {
+        const q = normalizeTurkishText(catalogSearch);
+        const matchQuery =
+          normalizeTurkishText(item.title).includes(q) ||
+          (item.originalTitle && normalizeTurkishText(item.originalTitle).includes(q)) ||
+          (item.director && normalizeTurkishText(item.director).includes(q)) ||
+          (item.actors && normalizeTurkishText(item.actors).includes(q)) ||
+          (item.year && item.year.toString().includes(q)) ||
+          item.genres.some((g) => normalizeTurkishText(g).includes(q));
+        if (!matchQuery) return false;
+      }
+      return true;
+    });
+
+    return sortMediaCatalog(filtered, sortBy, profile);
+  }, [mediaItems, activeTab, selectedGenre, catalogSearch, sortBy, profile]);
 
   const displayedMedia = filteredMedia.slice(0, visibleCount);
 
@@ -936,6 +942,39 @@ export default function HomePage() {
                 {genre}
               </button>
             ))}
+          </div>
+
+          {/* Discovery Sort Mode Bar */}
+          <div className="flex items-center justify-between gap-3 text-xs font-mono border-t border-neutral-800 pt-2 flex-wrap">
+            <div className="flex items-center gap-1.5 text-neutral-400 text-[11px] font-bold flex-wrap">
+              <span className="text-neutral-400 font-black">SIRALA:</span>
+              {[
+                { key: 'recommended', label: 'ÖNERİLEN (CINESCORE)' },
+                { key: 'rating', label: 'EN YÜKSEK PUAN' },
+                { key: 'popular', label: 'EN POPÜLER' },
+                { key: 'newest', label: 'EN YENİ' },
+              ].map((opt) => (
+                <button
+                  key={opt.key}
+                  type="button"
+                  onClick={() => {
+                    setSortBy(opt.key as DiscoverySortOption);
+                    setVisibleCount(DISCOVERY_PAGE_SIZE);
+                  }}
+                  className={`px-2.5 py-1 text-[11px] font-black uppercase transition-all cursor-pointer border ${
+                    sortBy === opt.key
+                      ? "bg-[#DC2626] text-white border-white shadow-[2px_2px_0px_#000000]"
+                      : "bg-[#171717] text-neutral-300 border-neutral-700 hover:text-white hover:border-neutral-500"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+
+            <span className="text-[11px] text-neutral-500 font-bold">
+              {filteredMedia.length} BAŞYAPIT
+            </span>
           </div>
 
           {/* Media Grid */}

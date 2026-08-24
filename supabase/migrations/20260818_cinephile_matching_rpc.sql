@@ -63,19 +63,19 @@ DECLARE
     v_user_intent TEXT;
     v_user_favorites JSONB;
 BEGIN
-    -- 1. Fetch Target User's Cinema DNA
+    -- 1. Fetch Target User's Cinema DNA (Explicitly qualify with table alias p to prevent ambiguity with OUT params)
     SELECT 
-        COALESCE(favorite_genres, '{}'),
-        COALESCE(streaming_services, '{}'),
-        COALESCE(match_intent, 'friend'),
-        COALESCE(top_4_favorites, '[]'::jsonb)
+        COALESCE(p.favorite_genres, '{}'),
+        COALESCE(p.streaming_services, '{}'),
+        COALESCE(p.match_intent, 'friend'),
+        COALESCE(p.top_4_favorites, '[]'::jsonb)
     INTO 
         v_user_genres,
         v_user_services,
         v_user_intent,
         v_user_favorites
-    FROM public.profiles
-    WHERE id = p_user_id;
+    FROM public.profiles p
+    WHERE p.id = p_user_id;
 
     IF NOT FOUND THEN
         -- If profile not found, return empty set

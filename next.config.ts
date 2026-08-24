@@ -61,7 +61,7 @@ const nextConfig: NextConfig = {
       : "script-src 'self' 'unsafe-inline'";
     const contentSecurityPolicy = [
       "default-src 'self'",
-      `img-src 'self' https://image.tmdb.org https://m.media-amazon.com https://images.unsplash.com https://lh3.googleusercontent.com https://api.dicebear.com https://hipavaiaumdkpqqwvlzp.supabase.co data:`,
+      `img-src 'self' https://image.tmdb.org https://m.media-amazon.com https://ia.media-imdb.com https://images.unsplash.com https://lh3.googleusercontent.com https://avatars.githubusercontent.com https://cdn.myanimelist.net https://api.dicebear.com https://hipavaiaumdkpqqwvlzp.supabase.co https://*.supabase.co data: blob:`,
       "style-src 'self' 'unsafe-inline'",
       scriptSrc,
       "connect-src 'self' https://hipavaiaumdkpqqwvlzp.supabase.co wss://hipavaiaumdkpqqwvlzp.supabase.co",
