@@ -1,5 +1,340 @@
 [
   {
+    "id": "tt1180340",
+    "type": "movie",
+    "title": "Recep İvedik",
+    "originalTitle": "Recep Ivedik",
+    "overview": "Recep İvedik, sokakta bulduğu cüzdanı Antalya'daki sahibine teslim etmek için yola çıkar ve komik maceralara atılır.",
+    "posterPath": "https://m.media-amazon.com/images/M/MV5BOGJmZGM5NjUtZDVjOS00MDMwLTk2NmEtNzQ1YjAwMzU1YTIxXkEyXkFqcGc@._V1_SX300.jpg",
+    "backdropPath": "https://m.media-amazon.com/images/M/MV5BOGJmZGM5NjUtZDVjOS00MDMwLTk2NmEtNzQ1YjAwMzU1YTIxXkEyXkFqcGc@._V1_SX300.jpg",
+    "year": 2008,
+    "voteAverage": 5,
+    "genres": [
+      "Komedi",
+      "Popüler"
+    ],
+    "duration": "104 dk",
+    "director": "Togan Gökbakar",
+    "actors": "Şahan Gökbakar, Fatma Toptaş, Tulug Çizgen"
+  },
+  {
+    "id": "tt1371151",
+    "type": "movie",
+    "title": "Recep İvedik 2",
+    "originalTitle": "Recep Ivedik 2",
+    "overview": "Recep İvedik, nenesinin vasiyeti üzerine iş bulmaya, evlenmeye ve saygın biri olmaya çalışır.",
+    "posterPath": "https://m.media-amazon.com/images/M/MV5BNTZmZGJjMDktNzk4MC00NzgwLTk1YmYtMWYzNGMzNWEwYmQ1XkEyXkFqcGc@._V1_SX300.jpg",
+    "backdropPath": "https://m.media-amazon.com/images/M/MV5BNTZmZGJjMDktNzk4MC00NzgwLTk1YmYtMWYzNGMzNWEwYmQ1XkEyXkFqcGc@._V1_SX300.jpg",
+    "year": 2009,
+    "voteAverage": 4.5,
+    "genres": [
+      "Komedi",
+      "Popüler"
+    ],
+    "duration": "107 dk",
+    "director": "Togan Gökbakar",
+    "actors": "Şahan Gökbakar, Gülsen Özbakan, Zeynep Çamcı"
+  },
+  {
+    "id": "tt1577061",
+    "type": "movie",
+    "title": "Recep İvedik 3",
+    "originalTitle": "Recep Ivedik 3",
+    "overview": "Nenesinin vefatından sonra depresyona giren Recep, hayatına renk katmak için birbirinden tuhaf aktivitelere katılır.",
+    "posterPath": "https://m.media-amazon.com/images/M/MV5BMjA4MTc1ODU4Ml5BMl5BanBnXkFtZTcwNTg2Nzg5Mg@@._V1_SX300.jpg",
+    "backdropPath": "https://m.media-amazon.com/images/M/MV5BMjA4MTc1ODU4Ml5BMl5BanBnXkFtZTcwNTg2Nzg5Mg@@._V1_SX300.jpg",
+    "year": 2010,
+    "voteAverage": 4.1,
+    "genres": [
+      "Komedi",
+      "Popüler"
+    ],
+    "duration": "98 dk",
+    "director": "Togan Gökbakar",
+    "actors": "Şahan Gökbakar, Zeynep Çamcı, Sevim Yatlılar"
+  },
+  {
+    "id": "tt3501756",
+    "type": "movie",
+    "title": "Recep İvedik 4",
+    "originalTitle": "Recep Ivedik 4",
+    "overview": "Mahalle çocuklarının futbol sahasını kurtarmak için para ödüllü ıssız ada yarışmasına katılan Recep İvedik'in maceraları.",
+    "posterPath": "https://m.media-amazon.com/images/M/MV5BNmFhMGUxMTAtNWQxNS00YTZiLWJjYjctYzVhMTczYzA5MTQ1XkEyXkFqcGc@._V1_SX300.jpg",
+    "backdropPath": "https://m.media-amazon.com/images/M/MV5BNmFhMGUxMTAtNWQxNS00YTZiLWJjYjctYzVhMTczYzA5MTQ1XkEyXkFqcGc@._V1_SX300.jpg",
+    "year": 2014,
+    "voteAverage": 3.8,
+    "genres": [
+      "Komedi",
+      "Popüler"
+    ],
+    "duration": "117 dk",
+    "director": "Togan Gökbakar",
+    "actors": "Şahan Gökbakar, Ali İhsan Varol, İrfan Kangı"
+  },
+  {
+    "id": "tt6316138",
+    "type": "movie",
+    "title": "Recep İvedik 5",
+    "originalTitle": "Recep Ivedik 5",
+    "overview": "Recep İvedik, vefat eden bir şoför dostunun yerine milli sporcuları Avrasya Gençlik Oyunları'na götürür.",
+    "posterPath": "https://m.media-amazon.com/images/M/MV5BOTU3MTY0NzgtYmUyNS00ZDVkLWE0NTMtOWU0Mzk5NDYzM2VmXkEyXkFqcGc@._V1_SX300.jpg",
+    "backdropPath": "https://m.media-amazon.com/images/M/MV5BOTU3MTY0NzgtYmUyNS00ZDVkLWE0NTMtOWU0Mzk5NDYzM2VmXkEyXkFqcGc@._V1_SX300.jpg",
+    "year": 2017,
+    "voteAverage": 3.3,
+    "genres": [
+      "Komedi",
+      "Popüler"
+    ],
+    "duration": "114 dk",
+    "director": "Togan Gökbakar",
+    "actors": "Şahan Gökbakar, Orkan Varan, Deniz Ceylan"
+  },
+  {
+    "id": "tt10756770",
+    "type": "movie",
+    "title": "Recep İvedik 6",
+    "originalTitle": "Recep Ivedik 6",
+    "overview": "Konya yerine yanlışlıkla Kenya'ya uçan Recep İvedik ve arkadaşı Nurullah'ın Afrika kabileleri arasındaki komedisi.",
+    "posterPath": "https://m.media-amazon.com/images/M/MV5BNTBmZGE2OTgtNzVhZS00M2VjLWEwNDAtMzBhOTQ1MGIxYTMzXkEyXkFqcGc@._V1_SX300.jpg",
+    "backdropPath": "https://m.media-amazon.com/images/M/MV5BNTBmZGE2OTgtNzVhZS00M2VjLWEwNDAtMzBhOTQ1MGIxYTMzXkEyXkFqcGc@._V1_SX300.jpg",
+    "year": 2019,
+    "voteAverage": 2.9,
+    "genres": [
+      "Komedi",
+      "Popüler"
+    ],
+    "duration": "110 dk",
+    "director": "Togan Gökbakar",
+    "actors": "Şahan Gökbakar, Nurullah Çelebi, Somer Karvan"
+  },
+  {
+    "id": "tt23730248",
+    "type": "movie",
+    "title": "Recep İvedik 7",
+    "originalTitle": "Recep Ivedik 7",
+    "overview": "Şehir hayatının pahalılığından kaçıp köyüne yerleşen Recep İvedik, köylülerle birlikte arazilerini ranta karşı korur.",
+    "posterPath": "https://m.media-amazon.com/images/M/MV5BYzA4ZjEzZjItMDFmMC00YWE0LThmMDgtMjg3ZTc1NGVmZTUyXkEyXkFqcGc@._V1_SX300.jpg",
+    "backdropPath": "https://m.media-amazon.com/images/M/MV5BYzA4ZjEzZjItMDFmMC00YWE0LThmMDgtMjg3ZTc1NGVmZTUyXkEyXkFqcGc@._V1_SX300.jpg",
+    "year": 2022,
+    "voteAverage": 5.1,
+    "genres": [
+      "Komedi",
+      "Popüler"
+    ],
+    "duration": "133 dk",
+    "director": "Togan Gökbakar",
+    "actors": "Şahan Gökbakar, Öznur Serçeler, İrfan Kangı"
+  },
+  {
+    "id": "tt0384116",
+    "type": "movie",
+    "title": "G.O.R.A.",
+    "originalTitle": "G.O.R.A.",
+    "overview": "Kurnaz halı tüccarı Arif, uzaylılar tarafından kaçırılarak G.O.R.A. gezegenine götürülür ve kaçış planı yapar.",
+    "posterPath": "https://m.media-amazon.com/images/M/MV5BNWQzMTM2OTQtNzI0MS00ZTMwLWIwYjQtMjhmMjE2NDFhMTk5XkEyXkFqcGc@._V1_SX300.jpg",
+    "backdropPath": "https://m.media-amazon.com/images/M/MV5BNWQzMTM2OTQtNzI0MS00ZTMwLWIwYjQtMjhmMjE2NDFhMTk5XkEyXkFqcGc@._V1_SX300.jpg",
+    "year": 2004,
+    "voteAverage": 8,
+    "genres": [
+      "Bilim Kurgu",
+      "Komedi",
+      "Kült"
+    ],
+    "duration": "127 dk",
+    "director": "Ömer Faruk Sorak",
+    "actors": "Cem Yılmaz, Rasim Öztekin, Özkan Uğur, Ozan Güven"
+  },
+  {
+    "id": "tt1284575",
+    "type": "movie",
+    "title": "A.R.O.G",
+    "originalTitle": "A.R.O.G: Bir Yontma Taş Filmi",
+    "overview": "Arif, Komutan Logar tarafından zaman makinesiyle bir milyon yıl öncesine gönderilir.",
+    "posterPath": "https://m.media-amazon.com/images/M/MV5BMTY3MjAwMzA1MF5BMl5BanBnXkFtZTcwODQ0MTk3Mg@@._V1_SX300.jpg",
+    "backdropPath": "https://m.media-amazon.com/images/M/MV5BMTY3MjAwMzA1MF5BMl5BanBnXkFtZTcwODQ0MTk3Mg@@._V1_SX300.jpg",
+    "year": 2008,
+    "voteAverage": 7.3,
+    "genres": [
+      "Bilim Kurgu",
+      "Komedi",
+      "Macera"
+    ],
+    "duration": "128 dk",
+    "director": "Cem Yılmaz, Ali Taner Baltacı",
+    "actors": "Cem Yılmaz, Özge Özberk, Ozan Güven, Zafer Algöz"
+  },
+  {
+    "id": "tt0480302",
+    "type": "movie",
+    "title": "Babam ve Oğlum",
+    "originalTitle": "Babam ve Oglum",
+    "overview": "12 Eylül darbesinde annesini kaybeden küçük Deniz ve babasının, yıllar sonra Ege kasabasındaki dedesinin yanına dönüşü.",
+    "posterPath": "https://m.media-amazon.com/images/M/MV5BNjAzMzEwYzctNjc1MC00Nzg5LWFmMGItMTgzNWJmYmFhNWZlXkEyXkFqcGc@._V1_SX300.jpg",
+    "backdropPath": "https://m.media-amazon.com/images/M/MV5BNjAzMzEwYzctNjc1MC00Nzg5LWFmMGItMTgzNWJmYmFhNWZlXkEyXkFqcGc@._V1_SX300.jpg",
+    "year": 2005,
+    "voteAverage": 8.2,
+    "genres": [
+      "Dram",
+      "Aile",
+      "Başyapıt"
+    ],
+    "duration": "112 dk",
+    "director": "Çağan Irmak",
+    "actors": "Çetin Tekindor, Fikret Kuşkan, Hümeyra, Ege Tanman"
+  },
+  {
+    "id": "tt0116231",
+    "type": "movie",
+    "title": "Eşkıya",
+    "originalTitle": "Eskiya",
+    "overview": "35 yıl hapis yatan Baran, sevdiği kadını ve kendisine ihanet eden arkadaşını bulmak için İstanbul'a gelir.",
+    "posterPath": "https://m.media-amazon.com/images/M/MV5BMjYwOTg1OTgyMl5BMl5BanBnXkFtZTcwNDYxMjE3MQ@@._V1_SX300.jpg",
+    "backdropPath": "https://m.media-amazon.com/images/M/MV5BMjYwOTg1OTgyMl5BMl5BanBnXkFtZTcwNDYxMjE3MQ@@._V1_SX300.jpg",
+    "year": 1996,
+    "voteAverage": 8.1,
+    "genres": [
+      "Suç & Gizem",
+      "Dram",
+      "Başyapıt"
+    ],
+    "duration": "128 dk",
+    "director": "Yavuz Turgul",
+    "actors": "Şener Şen, Uğur Yücel, Şermin Hürmeriç"
+  },
+  {
+    "id": "tt0275806",
+    "type": "movie",
+    "title": "Vizontele",
+    "originalTitle": "Vizontele",
+    "overview": "1974 yılında Güneydoğu Anadolu'nun ücra bir kasabasına televizyonun ilk kez gelişi ve kasaba halkının heyecanı.",
+    "posterPath": "https://m.media-amazon.com/images/M/MV5BMzY1MzA1ODAtMDZhMy00YjI5LWJjODctOWU1NzgyYmFkMjM3XkEyXkFqcGc@._V1_SX300.jpg",
+    "backdropPath": "https://m.media-amazon.com/images/M/MV5BMzY1MzA1ODAtMDZhMy00YjI5LWJjODctOWU1NzgyYmFkMjM3XkEyXkFqcGc@._V1_SX300.jpg",
+    "year": 2001,
+    "voteAverage": 8,
+    "genres": [
+      "Komedi",
+      "Dram",
+      "Kült"
+    ],
+    "duration": "110 dk",
+    "director": "Yılmaz Erdoğan, Ömer Faruk Sorak",
+    "actors": "Yılmaz Erdoğan, Demet Akbağ, Altan Erkekli, Cem Yılmaz"
+  },
+  {
+    "id": "tt7458856",
+    "type": "movie",
+    "title": "Ölümlü Dünya",
+    "originalTitle": "Olumlu Dunya",
+    "overview": "Nesillerdir dünya çapında bir kiralık katil organizasyonuna çalışan Mermer ailesinin komik kaçış hikayesi.",
+    "posterPath": "https://m.media-amazon.com/images/M/MV5BMzMyNjA4MzctNjA4Yy00ZjIzLWFiZjUtY2VjN2ZhMWE3N2UzXkEyXkFqcGc@._V1_SX300.jpg",
+    "backdropPath": "https://m.media-amazon.com/images/M/MV5BMzMyNjA4MzctNjA4Yy00ZjIzLWFiZjUtY2VjN2ZhMWE3N2UzXkEyXkFqcGc@._V1_SX300.jpg",
+    "year": 2018,
+    "voteAverage": 7.6,
+    "genres": [
+      "Aksiyon",
+      "Komedi",
+      "Suç & Gizem"
+    ],
+    "duration": "107 dk",
+    "director": "Ali Atay",
+    "actors": "Ahmet Mümtaz Taylan, Alper Kul, Sarp Apak, İrem Sak, Feyyaz Yiğit"
+  },
+  {
+    "id": "tt13970894",
+    "type": "tv",
+    "title": "Gibi",
+    "originalTitle": "Gibi",
+    "overview": "Yılmaz, İlkkan ve Ersoy'un sıradan hayatlarını altüst eden absürt ve felsefi olaylar dizisi.",
+    "posterPath": "https://m.media-amazon.com/images/M/MV5BMmQ3NWRjOTYtOTRhMy00YTc1LWJjODEtM2IxNjg1OTZlOWFlXkEyXkFqcGc@._V1_SX300.jpg",
+    "backdropPath": "https://m.media-amazon.com/images/M/MV5BMmQ3NWRjOTYtOTRhMy00YTc1LWJjODEtM2IxNjg1OTZlOWFlXkEyXkFqcGc@._V1_SX300.jpg",
+    "year": 2021,
+    "voteAverage": 8.9,
+    "genres": [
+      "Komedi",
+      "Absürt",
+      "Popüler"
+    ],
+    "duration": "30 dk",
+    "director": "Ömer Sinir, Onur Uzun",
+    "actors": "Feyyaz Yiğit, Kıvanç Kılınç, Ahmet Kürşat Öçalan"
+  },
+  {
+    "id": "tt0252487",
+    "type": "movie",
+    "title": "Hababam Sınıfı",
+    "originalTitle": "Hababam Sinifi",
+    "overview": "Özel Çamlıca Lisesi'nin afacan öğrencilerinin Mahmut Hoca ile olan unutulmaz anıları.",
+    "posterPath": "https://m.media-amazon.com/images/M/MV5BNjRmMzMyOTItNGM5OS00YTNjLThhODQtMWY0M2Y0MDc5NTBkXkEyXkFqcGc@._V1_SX300.jpg",
+    "backdropPath": "https://m.media-amazon.com/images/M/MV5BNjRmMzMyOTItNGM5OS00YTNjLThhODQtMWY0M2Y0MDc5NTBkXkEyXkFqcGc@._V1_SX300.jpg",
+    "year": 1975,
+    "voteAverage": 9.2,
+    "genres": [
+      "Komedi",
+      "Klasik Sinema",
+      "Başyapıt"
+    ],
+    "duration": "87 dk",
+    "director": "Ertem Eğilmez",
+    "actors": "Kemal Sunal, Münir Özkul, Tarık Akan, Halit Akçatepe, Adile Naşit"
+  },
+  {
+    "id": "tt0252055",
+    "type": "movie",
+    "title": "Tosun Paşa",
+    "originalTitle": "Tosun Pasa",
+    "overview": "Yeşil Vadi'yi kapmak için mücadele eden Tellioğulları ve Seferoğulları aileleri arasındaki mücadele.",
+    "posterPath": "https://m.media-amazon.com/images/M/MV5BNTQyYjdhYWEtMzM2Yy00MTZkLWFkZjQtMGI2ZjlmMzcwNWRjXkEyXkFqcGc@._V1_SX300.jpg",
+    "backdropPath": "https://m.media-amazon.com/images/M/MV5BNTQyYjdhYWEtMzM2Yy00MTZkLWFkZjQtMGI2ZjlmMzcwNWRjXkEyXkFqcGc@._V1_SX300.jpg",
+    "year": 1976,
+    "voteAverage": 8.9,
+    "genres": [
+      "Komedi",
+      "Klasik Sinema",
+      "Kült"
+    ],
+    "duration": "90 dk",
+    "director": "Kartal Tibet",
+    "actors": "Kemal Sunal, Müjde Ar, Şener Şen, Adile Naşit"
+  },
+  {
+    "id": "tt2758880",
+    "type": "movie",
+    "title": "Kış Uykusu",
+    "originalTitle": "Winter Sleep",
+    "overview": "Eski bir tiyatro oyuncusu olan Aydın'ın Kapadokya'daki bir otelde geçen ve insan ilişkilerini irdeleyen hikayesi.",
+    "posterPath": "https://m.media-amazon.com/images/M/MV5BMjA3NTY3Njg2Ml5BMl5BanBnXkFtZTgwNTQzNzQ4MTE@._V1_SX300.jpg",
+    "backdropPath": "https://m.media-amazon.com/images/M/MV5BMjA3NTY3Njg2Ml5BMl5BanBnXkFtZTgwNTQzNzQ4MTE@._V1_SX300.jpg",
+    "year": 2014,
+    "voteAverage": 8,
+    "genres": [
+      "Dram",
+      "Sanat & Festival",
+      "Başyapıt"
+    ],
+    "duration": "196 dk",
+    "director": "Nuri Bilge Ceylan",
+    "actors": "Haluk Bilginer, Melisa Sözen, Demet Akbağ"
+  },
+  {
+    "id": "tt1827487",
+    "type": "movie",
+    "title": "Bir Zamanlar Anadolu'da",
+    "originalTitle": "Once Upon a Time in Anatolia",
+    "overview": "Bir doktor ve savcının Anadolu bozkırında bir ceset arayışı sırasında geçen bir gece ve bir günün hikayesi.",
+    "posterPath": "https://m.media-amazon.com/images/M/MV5BMTAzMjI4Mjk2OTVeQTJeQWpwZ15BbWU3MDk3OTY3NTI@._V1_SX300.jpg",
+    "backdropPath": "https://m.media-amazon.com/images/M/MV5BMTAzMjI4Mjk2OTVeQTJeQWpwZ15BbWU3MDk3OTY3NTI@._V1_SX300.jpg",
+    "year": 2011,
+    "voteAverage": 7.8,
+    "genres": [
+      "Dram",
+      "Suç & Gizem",
+      "Sanat & Festival"
+    ],
+    "duration": "157 dk",
+    "director": "Nuri Bilge Ceylan",
+    "actors": "Muhammet Uzuner, Yılmaz Erdoğan, Taner Birsel"
+  },
+  {
     "id": "tt15239678",
     "type": "movie",
     "title": "Dune: Part Two",
@@ -9482,52 +9817,6 @@
     "cinemaNotes": "Karakter derinliği, doğal ışık kullanımı ve insan psikolojisinin katmanlarını açığa çıkaran güçlü diyaloglar."
   },
   {
-    "id": "tt2758880",
-    "type": "movie",
-    "title": "Winter Sleep",
-    "originalTitle": "Winter Sleep",
-    "overview": "Eski oyuncu olan Aydın, fırtınalı bir ilişkisi olduğu genç eşi Nihal ve yakın zamanda boşanmanın acısını çeken kız kardeşi Necla ile birlikte Orta Anadolu'da küçük bir otel işletiyor. Kışın kar yağmaya başlayınca otel bir sığınağa dönüşür ama aynı zamanda düşmanlıkları körükleyen kaçınılmaz bir yere dönüşür...",
-    "posterPath": "https://m.media-amazon.com/images/M/MV5BNTU1NTY2Mzg5M15BMl5BanBnXkFtZTgwNDcwNjM5MTE@._V1_SX300.jpg",
-    "backdropPath": "https://m.media-amazon.com/images/M/MV5BNTU1NTY2Mzg5M15BMl5BanBnXkFtZTgwNDcwNjM5MTE@._V1_SX300.jpg",
-    "releaseDate": "13 Haziran 2014",
-    "year": 2014,
-    "voteAverage": 8,
-    "genres": [
-      "Dram"
-    ],
-    "duration": "196 dk",
-    "director": "Nuri Bilge Ceylan",
-    "actors": "Haluk Bilginer, Melisa Sözen, Demet Akbag",
-    "awards": "19 Ödül & 32 Adaylık toplam",
-    "imdbVotes": "57,651",
-    "overviewEn": "Aydin, a former actor, runs a small hotel in central Anatolia with his young wife Nihal with whom he has a stormy relationship and his sister Necla who is suffering from her recent divorce. In winter as the snow begins to fall, the hotel turns into a shelter but also an inescapable place that fuels their animosities...",
-    "cinemaNotes": "Taşranın melankolisi, Çehovyen içsel monologlar ve Cannes Film Festivali tescilli fotoğrafik kompozisyonlar."
-  },
-  {
-    "id": "tt1827487",
-    "type": "movie",
-    "title": "Once Upon a Time in Anatolia",
-    "originalTitle": "Once Upon a Time in Anatolia",
-    "overview": "Anadolu'nun Keskin ilçesi kırsalında yerel savcı, polis komiseri ve doktor, Kenan adlı şüphelinin ve zihinsel engelli kardeşinin itiraf ettiği bir cinayetin kurbanını aramaya başlıyor. Ancak Kenan'ın cesedin tam yerini bilmemesi nedeniyle arama beklenenden daha zor oluyor. Grup araştırmaya devam ederken, üyeleri kendi aralarında hem önemsiz şeyler hem de herhangi birinin beklediğinden daha zorlu olduğunu kanıtlayan bir soruşturmadaki en derin endişeleri hakkında sohbet etmeden duramazlar.",
-    "posterPath": "https://m.media-amazon.com/images/M/MV5BMzg3OTMyODQ1M15BMl5BanBnXkFtZTcwNjMwMTEwNw@@._V1_SX300.jpg",
-    "backdropPath": "https://m.media-amazon.com/images/M/MV5BMzg3OTMyODQ1M15BMl5BanBnXkFtZTcwNjMwMTEwNw@@._V1_SX300.jpg",
-    "releaseDate": "23 Eylül 2011",
-    "year": 2011,
-    "voteAverage": 7.8,
-    "genres": [
-      "Suç & Gizem",
-      "Dram",
-      "Psikolojik Gerilim"
-    ],
-    "duration": "157 dk",
-    "director": "Nuri Bilge Ceylan",
-    "actors": "Muhammet Uzuner, Yilmaz Erdogan, Taner Birsel",
-    "awards": "21 Ödül & 34 Adaylık toplam",
-    "imdbVotes": "52,902",
-    "overviewEn": "In the rural area around the Anatolian town of Keskin, the local prosecutor, police commissar, and doctor lead a search for a victim of a murder to whom a suspect named Kenan and his mentally challenged brother confessed. However, the search is proving more difficult than expected as Kenan is fuzzy as to the body's exact location. As the group continues looking, its members can't help but chat among themselves about both trivia and their deepest concerns in an investigation that is proving more trying than any of them expected.",
-    "cinemaNotes": "Taşranın melankolisi, Çehovyen içsel monologlar ve Cannes Film Festivali tescilli fotoğrafik kompozisyonlar."
-  },
-  {
     "id": "tt6628394",
     "type": "movie",
     "title": "Bad Times at the El Royale",
@@ -9707,30 +9996,6 @@
     "cinemaNotes": "Karakter derinliği, doğal ışık kullanımı ve insan psikolojisinin katmanlarını açığa çıkaran güçlü diyaloglar."
   },
   {
-    "id": "tt0116231",
-    "type": "movie",
-    "title": "The Bandit",
-    "originalTitle": "The Bandit",
-    "overview": "Efsanevi Eşkıya Baran'ın hapisten çıktıktan sonraki destansı maceraları. 35 yıl hizmet verdikten sonra dünyanın dramatik bir şekilde değişmesi sürpriz değil. Yine de Baran, yeni baraj inşaatı nedeniyle doğduğu köyün sular altında kaldığını öğrenince şok olmaktan kendini alamaz. Daha sonra eski en yakın arkadaşı olan ve kendisine ispiyonlayan ve sevgilisi Keje'yi çalan adamdan intikam almak için İstanbul'a doğru yola çıkar. Bu arada Baran, hırsızın eski moda yöntemlerini oldukça tuhaf bulan sert genç serseri Cumali ile iş birliği yapar. Cumali'nin başı bir suç patronuyla büyük derde girince Baran, kadrosuna intikam dolu bir görev daha ekler.",
-    "posterPath": "https://m.media-amazon.com/images/M/MV5BZjAxM2YxNGItNzYwNy00Y2I2LTg1YzEtOWY4ZmU5Njk5ZDQzXkEyXkFqcGc@._V1_SX300.jpg",
-    "backdropPath": "https://m.media-amazon.com/images/M/MV5BZjAxM2YxNGItNzYwNy00Y2I2LTg1YzEtOWY4ZmU5Njk5ZDQzXkEyXkFqcGc@._V1_SX300.jpg",
-    "releaseDate": "29 Kasım 1996",
-    "year": 1996,
-    "voteAverage": 8.1,
-    "genres": [
-      "Suç & Gizem",
-      "Dram",
-      "Psikolojik Gerilim"
-    ],
-    "duration": "128 dk",
-    "director": "Yavuz Turgul",
-    "actors": "Sener Sen, Ugur Yücel, Sermin Hürmeriç",
-    "awards": "6 Ödül",
-    "imdbVotes": "73,146",
-    "overviewEn": "The epic adventures of the legendary Baran the Bandit following his release from prison. After serving 35 years, it is no surprise that the world has changed dramatically. Still, Baran can't help but be shocked to discover that his home village is now underwater thanks to the construction of a new dam. He then heads for Istanbul to get revenge upon his former best friend, the man who snitched on him and stole his lover Keje. Along the way, Baran teams up with Cumali, a tough young punk who finds the thief's old-fashioned ways rather quaint. When Cumali gets into deep trouble with a crime boss, Baran adds another vengeful task to his roster.",
-    "cinemaNotes": "Karakter derinliği, doğal ışık kullanımı ve insan psikolojisinin katmanlarını açığa çıkaran güçlü diyaloglar."
-  },
-  {
     "id": "tt0093574",
     "type": "movie",
     "title": "Motten im Licht",
@@ -9811,28 +10076,6 @@
     "director": "Yeshwant Pethkar",
     "overviewEn": "Sant Namdeo (1991): A remarkable movie exploring complex character journeys and unforgettable dramatic conflicts across its narrative.",
     "cinemaNotes": "35mm analog fanzin arşivine kaydedilmiş, sinefillerin zevk profillerinde ve eşleşme radarlarında öne çıkan kült bir yapım."
-  },
-  {
-    "id": "tt0252487",
-    "type": "movie",
-    "title": "The Chaos Class",
-    "originalTitle": "The Chaos Class",
-    "overview": "Tembel, eğitimsiz öğrenciler arasında çok yakın bir bağ vardır. En son şakalarını planladıkları yurtta birlikte yaşıyorlar. Yeni bir müdür geldiğinde öğrenciler doğal olarak onu devirmeye çalışırlar. Bunu aptalların komik bir savaşı takip ediyor.",
-    "posterPath": "https://m.media-amazon.com/images/M/MV5BZTdhN2ViYjctMGZlZi00ZGRmLWIxMWQtNzJiMDY1ZDcxNjJmXkEyXkFqcGc@._V1_SX300.jpg",
-    "backdropPath": "https://m.media-amazon.com/images/M/MV5BZTdhN2ViYjctMGZlZi00ZGRmLWIxMWQtNzJiMDY1ZDcxNjJmXkEyXkFqcGc@._V1_SX300.jpg",
-    "releaseDate": "01 Nisan 1975",
-    "year": 1975,
-    "voteAverage": 9.2,
-    "genres": [
-      "Komedi",
-      "Klasik Sinema"
-    ],
-    "duration": "87 dk",
-    "director": "Ertem Egilmez",
-    "actors": "Kemal Sunal, Münir Özkul, Halit Akçatepe",
-    "imdbVotes": "43,579",
-    "overviewEn": "Lazy, uneducated students share a very close bond. They live together in the dormitory, where they plan their latest pranks. When a new headmaster arrives, the students naturally try to overthrow him. A comic war of nitwits follows.",
-    "cinemaNotes": "Zekice örülmüş durum komedisi ve oyuncuların doğaçlama performanslarıyla parlayan fanzin klasiği."
   },
   {
     "id": "tt0252601",
