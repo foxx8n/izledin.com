@@ -29,6 +29,7 @@ export const PROFILE_SELECT_COLUMNS = [
   'updated_at',
   'is_verified',
   'match_intent',
+  'radar_visible',
   'intent_last_changed_at',
   'intent_integrity_score',
   'intent_strikes_count',
@@ -74,6 +75,7 @@ export function mapDbProfileToProfile(row: any): Profile {
     isPremium: Boolean(row.is_premium),
     matchEnabled: row.match_enabled !== false,
     matchIntent: (row.match_intent || row.matchIntent || 'friend') as any,
+    radarVisible: row.radar_visible !== false,
     intentLastChangedAt: row.intent_last_changed_at || undefined,
     intentIntegrityScore: row.intent_integrity_score ?? 98,
     intentStrikesCount: row.intent_strikes_count ?? 0,
@@ -111,6 +113,8 @@ export function mapProfileToDb(profile: Partial<Profile>): Record<string, any> {
   // protection trigger). Admin flows go through the admin_set_user_flags RPC.
   if (profile.matchEnabled !== undefined) dbData.match_enabled = profile.matchEnabled;
   if (profile.matchIntent !== undefined) dbData.match_intent = profile.matchIntent;
+  // S8 İZDAŞ GÜVENCESİ: radar visibility opt-out
+  if (profile.radarVisible !== undefined) dbData.radar_visible = profile.radarVisible;
   if (profile.intentAgreedAt !== undefined) dbData.intent_agreed_at = profile.intentAgreedAt;
   // NOTE: intent_integrity_score / intent_strikes_count / total_watched_count /
   // total_watch_hours are intentionally NOT mapped either. Column grants exclude

@@ -48,6 +48,12 @@ import { MovieMateMatch, MediaItem, MatchIntent } from '@/types';
 
 export default function MatchesPage() {
   const { user, profile } = useAuth();
+  // S8 İZDAŞ GÜVENCESİ: Sinematik Flört is opt-in. Members whose own intent
+  // is friend never see dating-intent profiles or the Flört tab.
+  const viewerIntent = (profile?.matchIntent as MatchIntent | undefined) || 'friend';
+  const datingVisible = viewerIntent === 'dating' || viewerIntent === 'both';
+  const intentOf = (m: MovieMateMatch): MatchIntent =>
+    ((m.user.matchIntent || m.intent || 'friend') as MatchIntent);
   const [matches, setMatches] = useState<MovieMateMatch[]>([]);
   const [selectedIntent, setSelectedIntent] = useState<'all' | 'friend' | 'dating' | 'both'>('all');
   const [selectedGenre, setSelectedGenre] = useState<string>('Hepsi');
@@ -83,6 +89,12 @@ export default function MatchesPage() {
   // Per-match undo timers live in gridUndoTimersRef (see handleGridPass)
   // Stale-response guard for rapid profile changes / refetches
   const matchesFetchSeqRef = React.useRef(0);
+
+  // S8: if the viewer loses dating visibility (intent change), fall back out
+  // of the hidden Flört tab.
+  useEffect(() => {
+    if (!datingVisible && selectedIntent === 'dating') setSelectedIntent('all');
+  }, [datingVisible, selectedIntent]);
 
   const fetchMatches = async (forceRefresh = false) => {
     const seq = ++matchesFetchSeqRef.current;
@@ -167,6 +179,8 @@ export default function MatchesPage() {
       const intent = m.user.matchIntent || m.intent || 'friend';
       // 'both' members are open to every intent
       if (intent !== selectedIntent && intent !== 'both') return false;
+    } else if (!datingVisible && intentOf(m) === 'dating') {
+      return false;
     }
     // Filter on the candidate's OWN genres — sharedGenres is the pairwise
     // intersection, so searching a genre you don't personally have always
@@ -230,13 +244,13 @@ export default function MatchesPage() {
     );
 
     if (!result.ok || !result.matchId) {
-      // Sticky rejection (upsert_match_request v2): the OTHER person passed on
-      // this pair earlier and only they can revive it. No dead-end chat modal —
-      // calm Turkish feedback instead.
+      // Sticky rejection / S8 daily cap: calm Turkish feedback, no dead-end chat.
       showDeckNotice(
         result.rejected
           ? `@${match.user.username} bu eşleşmeye daha önce pas geçmiş. Yeni bir mesaj isteği gönderilemedi.`
-          : 'Eşleşme talebi gönderilemedi. Lütfen tekrar deneyin.'
+          : result.limitReached
+            ? 'Günlük izdaş isteği sınırına ulaştın. Yarın tekrar dene.'
+            : 'Eşleşme talebi gönderilemedi. Lütfen tekrar deneyin.'
       );
       return;
     }
@@ -417,7 +431,7 @@ export default function MatchesPage() {
                   : '  text-neutral-400 hover:text-[#FAFAFA]'
               }`}
             >
-              TÜMÜ ({matches.length})
+              TÜMÜ ({matches.filter((m) => datingVisible || intentOf(m) !== 'dating').length})
             </button>
 
             <button
@@ -433,6 +447,7 @@ export default function MatchesPage() {
               <span className="truncate">Film Arkadaşı ({matches.filter(m => (m.user.matchIntent || m.intent || 'friend') === 'friend').length})</span>
             </button>
 
+            {datingVisible && (
             <button
               type="button"
               onClick={() => setSelectedIntent('dating')}
@@ -445,6 +460,7 @@ export default function MatchesPage() {
               <CinemaRomanceIcon size={14} className="shrink-0" />
               <span className="truncate">Sinematik Flört ({matches.filter(m => (m.user.matchIntent || m.intent) === 'dating').length})</span>
             </button>
+            )}
 
             <button
               type="button"

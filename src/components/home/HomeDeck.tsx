@@ -138,7 +138,11 @@ export function HomeDeck() {
       match.id = result.matchId;
       match.status = "pending";
       match.initiatorId = user.id;
+    } else if (result.limitReached) {
+      showToast("Günlük izdaş isteği sınırına ulaştın. Yarın tekrar dene.");
     }
+    // Sticky rejections stay silent here: the card already left the deck and
+    // the matches-page notice covers that flow.
   };
   const commitPass = async (match: MovieMateMatch) => {
     if (!user || !match.user?.id) return;

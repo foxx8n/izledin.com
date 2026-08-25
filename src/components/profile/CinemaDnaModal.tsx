@@ -36,6 +36,8 @@ export function CinemaDnaModal({ isOpen, onClose }: CinemaDnaModalProps) {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [location, setLocation] = useState('Kadıköy, İstanbul');
   const [matchIntent, setMatchIntent] = useState<MatchIntent>('friend');
+  // S8 İZDAŞ GÜVENCESİ: radarda görünme hakkı
+  const [radarVisible, setRadarVisible] = useState(profile?.radarVisible !== false);
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -46,6 +48,7 @@ export function CinemaDnaModal({ isOpen, onClose }: CinemaDnaModalProps) {
     setSelectedGenres(profile.favoriteGenres || []);
     setLocation(profile.location || 'Kadıköy, İstanbul');
     setMatchIntent(profile.matchIntent || 'friend');
+    setRadarVisible(profile.radarVisible !== false);
     setErrorMsg(null);
   }, [isOpen, profile]);
 
@@ -119,6 +122,11 @@ export function CinemaDnaModal({ isOpen, onClose }: CinemaDnaModalProps) {
           return;
         }
         payload.matchIntent = matchIntent;
+      }
+
+      // S8: radar visibility opt-out
+      if (radarVisible !== (profile.radarVisible !== false)) {
+        payload.radarVisible = radarVisible;
       }
 
       const res = await updateUserProfile(payload);
@@ -319,6 +327,39 @@ export function CinemaDnaModal({ isOpen, onClose }: CinemaDnaModalProps) {
           />
         </div>
 
+        {/* S8 İZDAŞ GÜVENCESİ: radarda görünme anahtarı */}
+        <div className="pt-4">
+          <button
+            type="button"
+            onClick={() => setRadarVisible((v) => !v)}
+            className={`w-full p-3 text-left border-2 transition-all flex items-center justify-between gap-3 cursor-pointer ${
+              radarVisible
+                ? 'bg-[#171717] text-[#FAFAFA] border-[#404040] hover:border-neutral-500'
+                : 'bg-[#0A0A0A] text-white border-emerald-600 shadow-[3px_3px_0px_#10B981]'
+            }`}
+          >
+            <div>
+              <span className="text-xs font-black uppercase tracking-wider block">
+                RADARDA GÖRÜNME HAKKI
+              </span>
+              <span className="text-[10px] font-bold text-neutral-400 block mt-0.5 leading-relaxed">
+                {radarVisible
+                  ? 'Profilin İzdaş radarında görünür. Kapatırsan kimse destende seni göremez.'
+                  : 'Profilin gizli — hiçbir desteye düşmezsin. Dilediğin an geri açabilirsin.'}
+              </span>
+            </div>
+            <span
+              className={`shrink-0 px-2 py-1 text-[10px] font-black uppercase border-2 ${
+                radarVisible
+                  ? 'bg-[#262626] text-neutral-300 border-[#404040]'
+                  : 'bg-emerald-500 text-[#0A0A0A] border-[#0A0A0A]'
+              }`}
+            >
+              {radarVisible ? 'AÇIK' : 'GİZLİ'}
+            </span>
+          </button>
+        </div>
+
         {/* Actions Footer */}
         <div className="flex items-center justify-between pt-4 border-t-2 border-[#404040]">
           <button
@@ -330,7 +371,6 @@ export function CinemaDnaModal({ isOpen, onClose }: CinemaDnaModalProps) {
           </button>
 
           <button
-            type="button"
             onClick={handleSave}
             disabled={saving}
             className="px-6 py-3 min-h-[44px] bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs sm:text-sm font-black uppercase tracking-wider border-2 border-white shadow-[4px_4px_0px_#000000] flex items-center gap-2 cursor-pointer transition-transform active:translate-x-0.5 active:translate-y-0.5 disabled:opacity-50"

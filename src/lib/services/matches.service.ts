@@ -187,6 +187,11 @@ export interface MatchRequestResult {
    * can revive it. Callers show calm Turkish feedback instead of a raw error.
    */
   rejected?: boolean;
+  /**
+   * True when the S8 İZDAŞ GÜVENCESİ daily like cap (25/day, DB-enforced)
+   * refused the request. Callers surface the quota message.
+   */
+  limitReached?: boolean;
   matchId?: string | null;
 }
 
@@ -208,16 +213,15 @@ async function upsertMatchRequest(
   });
 
   if (error) {
-    // Sticky rejection arrives as P0001 with a Turkish exception message —
-    // classify it so the UI can react without parsing console output.
-    const rejected =
-      error.code === 'P0001' &&
-      typeof error.message === 'string' &&
-      error.message.includes('reddedildi');
-    if (!rejected) {
+    // Sticky rejection / S8 daily-cap arrive as P0001 with Turkish exception
+    // messages — classify so the UI reacts without parsing console output.
+    const message = typeof error.message === 'string' ? error.message : '';
+    const rejected = error.code === 'P0001' && message.includes('reddedildi');
+    const limitReached = error.code === 'P0001' && message.includes('sınırına');
+    if (!rejected && !limitReached) {
       console.error('Error creating/updating match:', error.message);
     }
-    return { ok: false, rejected };
+    return { ok: false, rejected, limitReached };
   }
 
   const row = Array.isArray(data) ? data[0] : data;

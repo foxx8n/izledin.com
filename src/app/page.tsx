@@ -56,6 +56,9 @@ export default async function HomePage() {
             {typeof memberCount === "number" &&
               ` Şu an ${memberCount} sinefil frekansta.`}
           </p>
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 border border-emerald-600/40 bg-emerald-500/10 text-[10px] font-black uppercase tracking-widest text-emerald-400">
+            <span>İZDAŞ GÜVENCESİ: günlük istek sınırı • radarda gizlenme hakkı • korumalı sohbet</span>
+          </div>
         </section>
 
         {/* Liquidity-governed deck */}
