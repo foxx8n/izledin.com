@@ -4,7 +4,8 @@ import { Profile } from '@/types';
  * Client-side compatibility scoring for GUESTS and RPC-failure fallback only.
  * Mirrors the authoritative `calculate_cinephile_matches` Postgres spec so the
  * same pair sees the same score everywhere:
- *   baseline 32 + genre-Jaccard ×35 + streaming 15/5 + intent 15/5,
+ *   baseline 32 + genre-Jaccard ×35 + streaming 15/5
+ *   + intent 15 when equal OR either side 'both' else 5,
  *   clamped to [50, 99]. Top-4 overlaps are surfaced as shared titles/reasons
  *   but intentionally carry no score (parity with the DB engine).
  */
@@ -36,11 +37,15 @@ export function calculateCinemaMatch(
   const hasStreamingOverlap = [...servicesA].some((s) => servicesB.has(s));
   const serviceScore = hasStreamingOverlap ? 15 : 5;
 
-  // 3. Intent Alignment — exact 15 / different 5 (matches DB)
+  // 3. Intent Alignment — 15 when equal OR either side open ('both'), else 5
+  // (matches DB since the S1 hotfix; 'both' is admitted by the pool filter
+  // and must not be scored as a mismatch)
   const intentA = userA.matchIntent || 'friend';
   const intentB = userB.matchIntent || 'friend';
-  const intentScore = intentA === intentB ? 15 : 5;
-  if (intentA === intentB) {
+  const intentsAligned =
+    intentA === intentB || intentA === 'both' || intentB === 'both';
+  const intentScore = intentsAligned ? 15 : 5;
+  if (intentsAligned) {
     reasons.push('Ortak kulüp niyeti ve vizyon anlayışı');
   }
 
