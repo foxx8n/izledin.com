@@ -106,6 +106,7 @@ import {
   DiscoverySortOption,
 } from "@/lib/algorithms/discovery";
 import { MediaItem, MovieMateMatch, WatchLog, Profile } from "@/types";
+import { useSwipeDeck, type DeckHistoryEntry } from "@/hooks/useSwipeDeck";
 
 export default function HomePage() {
   const { user, profile } = useAuth();
@@ -119,8 +120,6 @@ export default function HomePage() {
   const [logs, setLogs] = useState<WatchLog[]>([]);
   const [likedLogIds, setLikedLogIds] = useState<Set<string>>(new Set());
   const [matches, setMatches] = useState<MovieMateMatch[]>([]);
-  const [activeHomeDeckIndex, setActiveHomeDeckIndex] = useState(0);
-  const [homeDeckHistory, setHomeDeckHistory] = useState<number[]>([]);
   const DISCOVERY_PAGE_SIZE = 15;
   const [selectedGenre, setSelectedGenre] = useState<string>("Hepsi");
   const [activeTab, setActiveTab] = useState<"all" | "movie" | "tv" | "anime">(
@@ -474,29 +473,76 @@ export default function HomePage() {
     setMatches((prev) => prev.filter((m) => m.id !== match.id));
   };
 
-  const handleHomeDeckLike = (match: MovieMateMatch) => {
-    handleMatchLike(match);
-    setHomeDeckHistory((prev) => [...prev, activeHomeDeckIndex]);
-    setActiveHomeDeckIndex((prev) => prev + 1);
+  // ---------------------------------------------------------------------------
+  // S3: home deck persistence moved behind useSwipeDeck's undo window (4s).
+  // Swipes are local until the window closes, so GERİ AL truly reverses —
+  // no 'passed' row or pending request survives an undone swipe. This also
+  // fixes the old pass handler's skipped card (it removed the card AND
+  // advanced the index). Commit-time likes intentionally do NOT auto-open
+  // chat; mutual matches announce via the global MatchAcceptedToast.
+  // ---------------------------------------------------------------------------
+  const commitHomeDeckLike = async (match: MovieMateMatch) => {
+    if (!user) return;
+    const result = await requestMatch(
+      user.id,
+      match.user.id,
+      "pending",
+      match.compatibilityScore,
+      match.sharedGenres,
+      match.sharedTitles,
+    );
+    if (!result.ok || !result.matchId) {
+      showCardToast(
+        result.rejected
+          ? `@${match.user.username} bu eşleşmeye daha önce pas geçmiş. Yeni bir mesaj isteği gönderilemedi.`
+          : "Eşleşme talebi gönderilemedi. Lütfen tekrar deneyin.",
+      );
+      return;
+    }
+    match.id = result.matchId;
+    match.status = "pending";
+    match.initiatorId = user.id;
   };
 
-  const handleHomeDeckPass = (match: MovieMateMatch) => {
-    handleMatchPass(match);
-    setHomeDeckHistory((prev) => [...prev, activeHomeDeckIndex]);
-    setActiveHomeDeckIndex((prev) => prev + 1);
+  const commitHomeDeckPass = async (match: MovieMateMatch) => {
+    if (!user || !match.user?.id) return;
+    await createOrUpdateMatch(
+      user.id,
+      match.user.id,
+      "passed",
+      match.compatibilityScore,
+      match.sharedGenres,
+      match.sharedTitles,
+    );
   };
 
+  const removeCardFromRadar = (match: MovieMateMatch) => {
+    setMatches((prev) => prev.filter((m) => m.id !== match.id));
+  };
+
+  const reinsertPassedCard = (entry: DeckHistoryEntry) => {
+    setMatches((prev) => {
+      if (prev.some((m) => m.id === entry.match.id)) return prev;
+      const next = [...prev];
+      next.splice(Math.min(entry.index, next.length), 0, entry.match);
+      return next;
+    });
+  };
+
+  const homeDeck = useSwipeDeck({
+    onLikeCommit: commitHomeDeckLike,
+    onPassGesture: removeCardFromRadar,
+    onPassCommit: commitHomeDeckPass,
+    onPassUndo: reinsertPassedCard,
+  });
+  const { index: activeHomeDeckIndex } = homeDeck;
+
+  const handleHomeDeckLike = (match: MovieMateMatch) => homeDeck.swipeLike(match);
+  const handleHomeDeckPass = (match: MovieMateMatch) => homeDeck.swipePass(match);
   const handleHomeDeckUndo = () => {
-    if (homeDeckHistory.length === 0) return;
-    const lastIdx = homeDeckHistory[homeDeckHistory.length - 1];
-    setHomeDeckHistory((prev) => prev.slice(0, -1));
-    setActiveHomeDeckIndex(lastIdx);
+    homeDeck.undo();
   };
-
-  const handleHomeDeckReset = () => {
-    setActiveHomeDeckIndex(0);
-    setHomeDeckHistory([]);
-  };
+  const handleHomeDeckReset = () => homeDeck.reset();
 
   return (
     <div className="min-h-screen with-sidebar flex flex-col  bg-[#0A0A0A]  text-[#FAFAFA] selection:bg-[#DC2626] selection:text-white transition-colors duration-150">
@@ -762,7 +808,7 @@ export default function HomePage() {
                       <button
                         type="button"
                         onClick={handleHomeDeckUndo}
-                        disabled={homeDeckHistory.length === 0}
+                        disabled={!homeDeck.canUndo}
                         aria-label="Önceki Profile Dön (Geri Al)"
                         className="px-2.5 py-1.5 min-h-[36px] text-xs font-black uppercase border border-neutral-600 bg-neutral-900 text-neutral-300 hover:text-white disabled:opacity-40 disabled:pointer-events-none flex items-center gap-1.5 cursor-pointer"
                         title="Önceki Profile Dön"

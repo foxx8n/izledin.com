@@ -42,6 +42,7 @@ import { AuthModal } from '@/components/auth/AuthModal';
 
 import { useAuth } from '@/context/AuthContext';
 import { computeDiscoverMatches, createOrUpdateMatch, requestMatch } from '@/lib/services/matches.service';
+import { useSwipeDeck, type DeckHistoryEntry } from '@/hooks/useSwipeDeck';
 import { trackEvent, TELEMETRY_EVENTS } from '@/lib/telemetry';
 import { getInboxSummary } from '@/lib/services/inbox.service';
 import { searchCatalog } from '@/lib/omdb';
@@ -62,15 +63,6 @@ export default function MatchesPage() {
 
   // Mobile Single Deck and View Mode State
   const [displayLayout, setDisplayLayout] = useState<'deck' | 'grid'>('deck');
-  const [activeDeckIndex, setActiveDeckIndex] = useState(0);
-  // Deck history remembers WHAT happened so undo can reverse passes (which
-  // shrink the array) differently from likes (which only advance).
-  const [deckHistory, setDeckHistory] = useState<
-    (
-      | { type: 'like'; index: number }
-      | { type: 'pass'; index: number; match: MovieMateMatch }
-    )[]
-  >([]);
 
   const provinces = getAllProvinces();
   const cityDistricts = selectedCity !== 'Hepsi' ? getDistricts(selectedCity) : [];
@@ -210,28 +202,6 @@ export default function MatchesPage() {
     return true;
   });
 
-  // S2 telemetry: fire ONCE per exhaustion transition so exhaustion rate can
-  // gate future deck decisions (MATCHING-PIVOT-PLAN.md §S2).
-  const radarEmpty = !loading && matches.length === 0;
-  const deckExhausted =
-    !loading &&
-    displayLayout === 'deck' &&
-    filteredMatches.length > 0 &&
-    activeDeckIndex >= filteredMatches.length;
-  const exhaustedNotifiedRef = React.useRef(false);
-  React.useEffect(() => {
-    if (!(radarEmpty || deckExhausted)) {
-      exhaustedNotifiedRef.current = false;
-      return;
-    }
-    if (exhaustedNotifiedRef.current) return;
-    exhaustedNotifiedRef.current = true;
-    trackEvent(TELEMETRY_EVENTS.RADAR_EXHAUSTED, {
-      kind: radarEmpty ? 'empty_radar' : 'deck_completed',
-      pool_size: filteredMatches.length,
-    });
-  }, [radarEmpty, deckExhausted, filteredMatches.length]);
-
   const handleOpenChat = async (match: MovieMateMatch) => {
     if (!user) {
       setIsAuthOpen(true);
@@ -345,68 +315,108 @@ export default function MatchesPage() {
     setGridUndoToast(null);
   };
 
-  const handlePassMatch = async (match: MovieMateMatch) => {
-    setMatches((prev) => prev.filter((m) => m.id !== match.id));
+  // (deck progress reset on filter change lives with the useSwipeDeck hook
+  // below — it owns index + history now.)
+
+  // ---------------------------------------------------------------------------
+  // S3: deck persistence moved behind useSwipeDeck's undo window. Swipes are
+  // LOCAL for 4s; commits run only when the window closes, so undo leaves no
+  // database row. Commit-time likes intentionally do NOT auto-open chat: a
+  // chat modal yanked open seconds after the gesture breaks swipe rhythm —
+  // mutual matches announce via the global MatchAcceptedToast listener.
+  // ---------------------------------------------------------------------------
+  const commitDeckLike = async (match: MovieMateMatch) => {
+    if (!user || !profile) return;
+    const result = await requestMatch(
+      user.id,
+      match.user.id,
+      'pending',
+      match.compatibilityScore,
+      match.sharedGenres,
+      match.sharedTitles
+    );
+    if (!result.ok || !result.matchId) {
+      showDeckNotice(
+        result.rejected
+          ? `@${match.user.username} bu eşleşmeye daha önce pas geçmiş. Yeni bir mesaj isteği gönderilemedi.`
+          : 'Eşleşme talebi gönderilemedi. Lütfen tekrar deneyin.'
+      );
+      return;
+    }
+    match.id = result.matchId;
+    match.status = 'pending';
+    match.initiatorId = user.id;
+  };
+
+  const commitDeckPass = async (match: MovieMateMatch) => {
     // Persist using the partner's REAL id — gating on match.id (which is
     // 'prospective_…' for fallback cards) silently discarded passes.
-    if (user && match.user?.id) {
-      await createOrUpdateMatch(
-        user.id,
-        match.user.id,
-        'passed',
-        match.compatibilityScore,
-        match.sharedGenres,
-        match.sharedTitles
-      );
-    }
+    if (!user || !profile || !match.user?.id) return;
+    await createOrUpdateMatch(
+      user.id,
+      match.user.id,
+      'passed',
+      match.compatibilityScore,
+      match.sharedGenres,
+      match.sharedTitles
+    );
   };
 
+  const removeCardFromRadar = (match: MovieMateMatch) => {
+    setMatches((prev) => prev.filter((m) => m.id !== match.id));
+  };
+
+  const reinsertPassedCard = (entry: DeckHistoryEntry) => {
+    setMatches((prev) => {
+      if (prev.some((m) => m.id === entry.match.id)) return prev;
+      const next = [...prev];
+      next.splice(Math.min(entry.index, next.length), 0, entry.match);
+      return next;
+    });
+  };
+
+  const deck = useSwipeDeck({
+    onLikeCommit: commitDeckLike,
+    onPassGesture: removeCardFromRadar,
+    onPassCommit: commitDeckPass,
+    onPassUndo: reinsertPassedCard,
+  });
+  const { index: activeDeckIndex } = deck;
+
+  // S2 telemetry: fire ONCE per exhaustion transition so exhaustion rate can
+  // gate future deck decisions (MATCHING-PIVOT-PLAN.md §S2).
+  const radarEmpty = !loading && matches.length === 0;
+  const deckExhausted =
+    !loading &&
+    displayLayout === 'deck' &&
+    filteredMatches.length > 0 &&
+    activeDeckIndex >= filteredMatches.length;
+  const exhaustedNotifiedRef = React.useRef(false);
+  React.useEffect(() => {
+    if (!(radarEmpty || deckExhausted)) {
+      exhaustedNotifiedRef.current = false;
+      return;
+    }
+    if (exhaustedNotifiedRef.current) return;
+    exhaustedNotifiedRef.current = true;
+    trackEvent(TELEMETRY_EVENTS.RADAR_EXHAUSTED, {
+      kind: radarEmpty ? 'empty_radar' : 'deck_completed',
+      pool_size: filteredMatches.length,
+    });
+  }, [radarEmpty, deckExhausted, filteredMatches.length]);
+
+  // Filter changes reset deck progress (same behavior as before S3).
   useEffect(() => {
-    setActiveDeckIndex(0);
-    setDeckHistory([]);
+    deck.reset();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedIntent, selectedGenre, selectedAgeRange, selectedCity, selectedDistrict]);
 
-  // Deck history entries remember WHAT happened so undo can reverse passes
-  // (which shrink the array) differently from likes (which only advance).
-  const handleDeckLike = (match: MovieMateMatch) => {
-    handleLikeMatch(match);
-    setDeckHistory((prev) => [...prev, { type: 'like', index: activeDeckIndex }]);
-    setActiveDeckIndex((prev) => prev + 1);
-  };
-
-  const handleDeckPass = (match: MovieMateMatch) => {
-    // The pass REMOVES the card from `matches`, so the next card slides into
-    // the same index — advancing here too would skip a card every pass.
-    const removedAtIndex = activeDeckIndex;
-    handlePassMatch(match);
-    setDeckHistory((prev) => [
-      ...prev,
-      { type: 'pass', index: removedAtIndex, match },
-    ]);
-  };
-
+  const handleDeckLike = (match: MovieMateMatch) => deck.swipeLike(match);
+  const handleDeckPass = (match: MovieMateMatch) => deck.swipePass(match);
   const handleDeckUndo = () => {
-    if (deckHistory.length === 0) return;
-    const last = deckHistory[deckHistory.length - 1];
-    setDeckHistory((prev) => prev.slice(0, -1));
-    if (last.type === 'pass') {
-      // Reinsert the passed card exactly where it was and resume there.
-      setMatches((prev) => {
-        if (prev.some((m) => m.id === last.match.id)) return prev;
-        const next = [...prev];
-        next.splice(Math.min(last.index, next.length), 0, last.match);
-        return next;
-      });
-      setActiveDeckIndex(last.index);
-    } else {
-      setActiveDeckIndex(last.index);
-    }
+    deck.undo();
   };
-
-  const handleDeckReset = () => {
-    setActiveDeckIndex(0);
-    setDeckHistory([]);
-  };
+  const handleDeckReset = () => deck.reset();
 
   // Keyboard Accelerators for Desktop Deck Mode (Alex Power User)
   useEffect(() => {
@@ -447,8 +457,7 @@ export default function MatchesPage() {
     isSearchOpen,
     isQuickLogOpen,
     isInboxOpen,
-    isTasteProfilerOpen,
-    deckHistory
+    isTasteProfilerOpen
   ]);
 
   const resetFilters = () => {
@@ -456,8 +465,7 @@ export default function MatchesPage() {
     setSelectedDistrict('Hepsi');
     setSelectedGenre('Hepsi');
     setSelectedAgeRange('Hepsi');
-    setActiveDeckIndex(0);
-    setDeckHistory([]);
+    deck.reset();
   };
 
   const hasActiveFilters = 
@@ -820,7 +828,7 @@ export default function MatchesPage() {
                   <button
                     type="button"
                     onClick={handleDeckUndo}
-                    disabled={deckHistory.length === 0}
+                    disabled={!deck.canUndo}
                     aria-label="Önceki Profile Geri Dön"
                     className="px-3 py-1.5 min-h-[36px] text-xs font-black uppercase border border-neutral-600 bg-neutral-900 text-neutral-300 hover:text-white disabled:opacity-40 disabled:pointer-events-none flex items-center gap-1.5 cursor-pointer transition-colors"
                     title="Önceki Profile Geri Dön"
