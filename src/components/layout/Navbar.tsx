@@ -296,11 +296,14 @@ export function Navbar({
     };
   }, [user?.id]);
 
+  // S7 atomic flip (MATCHING-PIVOT-PLAN §2): PERDE is the front door; the
+  // catalog showcase lives at /kesif. /upcoming stays routable but leaves the
+  // nav (folds into Keşif later).
   const navLinks = [
-    { href: "/", label: "VİZYONDAKİLER", icon: FilmReelIcon },
-    { href: "/matches", label: "İZDAŞLAR", icon: CinemaFrequencyIcon },
+    { href: "/", label: "PERDE", icon: FilmReelIcon },
+    { href: "/matches", label: "İZDAŞ", icon: CinemaFrequencyIcon },
+    { href: "/kesif", label: "KEŞİF", icon: CinemaSearchLensIcon },
     { href: "/diary", label: "GÜNLÜK", icon: FilmStripIcon },
-    { href: "/upcoming", label: "VİZYON", icon: CinemaCalendarIcon },
   ];
 
   const displayName =
@@ -622,7 +625,7 @@ export function Navbar({
 
         {/* Tactile Mobile Bottom Bar (Thumb-Zone Ergonomics with 48px+ Touch Targets) */}
         <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40  bg-[#0A0A0A]  text-[#FAFAFA] border-t-4  border-[#262626] px-1 py-1 flex items-center justify-around  shadow-[0px_-4px_0px_#000000] font-mono pb-safe transition-colors duration-150">
-          {/* Keşif */}
+          {/* Perde — front door deck */}
           <Link
             href="/"
             className={`flex-1 min-h-[48px] min-w-[48px] flex flex-col items-center justify-center gap-1 px-1 text-[10px] font-black uppercase transition-all ${
@@ -639,7 +642,7 @@ export function Navbar({
                   : " text-[#D4D4D4]"
               }
             />
-            <span>KEŞİF</span>
+            <span>PERDE</span>
           </Link>
 
           {/* İzdaşlar */}
@@ -673,6 +676,26 @@ export function Navbar({
               <Plus className="w-6 h-6 stroke-[3]" />
             </button>
           </div>
+
+          {/* Keşif — catalog showcase */}
+          <Link
+            href="/kesif"
+            className={`flex-1 min-h-[48px] min-w-[48px] flex flex-col items-center justify-center gap-1 px-1 text-[10px] font-black uppercase transition-all ${
+              pathname === "/kesif"
+                ? " text-[#FF5555]  bg-[#171717] border  border-[#404040]"
+                : " text-[#D4D4D4]  hover:text-[#FAFAFA]"
+            }`}
+          >
+            <CinemaSearchLensIcon
+              size={16}
+              className={
+                pathname === "/kesif"
+                  ? " text-[#FF5555]"
+                  : " text-[#D4D4D4]"
+              }
+            />
+            <span>KEŞİF</span>
+          </Link>
 
           {/* Günlük */}
           <Link

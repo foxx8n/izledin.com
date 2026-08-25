@@ -20,8 +20,6 @@ import {
   CinemaRomanceIcon,
   CinemaDuoIntentIcon,
   CinemaTrustShieldIcon,
-  CinemaDeckStackIcon,
-  CinemaGridMatrixIcon,
   CinemaDnaHelixIcon,
   FilmReelIcon,
   MasterpieceLaurelIcon
@@ -29,7 +27,6 @@ import {
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { MatchCard } from '@/components/matches/MatchCard';
-import { SwipeMatchCard } from '@/components/matches/SwipeMatchCard';
 import { ChatModal } from '@/components/matches/ChatModal';
 import { InboxModal } from '@/components/inbox/InboxModal';
 import { TasteProfilerModal } from '@/components/onboarding/TasteProfilerModal';
@@ -42,7 +39,6 @@ import { AuthModal } from '@/components/auth/AuthModal';
 
 import { useAuth } from '@/context/AuthContext';
 import { computeDiscoverMatches, createOrUpdateMatch, requestMatch } from '@/lib/services/matches.service';
-import { useSwipeDeck, type DeckHistoryEntry } from '@/hooks/useSwipeDeck';
 import { trackEvent, TELEMETRY_EVENTS } from '@/lib/telemetry';
 import { getInboxSummary } from '@/lib/services/inbox.service';
 import { searchCatalog } from '@/lib/omdb';
@@ -61,8 +57,8 @@ export default function MatchesPage() {
   const [loading, setLoading] = useState(true);
   const [unreadInboxCount, setUnreadInboxCount] = useState(0);
 
-  // Mobile Single Deck and View Mode State
-  const [displayLayout, setDisplayLayout] = useState<'deck' | 'grid'>('deck');
+  // S6: /matches is a people DIRECTORY (filters/grid/manage). The swipe deck
+  // lives at `/` (PERDE) — this page no longer renders one.
 
   const provinces = getAllProvinces();
   const cityDistricts = selectedCity !== 'Hepsi' ? getDistricts(selectedCity) : [];
@@ -315,157 +311,28 @@ export default function MatchesPage() {
     setGridUndoToast(null);
   };
 
-  // (deck progress reset on filter change lives with the useSwipeDeck hook
-  // below — it owns index + history now.)
-
-  // ---------------------------------------------------------------------------
-  // S3: deck persistence moved behind useSwipeDeck's undo window. Swipes are
-  // LOCAL for 4s; commits run only when the window closes, so undo leaves no
-  // database row. Commit-time likes intentionally do NOT auto-open chat: a
-  // chat modal yanked open seconds after the gesture breaks swipe rhythm —
-  // mutual matches announce via the global MatchAcceptedToast listener.
-  // ---------------------------------------------------------------------------
-  const commitDeckLike = async (match: MovieMateMatch) => {
-    if (!user || !profile) return;
-    const result = await requestMatch(
-      user.id,
-      match.user.id,
-      'pending',
-      match.compatibilityScore,
-      match.sharedGenres,
-      match.sharedTitles
-    );
-    if (!result.ok || !result.matchId) {
-      showDeckNotice(
-        result.rejected
-          ? `@${match.user.username} bu eşleşmeye daha önce pas geçmiş. Yeni bir mesaj isteği gönderilemedi.`
-          : 'Eşleşme talebi gönderilemedi. Lütfen tekrar deneyin.'
-      );
-      return;
-    }
-    match.id = result.matchId;
-    match.status = 'pending';
-    match.initiatorId = user.id;
-  };
-
-  const commitDeckPass = async (match: MovieMateMatch) => {
-    // Persist using the partner's REAL id — gating on match.id (which is
-    // 'prospective_…' for fallback cards) silently discarded passes.
-    if (!user || !profile || !match.user?.id) return;
-    await createOrUpdateMatch(
-      user.id,
-      match.user.id,
-      'passed',
-      match.compatibilityScore,
-      match.sharedGenres,
-      match.sharedTitles
-    );
-  };
-
-  const removeCardFromRadar = (match: MovieMateMatch) => {
-    setMatches((prev) => prev.filter((m) => m.id !== match.id));
-  };
-
-  const reinsertPassedCard = (entry: DeckHistoryEntry) => {
-    setMatches((prev) => {
-      if (prev.some((m) => m.id === entry.match.id)) return prev;
-      const next = [...prev];
-      next.splice(Math.min(entry.index, next.length), 0, entry.match);
-      return next;
-    });
-  };
-
-  const deck = useSwipeDeck({
-    onLikeCommit: commitDeckLike,
-    onPassGesture: removeCardFromRadar,
-    onPassCommit: commitDeckPass,
-    onPassUndo: reinsertPassedCard,
-  });
-  const { index: activeDeckIndex } = deck;
-
-  // S2 telemetry: fire ONCE per exhaustion transition so exhaustion rate can
+  // S2 telemetry: fire ONCE per empty-radar transition so exhaustion rate can
   // gate future deck decisions (MATCHING-PIVOT-PLAN.md §S2).
   const radarEmpty = !loading && matches.length === 0;
-  const deckExhausted =
-    !loading &&
-    displayLayout === 'deck' &&
-    filteredMatches.length > 0 &&
-    activeDeckIndex >= filteredMatches.length;
   const exhaustedNotifiedRef = React.useRef(false);
   React.useEffect(() => {
-    if (!(radarEmpty || deckExhausted)) {
+    if (!radarEmpty) {
       exhaustedNotifiedRef.current = false;
       return;
     }
     if (exhaustedNotifiedRef.current) return;
     exhaustedNotifiedRef.current = true;
     trackEvent(TELEMETRY_EVENTS.RADAR_EXHAUSTED, {
-      kind: radarEmpty ? 'empty_radar' : 'deck_completed',
+      kind: 'empty_radar',
       pool_size: filteredMatches.length,
     });
-  }, [radarEmpty, deckExhausted, filteredMatches.length]);
-
-  // Filter changes reset deck progress (same behavior as before S3).
-  useEffect(() => {
-    deck.reset();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedIntent, selectedGenre, selectedAgeRange, selectedCity, selectedDistrict]);
-
-  const handleDeckLike = (match: MovieMateMatch) => deck.swipeLike(match);
-  const handleDeckPass = (match: MovieMateMatch) => deck.swipePass(match);
-  const handleDeckUndo = () => {
-    deck.undo();
-  };
-  const handleDeckReset = () => deck.reset();
-
-  // Keyboard Accelerators for Desktop Deck Mode (Alex Power User)
-  useEffect(() => {
-    if (displayLayout !== 'deck') return;
-    if (isChatOpen || isAuthOpen || isPremiumOpen || isSearchOpen || isQuickLogOpen || isInboxOpen || isTasteProfilerOpen) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const activeTag = document.activeElement?.tagName.toLowerCase();
-      if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') return;
-
-      if (activeDeckIndex >= filteredMatches.length) return;
-      const currentMatch = filteredMatches[activeDeckIndex];
-
-      if (e.key === 'ArrowLeft') {
-        e.preventDefault();
-        handleDeckPass(currentMatch);
-      } else if (e.key === 'ArrowRight') {
-        e.preventDefault();
-        handleDeckLike(currentMatch);
-      } else if (e.key === ' ' || e.key === 'Spacebar') {
-        e.preventDefault();
-        handleOpenChat(currentMatch);
-      } else if (e.key === 'z' || e.key === 'Z') {
-        e.preventDefault();
-        handleDeckUndo();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [
-    displayLayout,
-    activeDeckIndex,
-    filteredMatches,
-    isChatOpen,
-    isAuthOpen,
-    isPremiumOpen,
-    isSearchOpen,
-    isQuickLogOpen,
-    isInboxOpen,
-    isTasteProfilerOpen
-  ]);
+  }, [radarEmpty, filteredMatches.length]);
 
   const resetFilters = () => {
     setSelectedCity('Hepsi');
     setSelectedDistrict('Hepsi');
     setSelectedGenre('Hepsi');
     setSelectedAgeRange('Hepsi');
-    deck.reset();
   };
 
   const hasActiveFilters = 
@@ -674,37 +541,6 @@ export default function MatchesPage() {
           </div>
 
           <div className="flex items-center gap-2.5 justify-between md:justify-end flex-wrap">
-            {/* Layout Mode Switcher (Deck vs Grid) */}
-            <div className="flex items-center border-2  border-[#404040]  bg-[#262626]">
-              <button
-                type="button"
-                onClick={() => setDisplayLayout('deck')}
-                className={`h-10 px-3 text-xs font-black uppercase flex items-center gap-1.5 cursor-pointer transition-all ${
-                  displayLayout === 'deck'
-                    ? 'bg-[#DC2626] text-white shadow-[2px_2px_0px_#000000]'
-                    : ' text-[#A3A3A3]  hover:text-white'
-                }`}
-                title="Tekil Sinefil Kartı ve Kaydırma (Swipe) Modu"
-              >
-                <CinemaDeckStackIcon size={14} />
-                <span>DESTE</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setDisplayLayout('grid')}
-                className={`h-10 px-3 text-xs font-black uppercase flex items-center gap-1.5 cursor-pointer transition-all ${
-                  displayLayout === 'grid'
-                    ? 'bg-[#DC2626] text-white shadow-[2px_2px_0px_#000000]'
-                    : ' text-[#A3A3A3]  hover:text-white'
-                }`}
-                title="Tüm Kartları Izgara Olarak Gör"
-              >
-                <CinemaGridMatrixIcon size={14} />
-                <span>GRID</span>
-              </button>
-            </div>
-
             <div className="flex items-center gap-2">
               {profile?.isPremium && (
                 <span className="px-2 py-1 text-[11px] font-black uppercase font-mono border bg-amber-500/10 text-amber-500 border-amber-500">
@@ -800,101 +636,6 @@ export default function MatchesPage() {
                 <span>FİLTRELERİ SIFIRLA</span>
               </button>
             </div>
-          </div>
-        ) : displayLayout === 'deck' ? (
-          /* ========================================================================= */
-          /* MOBILE-FIRST SINGLE CARD SWIPE DECK MODE (TINDER / LETTERBOXD CARDS) */
-          /* ========================================================================= */
-          <div className="max-w-md mx-auto w-full font-mono space-y-4">
-            {activeDeckIndex < filteredMatches.length ? (
-              <>
-                {/* Deck Progress & Undo Header Bar */}
-                <div className="flex items-center justify-between gap-3 bg-[#0A0A0A] text-white p-3 border-2  border-[#404040]  shadow-[4px_4px_0px_#000000]">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-black uppercase tracking-wider  text-[#EF4444]">
-                      KART {activeDeckIndex + 1} / {filteredMatches.length}
-                    </span>
-                  </div>
-
-                  {/* Progress Line */}
-                  <div className="flex-1 max-w-[140px] h-2 bg-neutral-800 border border-neutral-700 overflow-hidden">
-                    <div 
-                      className="h-full bg-[#DC2626] transition-all duration-300"
-                      style={{ width: `${((activeDeckIndex + 1) / filteredMatches.length) * 100}%` }}
-                    />
-                  </div>
-
-                  {/* Ergonomic Undo Button */}
-                  <button
-                    type="button"
-                    onClick={handleDeckUndo}
-                    disabled={!deck.canUndo}
-                    aria-label="Önceki Profile Geri Dön"
-                    className="px-3 py-1.5 min-h-[36px] text-xs font-black uppercase border border-neutral-600 bg-neutral-900 text-neutral-300 hover:text-white disabled:opacity-40 disabled:pointer-events-none flex items-center gap-1.5 cursor-pointer transition-colors"
-                    title="Önceki Profile Geri Dön"
-                  >
-                    <Undo2 className="w-3.5 h-3.5" />
-                    <span>Geri Al</span>
-                  </button>
-                </div>
-
-                {/* Single Active Card with Swipe Gesture & Next Underneath */}
-                <div className="w-full">
-                  <SwipeMatchCard
-                    key={filteredMatches[activeDeckIndex].id}
-                    match={filteredMatches[activeDeckIndex]}
-                    nextMatch={filteredMatches[activeDeckIndex + 1]}
-                    onChatClick={handleOpenChat}
-                    onLike={handleDeckLike}
-                    onPass={handleDeckPass}
-                    onMovieClick={handleMovieClick}
-                  />
-                </div>
-
-                {/* Screen Reader Live Status Announcement */}
-                <div aria-live="polite" className="sr-only">
-                  {`${filteredMatches[activeDeckIndex].user.fullName}, yüzde ${filteredMatches[activeDeckIndex].compatibilityScore} uyum ile görüntülendi.`}
-                </div>
-
-                {/* Swipe Helper & Desktop Keyboard Shortcuts Legend */}
-                <div className="text-center space-y-1 font-mono">
-                  <p className="text-[11px] font-black uppercase text-neutral-500 tracking-wider">
-                    ← SOLA KAYDIR: PAS &nbsp;&nbsp;•&nbsp;&nbsp; SAĞA KAYDIR: İZDAŞ →
-                  </p>
-                  <p className="hidden sm:block text-[10px] font-bold  text-neutral-500 uppercase tracking-widest">
-                    KLAVYE: <kbd className="px-1.5 py-0.5  bg-neutral-800 border  border-neutral-700  text-[#FAFAFA]">←</kbd> PAS &nbsp;•&nbsp; <kbd className="px-1.5 py-0.5  bg-neutral-800 border  border-neutral-700  text-[#FAFAFA]">→</kbd> İZDAŞ &nbsp;•&nbsp; <kbd className="px-1.5 py-0.5  bg-neutral-800 border  border-neutral-700  text-[#FAFAFA]">BOŞLUK</kbd> SOHBET &nbsp;•&nbsp; <kbd className="px-1.5 py-0.5  bg-neutral-800 border  border-neutral-700  text-[#FAFAFA]">Z</kbd> GERİ AL
-                  </p>
-                </div>
-              </>
-            ) : (
-              /* All Deck Cards Examined Screen */
-              <div className="p-8  bg-[#171717] border-4  border-[#404040]  shadow-[6px_6px_0px_#000000] text-center space-y-4">
-                <CinemaRadarScannerIllustration size={64} className="mx-auto" />
-                <h3 className="text-base font-black uppercase tracking-tight">
-                  TÜM İZDAŞ KARTLARINI İNCELEDİNİZ!
-                </h3>
-                <p className="text-xs  text-neutral-400 font-bold leading-relaxed">
-                  Bu filtrelerdeki tüm profilleri tamamladınız. Baştan tekrar tarayabilir veya filtrelerinizi genişletebilirsiniz.
-                </p>
-                <div className="pt-2 flex items-center justify-center gap-3">
-                  <button
-                    type="button"
-                    onClick={handleDeckReset}
-                    className="px-5 py-2.5 bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-black uppercase border-2  border-[#404040] shadow-[2px_2px_0px_#000000] cursor-pointer flex items-center gap-1.5"
-                  >
-                    <RefreshCw className="w-3.5 h-3.5" />
-                    <span>BAŞTAN TARA</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={resetFilters}
-                    className="px-4 py-2.5  bg-neutral-800  text-white text-xs font-black uppercase border-2 border-neutral-700 cursor-pointer"
-                  >
-                    Filtreleri Sıfırla
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         ) : (
           /* ========================================================================= */

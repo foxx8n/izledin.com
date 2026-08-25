@@ -24,13 +24,14 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://www.izledin.com",
   },
-  title: "izledin.com — Sosyal Sinema Kulübü & İzdaş Keşif Platformu",
+  title: "İzledin — Zevkinle Eşleşen Sinema Kulübü | Film, Dizi, Anime İzdaş Bul",
   description:
-    "Film, dizi ve anime izleme geçmişini kaydet, puanla ve zevkine en uygun sinema arkadaşları (İzdaşlar) ile eşleş.",
+    "Sinema DNA'nı çıkar; aynı filmlerde ağlayıp aynı sahnelerde ürperdiğin izdaşınla eşleş. Film, dizi ve anime için Türkçe sosyal sinema kulübü.",
   keywords: [
     "izledin",
     "izdaş",
     "izdaşlar",
+    "sinema eşleşme",
     "film günlüğü",
     "anime takip",
     "sinema kulübü",
@@ -40,9 +41,9 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "izledin.com" }],
   openGraph: {
-    title: "izledin.com — Sosyal Sinema Kulübü & İzdaş Keşif",
+    title: "İzledin — Aynı Filmlerde Ağlayan İzdaşını Bul",
     description:
-      "Film zevkine en yakın İzdaşlarını bul, izlediklerini puanla ve sinema günlüğünü oluştur.",
+      "Sinema DNA'nla eşleşen insanları keşfet. İzlediklerini puanla, günlüğüne yaz, izdaşlarınla sohbete açıl.",
     url: "https://www.izledin.com",
     siteName: "izledin.com",
     locale: "tr_TR",
@@ -90,7 +91,7 @@ export default function RootLayout({
         "@id": "https://www.izledin.com/#website",
         name: "izledin.com",
         url: "https://www.izledin.com/",
-        description: "Sosyal Sinema Kulübü ve İzdaş Keşif Platformu",
+        description: "Zevkinle Eşleşen Sinema Kulübü — film, dizi ve anime izdaşları",
         publisher: {
           "@id": "https://www.izledin.com/#organization",
         },
