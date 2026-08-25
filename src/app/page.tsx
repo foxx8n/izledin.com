@@ -97,6 +97,7 @@ import {
 import {
   computeDiscoverMatches,
   createOrUpdateMatch,
+  requestMatch,
 } from "@/lib/services/matches.service";
 import { POPULAR_GENRES } from "@/lib/constants";
 import {
@@ -275,9 +276,7 @@ export default function HomePage() {
       setWatchlistIds(
         new Set(
           logs
-            // WatchStatus's union predates watchlist rows, which
-            // toggleWatchlistItem really writes — compare via string.
-            .filter((l) => (l.status as string) === "watchlist")
+            .filter((l) => l.status === "watchlist")
             .map((l) => l.mediaId),
         ),
       );
@@ -434,7 +433,10 @@ export default function HomePage() {
       return;
     }
 
-    const matchId = await createOrUpdateMatch(
+    // requestMatch distinguishes sticky rejections (the OTHER person passed
+    // earlier; only they can revive the pair). No dead-end chat modal — calm
+    // Turkish feedback instead (same pattern as the matches page).
+    const result = await requestMatch(
       user.id,
       match.user.id,
       "pending",
@@ -442,11 +444,18 @@ export default function HomePage() {
       match.sharedGenres,
       match.sharedTitles,
     );
-    if (matchId) {
-      match.id = matchId;
-      match.status = "pending";
-      match.initiatorId = user.id;
+    if (!result.ok || !result.matchId) {
+      showCardToast(
+        result.rejected
+          ? `@${match.user.username} bu eşleşmeye daha önce pas geçmiş. Yeni bir mesaj isteği gönderilemedi.`
+          : "Eşleşme talebi gönderilemedi. Lütfen tekrar deneyin.",
+      );
+      return;
     }
+    match.id = result.matchId;
+    match.status = "pending";
+    match.initiatorId = user.id;
+
     setActiveChatMatch(match);
     setIsChatOpen(true);
   };

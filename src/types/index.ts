@@ -1,6 +1,14 @@
-export type MediaType = 'movie' | 'tv' | 'anime';
+// Both unions mirror the LIVE watch_logs CHECK constraints (verified
+// 2026-08-25). The repo snapshot supabase/schema.sql drifted from production —
+// live allows these extra values:
+export type MediaType = 'movie' | 'tv' | 'anime' | 'series';
 
-export type WatchStatus = 'watched' | 'watching' | 'plan_to_watch' | 'dropped';
+export type WatchStatus =
+  | 'watched'
+  | 'watching'
+  | 'plan_to_watch'
+  | 'dropped'
+  | 'watchlist';
 
 export interface MediaItem {
   id: string;

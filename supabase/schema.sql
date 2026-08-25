@@ -1,218 +1,190 @@
--- ==============================================================================
--- izledin.com — LIVE DATABASE SCHEMA SNAPSHOT
--- Snapshot date: 2026-08-22
+-- ============================================================================
+-- İZLEDİN.COM — LIVE SCHEMA DOCUMENTATION SNAPSHOT
+-- Regenerated from production 2026-08-25 (catalog queries over
+-- information_schema / pg_catalog), replacing the stale 2026-08-22 snapshot.
 --
--- ⚠️  THIS FILE IS DOCUMENTATION, NOT A RUNNABLE MIGRATION.
--- The live Supabase project is the source of truth:
---   Project ref: hipavaiaumdkpqqwvlzp  (Postgres 17)
--- Some historical migrations were applied directly via the dashboard / MCP and
--- never lived in this repo. Re-running old repo files against a fresh project
--- WILL produce a different (and insecure) schema — always re-apply from this
--- snapshot or `supabase db pull` instead.
+-- ⚠ THIS FILE IS DOCUMENTATION ONLY — NOT A RUNNABLE MIGRATION.
+--   The authoritative change history lives in supabase/migrations/*.sql.
+--   Live DB may drift ahead of this file; verify against information_schema
+--   before building on any assumption (see MATCHING-PIVOT-PLAN.md §0).
 --
--- Security posture summary (post-audit 2026-08-22):
---   * RLS enabled on every public table
---   * profiles.is_premium / is_verified / is_banned / ban_reason / banned_at
---     are NOT writable by clients (column grants + protection trigger);
---     admins go through the admin_set_user_flags RPC
---   * birth_date is not SELECTable by any role; only computed ages leave the DB
---   * messages INSERT requires match participation; FK to movie_mate_matches
--- ==============================================================================
+-- Highlights vs the previous snapshot:
+--   + media_catalog (FTS table w/ trgm indexes) and user_reports existed live
+--     but were missing entirely from the old doc.
+--   + watch_logs.status allows 'watchlist'; media_type allows 'series'.
+--   + movie_mate_matches has passed_by/passed_at (+ FK/index).
+--   + calculate_cinephile_matches locked down 2026-08-25 (S1 hotfix):
+--     authenticated-only EXECUTE, auth.uid() ownership guard, computed age
+--     instead of raw birth_date, no paid ranking in ORDER BY.
+-- ============================================================================
 
--- ─────────────────────────────────────────────────────────────────────────────
--- TABLES
--- ─────────────────────────────────────────────────────────────────────────────
+-- ----------------------------------------------------------------------------
+-- TABLES (10, all RLS-enabled)
+-- ----------------------------------------------------------------------------
 
--- User profiles (1:1 with auth.users)
--- CREATE EXTENSION IF NOT EXISTS "uuid-ossp"; CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-CREATE TABLE public.profiles (
-    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-    username TEXT UNIQUE,
-    full_name TEXT,
-    avatar_url TEXT,
-    bio TEXT,
-    location TEXT,
-    favorite_genres TEXT[] DEFAULT '{}',
-    top_4_favorites JSONB DEFAULT '[]'::jsonb,
-    streaming_services TEXT[] DEFAULT '{}',
-    is_premium BOOLEAN DEFAULT FALSE,          -- 🔒 privileged: RPC/trigger-guarded
-    match_enabled BOOLEAN DEFAULT TRUE,
-    total_watched_count INTEGER DEFAULT 0,
-    total_watch_hours INTEGER DEFAULT 0,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    is_verified BOOLEAN DEFAULT TRUE,          -- 🔒 privileged
-    birth_date DATE,                           -- 🔒 private: never SELECTable, ages only
-    is_banned BOOLEAN DEFAULT FALSE,           -- 🔒 privileged
-    ban_reason TEXT,                           -- 🔒 privileged
-    banned_at TIMESTAMPTZ,                     -- 🔒 privileged
-    match_intent TEXT DEFAULT 'friend',
-    intent_integrity_score INTEGER DEFAULT 98,
-    intent_strikes_count INTEGER DEFAULT 0,
-    intent_agreed_at TIMESTAMPTZ
-);
+-- profiles -------------------------------------------------------------------
+-- id uuid PK NN (FK -> auth.users ON DELETE CASCADE)
+-- username text            CHECK ^[a-z0-9_]{3,24}$ ; UNIQUE lower(username)
+-- full_name text | avatar_url text | bio text | location text
+-- favorite_genres text[] DEF '{}'      (GIN idx)
+-- top_4_favorites jsonb DEF '[]'       (GIN idx)
+-- streaming_services text[] DEF '{}'   (GIN idx)
+-- is_premium bool DEF false | match_enabled bool DEF true
+-- total_watched_count int DEF 0 | total_watch_hours int DEF 0
+-- created_at/updated_at timestamptz DEF now()
+-- is_verified bool DEF false
+-- birth_date date        CHECK NULL OR [1920-01-01, CURRENT_DATE - 13y]
+--                        write-once enforced by trigger
+--                        (never exposed publicly; ages via RPCs only)
+-- is_banned bool DEF false | ban_reason text | banned_at timestamptz
+-- match_intent text DEF 'friend' ('friend'|'dating'|'both')
+-- intent_integrity_score int DEF 98 | intent_strikes_count int DEF 0
+-- intent_agreed_at timestamptz | intent_last_changed_at timestamptz DEF now()
+--   (24h cooldown between intent changes enforced by trigger)
+-- IDX: pkey, lower(username) uniq, created_at DESC, GIN x3,
+--      id WHERE match_enabled (partial)
 
-CREATE TABLE public.watch_logs (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-    media_id TEXT NOT NULL,
-    media_type TEXT NOT NULL CHECK (media_type IN ('movie', 'tv', 'anime')),
-    title TEXT NOT NULL,
-    year INTEGER,
-    poster_url TEXT,
-    backdrop_url TEXT,
-    genres TEXT[] DEFAULT '{}',
-    rating NUMERIC(3,1) CHECK (rating >= 0 AND rating <= 10),
-    review TEXT,
-    is_favorite BOOLEAN DEFAULT FALSE,
-    is_rewatch BOOLEAN DEFAULT FALSE,
-    status TEXT NOT NULL DEFAULT 'watched' CHECK (status IN ('watched','watching','plan_to_watch','dropped')),
-    watched_date DATE DEFAULT CURRENT_DATE,
-    likes_count INTEGER DEFAULT 0,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
+-- watch_logs -----------------------------------------------------------------
+-- id uuid PK NN DEF gen_random_uuid() | user_id uuid NN FK->profiles CASCADE
+-- media_id text NN | title text NN
+-- media_type text NN CHECK IN ('movie','tv','anime','series')
+-- year int | poster_url text | backdrop_url text | genres text[] DEF '{}'
+-- rating numeric CHECK 0..10 | review text
+-- is_favorite bool DEF false | is_rewatch bool DEF false
+-- status text NN DEF 'watched'
+--   CHECK IN ('watched','watching','plan_to_watch','dropped','watchlist')
+-- watched_date date DEF CURRENT_DATE | likes_count int DEF 0
+-- created_at/updated_at timestamptz DEF now()
+-- IDX: pkey, user_id, media_id, status, rating, created_at DESC,
+--      (user_id, rating DESC) WHERE rating>=7 partial
 
-CREATE TABLE public.movie_mate_matches (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id_1 UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-    user_id_2 UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-    compatibility_score INTEGER DEFAULT 0 CHECK (compatibility_score BETWEEN 0 AND 100),
-    shared_genres TEXT[] DEFAULT '{}',
-    shared_titles JSONB DEFAULT '[]'::jsonb,
-    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','matched','passed','blocked')),
-    initiator_id UUID REFERENCES public.profiles(id),
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    CONSTRAINT unique_user_pair UNIQUE (user_id_1, user_id_2),
-    CONSTRAINT different_users CHECK (user_id_1 <> user_id_2)
-);
+-- movie_mate_matches ----------------------------------------------------------
+-- Pair state machine: pending -> matched | pending -> passed (sticky) | blocked
+-- id uuid PK NN | user_id_1 uuid NN FK->profiles CASCADE (LEAST of pair)
+-- user_id_2 uuid NN FK->profiles CASCADE (GREATEST of pair)  CHECK u1<>u2
+-- UNIQUE(user_id_1, user_id_2)  -- canonical pair key
+-- compatibility_score int DEF 0 CHECK 0..100
+-- shared_genres text[] DEF '{}' | shared_titles jsonb DEF '[]'
+-- status text NN DEF 'pending'
+--   CHECK IN ('pending','matched','passed','blocked')
+-- initiator_id uuid FK->profiles (preserved on transitions)
+-- passed_by uuid FK->profiles SET NULL | passed_at timestamptz
+--   (written on pass/reject; consumed by future resurface logic, plan §S12)
+-- created_at/updated_at timestamptz
+-- IDX: pkey, unique pair, pair+status, user_2, initiator, passed_by
 
-CREATE TABLE public.messages (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    match_id UUID NOT NULL REFERENCES public.movie_mate_matches(id) ON DELETE CASCADE, -- FK added 2026-08-22
-    sender_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-    content TEXT NOT NULL,
-    is_read BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
+-- messages --------------------------------------------------------------------
+-- id uuid PK NN | match_id uuid NN FK->movie_mate_matches CASCADE
+-- sender_id uuid NN FK->profiles CASCADE
+-- content text NN CHECK char_length 1..4000
+-- is_read bool DEF false | created_at timestamptz DEF now()
+-- IDX: pkey, match_id, (match_id, created_at), sender_id
+-- INSERT gated by can_insert_message(match_id, sender_id) (chat gating)
 
-CREATE TABLE public.watch_together_items (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    match_id UUID NOT NULL REFERENCES public.movie_mate_matches(id) ON DELETE CASCADE,
-    media_id TEXT NOT NULL,
-    media_type TEXT NOT NULL CHECK (media_type IN ('movie','tv','anime')),
-    title TEXT NOT NULL,
-    poster_url TEXT,
-    added_by UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-    status TEXT NOT NULL DEFAULT 'suggested' CHECK (status IN ('suggested','watching','watched_together')),
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
+-- watch_together_items (dormant — no UI yet; plan §S14 revives it) ------------
+-- id uuid PK NN | match_id uuid NN FK->movie_mate_matches CASCADE
+-- media_id text NN | title text NN | poster_url text
+-- media_type text NN CHECK IN ('movie','tv','anime')
+-- added_by uuid NN FK->profiles CASCADE
+-- status text NN DEF 'suggested'
+--   CHECK IN ('suggested','watching','watched_together')
+-- created_at timestamptz DEF now()
+-- RLS: participants-only (SELECT/INSERT/UPDATE require matched-pair membership;
+--      DELETE own-or-admin). IDX: pkey, match_id, added_by
 
-CREATE TABLE public.custom_lists (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-    title TEXT NOT NULL,
-    description TEXT,
-    is_public BOOLEAN DEFAULT TRUE,
-    likes_count INTEGER DEFAULT 0,
-    items JSONB DEFAULT '[]'::jsonb,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
+-- custom_lists ------------------------------------------------------------
+-- id uuid PK NN | user_id uuid NN FK->profiles CASCADE
+-- title text NN | description text | is_public bool DEF true
+-- likes_count int DEF 0 | items jsonb DEF '[]'
+-- created_at/updated_at timestamptz
+-- IDX: pkey, user_id
 
-CREATE TABLE public.watch_log_likes (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-    log_id UUID NOT NULL REFERENCES public.watch_logs(id) ON DELETE CASCADE,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    CONSTRAINT unique_user_log_like UNIQUE (user_id, log_id)
-);
+-- watch_log_likes ---------------------------------------------------------
+-- id uuid PK NN | user_id uuid NN FK->profiles CASCADE
+-- log_id uuid NN FK->watch_logs CASCADE | created_at timestamptz NN
+-- UNIQUE(user_id, log_id); IDX pkey, user_id, log_id
 
-CREATE TABLE public.site_settings (
-    key TEXT PRIMARY KEY,
-    value JSONB,
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
+-- site_settings -----------------------------------------------------------
+-- key text PK NN | value jsonb NN | updated_at timestamptz DEF now()
 
--- ─────────────────────────────────────────────────────────────────────────────
--- INDEXES (performance-critical ones)
--- ─────────────────────────────────────────────────────────────────────────────
--- idx_watch_logs_user_id (user_id), idx_watch_logs_media_id, idx_watch_logs_status,
--- idx_watch_logs_rating, idx_matches_users (user_id_1,user_id_2),
--- idx_messages_match_id, idx_matches_pair_status (user_id_1,user_id_2,status),
--- idx_profiles_match_enabled partial WHERE match_enabled,
--- GIN: profiles.favorite_genres, streaming_services, top_4_favorites,
--- idx_watch_logs_user_high_rating partial WHERE rating >= 7.0
+-- user_reports --------------------------------------------------------------
+-- id uuid PK NN | reporter_id uuid NN FK->profiles CASCADE
+-- reported_user_id uuid NN FK->profiles CASCADE  CHECK reporter<>reported
+-- match_id uuid FK->movie_mate_matches SET NULL
+-- reason text NN CHECK IN ('intent_breach','false_profile','harassment')
+-- created_at timestamptz DEF now()
+-- UNIQUE(reporter_id, reported_user_id); IDX pkey, match, reported_user
+-- submit_user_report() returns target_blocked (3 strikes auto-block path)
 
--- ─────────────────────────────────────────────────────────────────────────────
--- FUNCTIONS & SECURITY
--- ─────────────────────────────────────────────────────────────────────────────
--- handle_new_user()                 SECURITY DEFINER (trigger on auth.users insert)
---                                   → auto-creates profile row. EXECUTE: postgres, service_role only.
--- protect_profile_privileged_fields() SECURITY DEFINER BEFORE UPDATE trigger on profiles.
---                                   Blocks client writes to is_premium/is_banned/is_verified
---                                   unless service_role or admin. (Fixed 2026-08-22 — the old
---                                   current_user guard was dead code inside its own definer.)
--- sync_subscription_status(uuid,boolean) SECURITY DEFINER. Webhook-only premium sync.
---                                   EXECUTE revoked from PUBLIC/anon/authenticated —
---                                   callable by postgres/service_role ONLY.
--- admin_set_user_flags(uuid,[premium],[verified],[banned],[reason]) SECURITY DEFINER.
---                                   Admin panel RPC; raises unless is_admin(). EXECUTE: authenticated.
--- is_admin()                        SECURITY DEFINER. Admin check by immutable UUID +
---                                   trusted JWT email claim + auth.users lookup.
---                                   NEVER reads user_metadata (client-editable).
---                                   EXECUTE: authenticated, service_role (needed by RLS policies).
--- calculate_cinephile_matches(uuid,text,int) SECURITY INVOKER. Returns computed AGE,
---                                   never birth_date. Ownership-checked for authenticated callers.
--- get_my_birth_date()               SECURITY DEFINER. Owner-only birthday readback.
--- get_user_age(uuid), get_user_ages(uuid[]) SECURITY DEFINER. Public computed-age lookups.
--- rls_auto_enable()                 SECURITY DEFINER (infra helper).
+-- media_catalog (server-side global search corpus) ------------------------
+-- id text PK NN | type text NN DEF 'movie' | title text NN | original_title
+-- overview | overview_en | poster_path | backdrop_path | release_date
+-- year int | vote_average numeric | genres text[] DEF '{}'
+-- duration | director | actors | awards | imdb_votes
+-- search_tsv tsvector (trigger-maintained by media_catalog_update_tsv)
+-- created_at/updated_at timestamptz NN
+-- IDX: pkey, GIN(search_tsv), GIN(title trgm), GIN(original_title trgm),
+--      vote_average DESC, year
 
--- Column grants on profiles (2026-08-22):
---   UPDATE granted to authenticated ONLY on: username, full_name, avatar_url, bio,
---     location, birth_date, favorite_genres, top_4_favorites, streaming_services,
---     match_enabled, match_intent, intent_integrity_score, intent_strikes_count,
---     intent_agreed_at, total_watched_count, total_watch_hours, updated_at
---   SELECT granted to anon+authenticated on everything EXCEPT birth_date.
+-- ----------------------------------------------------------------------------
+-- RLS ENABLEMENT: relrowsecurity = true on ALL 10 tables (no FORCE).
+-- Event trigger rls_auto_enable enforces this for future tables.
+-- ----------------------------------------------------------------------------
 
--- ─────────────────────────────────────────────────────────────────────────────
--- RLS POLICIES (live state)
--- ─────────────────────────────────────────────────────────────────────────────
--- profiles:
---   SELECT  USING (true)                                    -- public read (minus birth_date)
---   INSERT  WITH CHECK (auth.uid() = id)
---   UPDATE  USING/WITH CHECK (auth.uid() = id OR is_admin())
--- watch_logs:
---   SELECT  USING (true)                                    -- community feed
---   INSERT  TO authenticated WITH CHECK (own AND not banned)
---   UPDATE  USING/WITH CHECK (auth.uid() = user_id)         -- fixed 2026-08-18 (was "OR true")
---   DELETE  TO authenticated USING (own OR is_admin())
--- movie_mate_matches:
---   SELECT  USING (participant)
---   INSERT  WITH CHECK (auth.uid() IN (user_id_1, user_id_2))
---   UPDATE  USING/WITH CHECK (participant)                  -- WITH CHECK added 2026-08-22
--- messages:
---   SELECT  TO public USING (match participant)
---   INSERT  TO authenticated WITH CHECK (sender = self AND not banned AND match participant)
--- watch_together_items: all four ops require match participation
--- custom_lists:
---   SELECT  USING (is_public OR owner)
---   INSERT  WITH CHECK (owner); UPDATE USING/WITH CHECK (owner); DELETE USING (owner)
--- watch_log_likes:
---   SELECT public; INSERT own; DELETE own-or-admin
--- site_settings:
---   SELECT public (broadcast banners); INSERT/UPDATE admin only
+-- ----------------------------------------------------------------------------
+-- POLICIES (28) — summarized; quals use init-plan wrapped (select auth.uid())
+-- ----------------------------------------------------------------------------
+-- profiles: SELECT true (public read; PRIVACY: birth_date/is_banned/ban_reason/
+--           banned_at excluded from anon+authenticated column grants — age only
+--           via get_user_age(s)); INSERT own id; UPDATE (own AND NOT banned) OR admin.
+-- watch_logs: SELECT true; INSERT/UPDATE own AND NOT banned (auth'd); DELETE own OR admin.
+-- movie_mate_matches: SELECT pair-member only; INSERT WITH CHECK
+--                     (uid=initiator AND status='pending' AND uid in pair).
+--                     All transitions flow through upsert_match_request().
+-- messages: SELECT pair-members; INSERT WITH CHECK can_insert_message(...);
+--           UPDATE pair-member AND sender<>self (mark-read only).
+-- watch_together_items: SELECT pair-members; INSERT own AND NOT banned AND matched-pair;
+--           UPDATE NOT banned AND matched-pair; DELETE own OR admin.
+-- custom_lists: SELECT is_public OR own; INSERT/UPDATE/DELETE own.
+-- watch_log_likes: SELECT true; INSERT own; DELETE own OR admin.
+-- site_settings: SELECT true; INSERT/UPDATE admin only.
+-- user_reports: INSERT reporter=uid AND reporter not banned; SELECT admin only.
+-- media_catalog: SELECT/INSERT/UPDATE true (public corpus maintenance).
 
--- ─────────────────────────────────────────────────────────────────────────────
--- STORAGE (buckets)
--- ─────────────────────────────────────────────────────────────────────────────
--- avatars:      public read; INSERT/UPDATE own-folder only (<uid>/…); 2 MB file cap
--- diary-media:  public read; NO write policies yet (writes intentionally locked)
-
--- ─────────────────────────────────────────────────────────────────────────────
--- REALTIME
--- ─────────────────────────────────────────────────────────────────────────────
-ALTER PUBLICATION supabase_realtime ADD TABLE public.messages;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.movie_mate_matches;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.watch_logs;
+-- ----------------------------------------------------------------------------
+-- FUNCTIONS (app surface; pg_trgm internals omitted = extension-owned)
+-- ACL legend: who holds EXECUTE beyond owner postgres/service_role
+-- ----------------------------------------------------------------------------
+-- SECURITY DEFINER, authenticated-only:
+--   upsert_match_request(p_partner_id uuid, p_status text, p_compatibility_score int,
+--     p_shared_genres text[], p_shared_titles jsonb) -> (match_id uuid, status text)
+--     [state machine: sticky rejection P0001 'Bu eşleşme talebi daha önce reddedildi.',
+--      mutual-pending auto-match, revive-by-passer-only, blocked/matched untouchable]
+--   calculate_cinephile_matches(p_user_id uuid, p_intent_filter text, p_limit int)
+--     -> TABLE(... age integer ...)  [S1 hotfix 2026-08-25: ownership guard,
+--      age-not-birthdate, no paid ranking, both-intent scored as aligned]
+--   match_respond(p_match_id uuid, p_action text) -> (match_id, status)
+--   toggle_watch_log_like(p_log_id uuid) -> (liked bool, likes_count int)
+--   submit_user_report(p_reported_user_id uuid, p_reason text, p_match_id uuid)
+--     -> (accepted bool, target_blocked bool)
+--   admin_list_profiles(p_limit int) -> TABLE(...)   [internal admin gate]
+--   admin_set_user_flags(p_user_id, p_is_premium, p_is_verified, p_is_banned, p_ban_reason)
+--   get_my_birth_date() -> date                      [owner-only self-read]
+--   is_currently_banned() -> boolean                 [policy helper]
+-- SECURITY DEFINER, anon-callable BY DESIGN (helpers/corpus):
+--   is_admin() -> boolean                            [policy helper]
+--   get_user_age(p_user_id uuid) -> int ; get_user_ages(p_ids uuid[]) -> TABLE(id,age)
+--   search_media_catalog(p_query text, p_limit int) -> SETOF media_catalog
+--   can_insert_message(p_match_id uuid, p_sender_id uuid) -> boolean
+--   enforce_intent_cooldown() -> trigger
+-- SECURITY DEFINER, service_role/postgres only:
+--   handle_new_user() -> trigger   [provisions profile row on signup]
+--   enforce_birth_date_write_once() -> trigger ; protect_profile_privileged_fields() -> trigger
+--   bump_profile_watch_stats() -> trigger ; rls_auto_enable() -> event trigger
+--   sync_subscription_status(p_user_id uuid, p_is_premium boolean) -> void
+-- SECURITY INVOKER, public:
+--   media_catalog_update_tsv() -> trigger
+-- Column-grant notes: profiles SELECT for anon/authenticated is privacy-column-
+-- enumerated (birth_date & ban fields withheld); profiles UPDATE is column-
+-- enumerated too — ANY new profiles column needs an explicit GRANT UPDATE(col)
+-- or client writes fail outright (bit us before: see migrations 20260824_*).

@@ -42,6 +42,7 @@ import { AuthModal } from '@/components/auth/AuthModal';
 
 import { useAuth } from '@/context/AuthContext';
 import { computeDiscoverMatches, createOrUpdateMatch, requestMatch } from '@/lib/services/matches.service';
+import { trackEvent, TELEMETRY_EVENTS } from '@/lib/telemetry';
 import { getInboxSummary } from '@/lib/services/inbox.service';
 import { searchCatalog } from '@/lib/omdb';
 import { getAllProvinces, getDistricts } from '@/data/locations';
@@ -208,6 +209,28 @@ export default function MatchesPage() {
     }
     return true;
   });
+
+  // S2 telemetry: fire ONCE per exhaustion transition so exhaustion rate can
+  // gate future deck decisions (MATCHING-PIVOT-PLAN.md §S2).
+  const radarEmpty = !loading && matches.length === 0;
+  const deckExhausted =
+    !loading &&
+    displayLayout === 'deck' &&
+    filteredMatches.length > 0 &&
+    activeDeckIndex >= filteredMatches.length;
+  const exhaustedNotifiedRef = React.useRef(false);
+  React.useEffect(() => {
+    if (!(radarEmpty || deckExhausted)) {
+      exhaustedNotifiedRef.current = false;
+      return;
+    }
+    if (exhaustedNotifiedRef.current) return;
+    exhaustedNotifiedRef.current = true;
+    trackEvent(TELEMETRY_EVENTS.RADAR_EXHAUSTED, {
+      kind: radarEmpty ? 'empty_radar' : 'deck_completed',
+      pool_size: filteredMatches.length,
+    });
+  }, [radarEmpty, deckExhausted, filteredMatches.length]);
 
   const handleOpenChat = async (match: MovieMateMatch) => {
     if (!user) {

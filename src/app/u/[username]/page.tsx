@@ -17,6 +17,7 @@ import { createClient } from '@/lib/supabase/server';
 import { mapDbProfileToProfile, PROFILE_SELECT_COLUMNS } from '@/lib/services/profile.service';
 import { mapDbLogToWatchLog } from '@/lib/services/watch-logs.service';
 import { Navbar } from '@/components/layout/Navbar';
+import { ProfileViewTracker } from '@/components/profile/ProfileViewTracker';
 import { Footer } from '@/components/layout/Footer';
 import { generateDynamicBio } from '@/lib/cinema-bio-generator';
 
@@ -121,7 +122,8 @@ export default async function PublicProfilePage({ params }: Props) {
   return (
     <div className="min-h-screen with-sidebar flex flex-col  bg-[#0A0A0A]  text-[#FAFAFA] selection:bg-[#DC2626] selection:text-white transition-colors duration-150">
       <Navbar />
-      
+      <ProfileViewTracker username={profile.username || resolvedParams.username} />
+
       <main className="flex-1 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full font-mono">
         <script
           type="application/ld+json"
