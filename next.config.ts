@@ -13,6 +13,10 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "image.tmdb.org" },
       { protocol: "https", hostname: "m.media-amazon.com" },
+      // Catalog poster sources seeded into media_catalog (catalog.json batches):
+      // wikipedia fair-use poster scans + TVmaze show artwork.
+      { protocol: "https", hostname: "upload.wikimedia.org" },
+      { protocol: "https", hostname: "static.tvmaze.com" },
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "lh3.googleusercontent.com" },
       { protocol: "https", hostname: "avatars.githubusercontent.com" },
@@ -47,6 +51,9 @@ const nextConfig: NextConfig = {
   async headers() {
     // Phase-1 CSP. Hosts are limited to what src/ actually loads:
     // - image.tmdb.org / m.media-amazon.com : TMDB + OMDB posters (layout.tsx preconnects both)
+    // - upload.wikimedia.org / static.tvmaze.com : catalog.json poster batches
+    //   (517 wikipedia + 162 tvmaze titles — without these their <img> tags
+    //   violate img-src and every card falls back to the placeholder icon)
     // - images.unsplash.com                 : poster fallbacks in services + admin/diary pages
     // - lh3.googleusercontent.com           : Google account avatar URLs stored as user_metadata.picture
     // - api.dicebear.com                    : generated initial-avatar fallbacks
@@ -61,7 +68,7 @@ const nextConfig: NextConfig = {
       : "script-src 'self' 'unsafe-inline'";
     const contentSecurityPolicy = [
       "default-src 'self'",
-      `img-src 'self' https://image.tmdb.org https://m.media-amazon.com https://ia.media-imdb.com https://images.unsplash.com https://lh3.googleusercontent.com https://avatars.githubusercontent.com https://cdn.myanimelist.net https://api.dicebear.com https://hipavaiaumdkpqqwvlzp.supabase.co https://*.supabase.co data: blob:`,
+      `img-src 'self' https://image.tmdb.org https://m.media-amazon.com https://ia.media-imdb.com https://upload.wikimedia.org https://static.tvmaze.com https://images.unsplash.com https://lh3.googleusercontent.com https://avatars.githubusercontent.com https://cdn.myanimelist.net https://api.dicebear.com https://hipavaiaumdkpqqwvlzp.supabase.co https://*.supabase.co data: blob:`,
       "style-src 'self' 'unsafe-inline'",
       scriptSrc,
       "connect-src 'self' https://hipavaiaumdkpqqwvlzp.supabase.co wss://hipavaiaumdkpqqwvlzp.supabase.co",
