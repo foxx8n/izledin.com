@@ -22,7 +22,14 @@ import { STATIC_MASTER_CATALOG } from "@/lib/omdb";
 import {
   getOrCreateDiscoverySeed,
   sortMediaCatalog,
+  seededShuffle,
 } from "@/lib/algorithms/discovery";
+import { createClient } from "@/lib/supabase/client";
+import {
+  enqueueSwipe,
+  getQueuedSwipes,
+  clearQueuedSwipes,
+} from "@/lib/swipe-queue";
 import { getLiquidityDecision, type LiquidityDecision } from "@/lib/liquidity";
 import { useSwipeDeck, type DeckHistoryEntry } from "@/hooks/useSwipeDeck";
 import type { MediaItem, MovieMateMatch } from "@/types";
@@ -34,8 +41,14 @@ const MediaDetailModal = dynamic(
     import("@/components/media/MediaDetailModal").then((m) => m.MediaDetailModal),
   { ssr: false },
 );
+const AuthModal = dynamic(
+  () => import("@/components/auth/AuthModal").then((m) => m.AuthModal),
+  { ssr: false },
+);
 
 const TITLE_DECK_SIZE = 20;
+/** S10: the auth hook fires after this many pre-signin swipes. */
+const GUEST_AUTH_HOOK_SWIPES = 8;
 
 /**
  * PERDE deck brain (S5). Authenticated users get a liquidity-governed deck:
@@ -172,6 +185,53 @@ export function HomeDeck() {
     onPassUndo: reinsertCard,
   });
 
+  // ── S10 guest funnel state (hooks live above every early return) ──
+  const [guestIndex, setGuestIndex] = useState(0);
+  const [sessionSwipeCount, setSessionSwipeCount] = useState(0);
+  const [showAuth, setShowAuth] = useState(false);
+  const guestQueue = useMemo(() => {
+    if (user) return [];
+    const topRated = [...(STATIC_MASTER_CATALOG as MediaItem[])]
+      .sort((a, b) => (b.voteAverage ?? 0) - (a.voteAverage ?? 0))
+      .slice(0, 40);
+    return seededShuffle(topRated, `guest_${discoverySeed}`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
+  // Replay queued pre-signin swipes into private title_swipes on any
+  // successful session. Upsert latest-wins = idempotent, so a failed attempt
+  // simply leaves the queue for next login.
+  const replayedRef = React.useRef(false);
+  React.useEffect(() => {
+    if (replayedRef.current) return;
+    const queued = getQueuedSwipes();
+    if (queued.length === 0) return;
+    replayedRef.current = true;
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }: { data: { user: { id: string } | null } | null }) => {
+      const uid = data?.user?.id;
+      if (!uid) {
+        replayedRef.current = false;
+        return;
+      }
+      supabase
+        .from("title_swipes")
+        .upsert(
+          queued.map((s) => ({
+            user_id: uid,
+            media_id: s.mediaId,
+            media_type: s.mediaType,
+            direction: s.direction,
+          })),
+          { onConflict: "user_id,media_id" },
+        )
+        .then(({ error }: { error: { message: string } | null }) => {
+          if (!error) clearQueuedSwipes();
+          else replayedRef.current = false;
+        });
+    });
+  }, []);
+
   // Title likes persist for real via the watchlist write (no bare gestures).
   const handleTitleLike = async (item: MediaItem) => {
     if (!user) return;
@@ -188,33 +248,85 @@ export function HomeDeck() {
   const [titleIndex, setTitleIndex] = useState(0);
   const handleTitlePass = () => setTitleIndex((i) => i + 1);
 
-  // ── Guest branch ──
+  // ── S10 guest funnel: PLAYABLE deck, queue + auth hook ──
   if (!user) {
+    const current = guestQueue[guestIndex];
+    const handleSwipe = (direction: "like" | "pass", item: MediaItem) => {
+      enqueueSwipe(item.id, item.type, direction);
+      const nextCount = sessionSwipeCount + 1;
+      setSessionSwipeCount(nextCount);
+      setGuestIndex((i) => i + 1);
+      if (nextCount >= GUEST_AUTH_HOOK_SWIPES && !showAuth) setShowAuth(true);
+    };
+
     return (
-      <section className="bg-[#171717] border-2 sm:border-4 border-[#404040] shadow-[8px_8px_0px_#EF4444] p-6 sm:p-10 font-mono text-center space-y-5">
-        <CinemaRadarScannerIllustration size={84} className="mx-auto" />
-        <h2 className="text-xl sm:text-3xl font-black uppercase text-[#FAFAFA] font-sans tracking-tight">
-          RADAR SENİ BEKLİYOR
-        </h2>
-        <p className="text-xs sm:text-sm text-neutral-400 max-w-xl mx-auto leading-relaxed">
-          Google ile katıl; Sinema DNA&apos;nı çıkar, aynı filmlerde ağlayan
-          İzdaşlarınla eşleş.
-        </p>
-        <div className="flex items-center justify-center gap-3 flex-wrap">
-          <Link
-            href="/matches"
-            className="px-6 py-3 bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-black uppercase tracking-wider border-2 border-[#404040] shadow-[3px_3px_0px_#000000] transition-all inline-flex items-center gap-2"
-          >
-            <Radar className="w-4 h-4" />
-            <span>İZDAŞINI BUL</span>
-          </Link>
-          <Link
-            href="/kesif"
-            className="px-5 py-3 bg-[#262626] hover:bg-[#404040] text-white text-xs font-black uppercase border-2 border-[#404040] shadow-[3px_3px_0px_#000000] transition-all"
-          >
-            ÖNCE KATALOĞU GEZ
-          </Link>
+      <section className="space-y-5">
+        <div className="max-w-md mx-auto space-y-2">
+          {current ? (
+            <>
+              <MediaSwipeCard
+                item={current}
+                nextItem={guestQueue[guestIndex + 1]}
+                isWatchlisted={false}
+                onLike={(item) => handleSwipe("like", item)}
+                onPass={(item) => handleSwipe("pass", item)}
+                onDetail={() => {}}
+              />
+              <p className="text-center text-[11px] font-mono font-black uppercase text-neutral-500 tracking-widest">
+                PERDE {guestIndex + 1} / {guestQueue.length} — beğenilerin
+                kaydediliyor
+              </p>
+            </>
+          ) : (
+            <div className="bg-[#171717] border-2 sm:border-4 border-[#404040] shadow-[6px_6px_0px_#EF4444] p-8 font-mono text-center space-y-4">
+              <CinemaRadarScannerIllustration size={72} className="mx-auto" />
+              <h3 className="text-lg font-black uppercase text-[#FAFAFA]">
+                FREKANSIN OLUŞUYOR
+              </h3>
+              <p className="text-xs text-neutral-400 max-w-sm mx-auto">
+                Google ile katıl; kaydettiğin beğeniler Sinema DNA&apos;nı
+                oluştursun ve seni aynı frekanstaki İzdaşlarla eşleştirsin.
+              </p>
+            </div>
+          )}
         </div>
+
+        {/* Auth hook — participatory, never a wall */}
+        {showAuth && (
+          <div className="max-w-md mx-auto bg-[#171717] border-2 border-emerald-600/60 shadow-[4px_4px_0px_#10B981] p-5 font-mono text-center space-y-3">
+            <p className="text-xs font-black uppercase text-[#FAFAFA] tracking-wide">
+              DNA&apos;N OLUŞUYOR — {Math.min(sessionSwipeCount, GUEST_AUTH_HOOK_SWIPES)}{" "}
+              BEĞENİ KAYITLI
+            </p>
+            <p className="text-[11px] text-neutral-400 leading-relaxed">
+              Devam etmek için Google ile mühürle. Beğenilerin hesabına
+              aktarılır, hiçbiri kaybolmaz.
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowAuth(true)}
+              className="hidden"
+              aria-hidden
+            />
+            <Link
+              href="/matches"
+              className="inline-block px-6 py-3 bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-black uppercase tracking-wider border-2 border-[#404040] shadow-[3px_3px_0px_#000000]"
+              onClick={(e) => {
+                e.preventDefault();
+                setShowAuth(true);
+              }}
+            >
+              DEVAM ET →
+            </Link>
+            {!showAuth && null}
+          </div>
+        )}
+
+        <AuthModal
+          isOpen={showAuth}
+          onClose={() => setShowAuth(false)}
+          defaultMode="login"
+        />
       </section>
     );
   }
