@@ -62,6 +62,7 @@ export function HomeDeck() {
   const [decision, setDecision] = useState<LiquidityDecision | null>(null);
   const [matches, setMatches] = useState<MovieMateMatch[]>([]);
   const [loadingPeople, setLoadingPeople] = useState(false);
+  const [seenTitleIds, setSeenTitleIds] = useState<Set<string>>(new Set());
   const [watchlistIds, setWatchlistIds] = useState<Set<string>>(new Set());
   const [detailItem, setDetailItem] = useState<MediaItem | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -78,11 +79,14 @@ export function HomeDeck() {
       profile,
       discoverySeed,
     );
+    // Refresh-stability: anything already swiped (title_swipes) or logged
+    // (any watch status) never re-enters the deck — otherwise every reload
+    // dealt a fresh-looking 20 while the top of the catalog stayed the same.
     return ranked
-      .filter((m) => !watchlistIds.has(m.id))
+      .filter((m) => !seenTitleIds.has(m.id) && !watchlistIds.has(m.id))
       .slice(0, TITLE_DECK_SIZE);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile, watchlistIds]);
+  }, [profile, seenTitleIds, watchlistIds]);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -127,10 +131,32 @@ export function HomeDeck() {
     let cancelled = false;
     getUserWatchLogs(user.id).then((logs) => {
       if (cancelled) return;
-      setWatchlistIds(
-        new Set(logs.filter((l) => l.status === "watchlist").map((l) => l.mediaId)),
-      );
+      // Every logged title (watchlist, watched, dropped...) leaves the deck —
+      // the deck is for DISCOVERY, not re-encounters.
+      setWatchlistIds(new Set(logs.map((l) => l.mediaId)));
     });
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  // S12 follow-up: titles the user already swiped never come back after a
+  // refresh. Local state also absorbs the current session's swipes instantly.
+  useEffect(() => {
+    if (!user) {
+      setSeenTitleIds(new Set());
+      return;
+    }
+    let cancelled = false;
+    createClient()
+      .from("title_swipes")
+      .select("media_id")
+      .eq("user_id", user.id)
+      .then(({ data }: { data: { media_id: string }[] | null }) => {
+        if (!cancelled && data) {
+          setSeenTitleIds(new Set(data.map((r) => r.media_id)));
+        }
+      });
     return () => {
       cancelled = true;
     };
@@ -154,9 +180,15 @@ export function HomeDeck() {
       match.initiatorId = user.id;
     } else if (result.limitReached) {
       showToast("Günlük izdaş isteği sınırına ulaştın. Yarın tekrar dene.");
+    } else if (result.rejected) {
+      // Sticky rejection must NEVER be silent: the card left the deck and the
+      // user deserves to know why nothing happened.
+      showToast(
+        `@${match.user.username} bu eşleşmeye daha önce pas geçmiş — yeniden açma hakkı onlarda.`,
+      );
+    } else {
+      showToast("İstek gönderilemedi. Bağlantını kontrol et.");
     }
-    // Sticky rejections stay silent here: the card already left the deck and
-    // the matches-page notice covers that flow.
   };
   const commitPass = async (match: MovieMateMatch) => {
     if (!user || !match.user?.id) return;
@@ -185,11 +217,16 @@ export function HomeDeck() {
       match.id = result.matchId;
       match.status = "pending";
       match.initiatorId = user.id;
-      showToast("BİLET gönderildi — isteğin öne çıktı.");
+      showToast(`BİLET gönderildi — @${match.user.username} onaylarsa sohbet açılır.`);
     } else if (result.limitReached) {
       showToast("Günlük BİLET sınırına ulaştın (1). Kulüp üyeliği ile sınırsız.");
+    } else if (result.rejected) {
+      showToast(
+        `@${match.user.username} bu eşleşmeye daha önce pas geçmiş — BİLET gönderilemedi.`,
+      );
+    } else {
+      showToast("BİLET gönderilemedi. Bağlantını kontrol et.");
     }
-    // Sticky rejections stay silent, same as commitLike.
   };
   const removeCard = (match: MovieMateMatch) =>
     setMatches((prev) => prev.filter((m) => m.id !== match.id));
@@ -260,6 +297,7 @@ export function HomeDeck() {
   // write must never block a gesture; latest-wins upsert keeps it idempotent.
   const persistSwipe = (item: MediaItem, direction: "like" | "pass") => {
     if (!user) return;
+    setSeenTitleIds((prev) => new Set(prev).add(item.id));
     createClient()
       .from("title_swipes")
       .upsert(

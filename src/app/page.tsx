@@ -4,7 +4,6 @@ import { Suspense } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { HomeDeck } from "@/components/home/HomeDeck";
-import { MasterpieceLaurelIcon } from "@/components/icons/CinemaIcons";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -39,32 +38,28 @@ export default async function HomePage() {
     <div className="min-h-screen with-sidebar flex flex-col bg-[#0A0A0A] text-[#FAFAFA] selection:bg-[#DC2626] selection:text-white transition-colors duration-150">
       <Navbar />
 
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full space-y-12">
-        {/* Pitch — crawlable identity line + honest scale */}
-        <section className="text-center space-y-4 pt-2 font-mono">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 border border-[#F59E0B]/40 bg-[#F59E0B]/10 text-[10px] font-black uppercase tracking-widest text-[#F59E0B]">
-            <MasterpieceLaurelIcon size={13} className="text-[#F59E0B]" />
-            <span>KURUCU ÜYELER DÖNEMİ</span>
-          </div>
-          <h1 className="text-xl sm:text-3xl md:text-4xl font-black uppercase tracking-tight text-[#FAFAFA] font-sans leading-tight max-w-3xl mx-auto">
-            Aynı filmlerde ağlayıp, aynı sahnelerde ürperdiğin{" "}
-            <span className="text-[#EF4444]">izdaşını</span> bul.
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full space-y-7">
+        {/* Pitch — one line of soul, one line of fact, zero ceremony */}
+        <section className="text-center space-y-2.5 pt-1 font-mono">
+          <h1 className="text-lg sm:text-2xl md:text-3xl font-black uppercase tracking-tight text-[#FAFAFA] font-sans leading-tight max-w-3xl mx-auto">
+            Aynı filmlerde ağlayıp aynı sahnelerde ürperdiğin{" "}
+            <span className="text-[#EF4444]">izdaşını</span> bul — kaydırmaya
+            başla.
           </h1>
-          <p className="text-xs sm:text-sm text-neutral-400 max-w-xl mx-auto">
-            Sinema DNA&apos;nı çıkar; film, dizi ve anime frekansın sana
-            eşleşsin.
-            {typeof memberCount === "number" &&
-              ` Şu an ${memberCount} sinefil frekansta.`}
+          <p className="text-xs text-neutral-400">
+            {typeof memberCount === "number"
+              ? `Film · Dizi · Anime — şu an ${memberCount} sinefil kayıtlı (kurucu dönem)`
+              : "Film · Dizi · Anime — kurucu üyeler dönemi"}
           </p>
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 border border-emerald-600/40 bg-emerald-500/10 text-[10px] font-black uppercase tracking-widest text-emerald-400">
-            <span>İZDAŞ GÜVENCESİ: günlük istek sınırı • radarda gizlenme hakkı • korumalı sohbet</span>
-          </div>
+          <p className="text-[10px] uppercase tracking-widest text-neutral-600">
+            Günlük istek sınırı · radarda gizlenme · korumalı sohbet
+          </p>
         </section>
 
         {/* Liquidity-governed deck */}
         <Suspense
           fallback={
-            <div className="py-16 text-center font-mono text-xs font-black uppercase text-neutral-500 tracking-widest">
+            <div className="py-12 text-center font-mono text-xs font-black uppercase text-neutral-500 tracking-widest">
               PERDE AÇILIYOR...
             </div>
           }
