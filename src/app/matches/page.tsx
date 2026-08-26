@@ -42,6 +42,7 @@ import { computeDiscoverMatches, createOrUpdateMatch, requestMatch } from '@/lib
 import { trackEvent, TELEMETRY_EVENTS } from '@/lib/telemetry';
 import { getInboxSummary } from '@/lib/services/inbox.service';
 import { searchCatalog } from '@/lib/omdb';
+import { isOnboarded } from '@/lib/onboarding';
 import { getAllProvinces, getDistricts } from '@/data/locations';
 import { POPULAR_GENRES } from '@/lib/constants';
 import { MovieMateMatch, MediaItem, MatchIntent } from '@/types';
@@ -103,7 +104,9 @@ export default function MatchesPage() {
       // Always fetch the full radar ('all') — per-tab counts were computed
       // from the already-intent-filtered dataset, so TÜMÜ/Flört counts were
       // wrong outside their own tab. The client-side filter handles tabs.
-      const cacheKey = user ? `izledin_matches_${user.id}_all` : null;
+      // _v2: S12 scoring changed (taste-vector term + resurface rows) — old
+      // cached payloads must never paint over fresh-shape results.
+      const cacheKey = user ? `izledin_matches_${user.id}_all_v2` : null;
 
       // Stale-while-revalidate: paint the cached radar instantly so there is no
       // spinner flash, but ALWAYS recompute below so taste changes propagate
@@ -164,7 +167,8 @@ export default function MatchesPage() {
     if (user && profile) {
       try {
         const isCompleted = localStorage.getItem(`izledin_onboarded_${user.id}`);
-        if (!isCompleted && (!profile.streamingServices?.length || !profile.top4Favorites?.length)) {
+        // S11: single canonical onboarding predicate (top-4 presence).
+        if (!isCompleted && !isOnboarded(profile)) {
           const timer = setTimeout(() => {
             setIsTasteProfilerOpen(true);
           }, 700);

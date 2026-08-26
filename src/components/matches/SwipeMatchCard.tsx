@@ -262,7 +262,16 @@ export function SwipeMatchCard({ match, nextMatch, onChatClick, onLike, onPass, 
               </span>
             )}
 
-            <span 
+            {match.resurfaced && (
+              <span
+                className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider bg-sky-500/15 text-sky-400 border border-sky-600/30"
+                title="Daha önce pas geçmiştin; frekansınız yeniden kesişti"
+              >
+                <span>Yeniden Karşında</span>
+              </span>
+            )}
+
+            <span
               className="inline-flex items-center gap-1 text-[10px] font-bold  text-neutral-300  bg-neutral-800 px-1.5 py-0.5 border  border-neutral-700"
               title="Topluluk Güven ve Niyet Uyumu"
             >

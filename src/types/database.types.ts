@@ -206,6 +206,44 @@ export type Database = {
         }
         Relationships: []
       }
+      title_swipes: {
+        Row: {
+          created_at: string | null
+          direction: string
+          id: string
+          media_id: string
+          media_type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          direction: string
+          id?: string
+          media_id: string
+          media_type?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          direction?: string
+          id?: string
+          media_id?: string
+          media_type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "title_swipes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       watch_logs: {
         Row: {
           backdrop_url: string | null

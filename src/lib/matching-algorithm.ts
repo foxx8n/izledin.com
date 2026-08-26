@@ -5,15 +5,23 @@ import { Profile } from '@/types';
  * Mirrors the authoritative `calculate_cinephile_matches` Postgres spec so the
  * same pair sees the same score everywhere:
  *   baseline 32 + genre-Jaccard ×35 + streaming 15/5
- *   + intent 15 when equal OR either side 'both' else 5,
+ *   + intent 15 when equal OR either side 'both' else 5
+ *   + title-overlap LEAST(10, round(30·shared / max(myTasteN,10)))  [S12],
  *   clamped to [50, 99]. Top-4 overlaps are surfaced as shared titles/reasons
  *   but intentionally carry no score (parity with the DB engine).
+ *
+ * The S12 taste term activates only when the caller supplies liked-title
+ * vectors (title_swipes like/super ∪ watch_logs watched/watching ids). Without
+ * them — the usual guest path — it contributes 0, exactly like empty tables do
+ * in Postgres.
  */
 export function calculateCinemaMatch(
   userA: Profile,
   userB: Profile,
   userAWatchlist?: string[], // list of media titles/ids userA wants to watch
-  userBWatchlist?: string[]  // list of media titles/ids userB wants to watch
+  userBWatchlist?: string[], // list of media titles/ids userB wants to watch
+  userALikedTitles?: string[], // S12 taste vector: media_ids userA liked/watched
+  userBLikedTitles?: string[]  // S12 taste vector: media_ids userB liked/watched
 ): { score: number; reasons: string[]; sharedGenres: string[]; sharedTitles: Array<{ id: string; title: string; posterUrl: string; type: any }> } {
   const reasons: string[] = [];
 
@@ -49,6 +57,26 @@ export function calculateCinemaMatch(
     reasons.push('Ortak kulüp niyeti ve vizyon anlayışı');
   }
 
+  // 3b. Taste-Vector Overlap [S12] — damped asymmetric overlap, max +10:
+  // LEAST(10, round(30 · shared_n / GREATEST(caller_vector_n, 10))).
+  // Asymmetric on purpose (caller side), damped against catalog hoarders.
+  let titleScore = 0;
+  const likedA = userALikedTitles || [];
+  const likedB = userBLikedTitles || [];
+  if (likedA.length > 0 && likedB.length > 0) {
+    const setB = new Set(likedB);
+    const sharedLiked = likedA.filter((id) => setB.has(id));
+    if (sharedLiked.length > 0) {
+      titleScore = Math.min(
+        10,
+        Math.round((30 * sharedLiked.length) / Math.max(likedA.length, 10)),
+      );
+      reasons.push(
+        `Ortak beğeni: ${sharedLiked.length} ortak yapım`,
+      );
+    }
+  }
+
   // 4. Top-4 Favorites Overlap — display-only (DB parity: no score)
   const top4A = userA.top4Favorites || [];
   const top4B = userB.top4Favorites || [];
@@ -76,7 +104,7 @@ export function calculateCinemaMatch(
   }
 
   // Normalize exactly like the DB engine: [50, 99]
-  const total = 32 + genreScore + serviceScore + intentScore;
+  const total = 32 + genreScore + serviceScore + intentScore + titleScore;
   const finalScore = Math.min(99, Math.max(50, Math.round(total)));
 
   return {

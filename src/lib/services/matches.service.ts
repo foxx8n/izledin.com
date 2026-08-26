@@ -75,13 +75,16 @@ export async function getUserMatches(currentUserId: string): Promise<MovieMateMa
   return results;
 }
 
+/** S12 resurface window (days): own passes may come back after this long. */
+const RESURFACE_DAYS = 14;
+
 /**
  * High-Scale Cinephile Discovery & Vector Matching Engine.
  * Uses PostgreSQL RPC (calculate_cinephile_matches) for sub-5ms multi-vector scoring.
  * Falls back gracefully to local calculations for demo/offline users.
  */
 export async function computeDiscoverMatches(
-  currentUser: Profile, 
+  currentUser: Profile,
   intentFilter: string = 'all',
   limit: number = 50
 ): Promise<MovieMateMatch[]> {
@@ -95,12 +98,24 @@ export async function computeDiscoverMatches(
         p_user_id: currentUser.id,
         p_intent_filter: intentFilter,
         p_limit: limit,
+        p_resurface_days: RESURFACE_DAYS,
       });
 
       if (!error && Array.isArray(rpcMatches)) {
         // An empty result is AUTHORITATIVE (new account / everyone passed):
         // falling through to the local engine would resurface filtered users.
-        return rpcMatches.map((row: any): MovieMateMatch => ({
+        return rpcMatches.map((row: any): MovieMateMatch => {
+        // S12 resurface rows carry a REAL match uuid + status='passed'.
+        // Until re-liked they are prospects on every deck surface — override
+        // the display status so ChatModal's conversationClosed gate and other
+        // status branching never treat a radar card as a closed conversation.
+        // The real id is preserved so requestMatch hits the revive path, and
+        // `resurfaced` lets UIs badge the card honestly.
+        const isResurfaced =
+          typeof row.match_id === 'string' &&
+          !row.match_id.startsWith('prospective_') &&
+          row.status === 'passed';
+        return {
         id: row.match_id,
         user: {
           id: row.partner_id,
@@ -126,9 +141,11 @@ export async function computeDiscoverMatches(
         sharedGenres: row.shared_genres || [],
         sharedTitles: row.shared_titles || [],
         matchReasons: row.match_reasons || ['Yüksek 35mm frekans uyumu'],
-        status: row.status || 'pending',
+        status: isResurfaced ? 'pending' : row.status || 'pending',
         initiatorId: row.initiator_id || undefined,
-      }));
+        resurfaced: isResurfaced || undefined,
+      };
+      });
     }
     } catch (err) {
       console.warn('RPC matching unavailable, falling back to in-memory matching:', err);

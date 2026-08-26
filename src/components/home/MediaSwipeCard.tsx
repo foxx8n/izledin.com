@@ -26,8 +26,8 @@ function triggerHaptic(pattern: number[]) {
 /**
  * PERDE title card — the media variant of the SwipeMatchCard drag engine
  * (S5). Swipe right = SEVDİM (real persistence via the caller's watchlist
- * write — no bare gesture without a persisted consequence, plan §C9);
- * swipe left = PAS (session-local until S9's title_swipes table ships).
+ * write + S12 title_swipes taste vector); swipe left = PAS (also persisted to
+ * title_swipes since S12 — both directions feed co-like matching).
  */
 export function MediaSwipeCard({
   item,

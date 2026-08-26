@@ -110,6 +110,12 @@ export interface MovieMateMatch {
   matchReasons: string[];
   status: 'pending' | 'matched' | 'passed' | 'blocked';
   initiatorId?: string;
+  /**
+   * S12 resurface: the pair was passed by ME earlier and the resurface window
+   * brought it back. The row keeps its REAL match id (revive path on like),
+   * but every deck surface must treat it as a prospect until re-liked.
+   */
+  resurfaced?: boolean;
   lastMessage?: string;
   lastMessageTime?: string;
   unreadCount?: number;

@@ -1,15 +1,14 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  X, 
-  Check, 
-  Search, 
-  Trash2, 
-  ArrowRight, 
-  ArrowLeft, 
-  Loader2, 
-  Calendar, 
+import {
+  X,
+  Search,
+  Trash2,
+  ArrowRight,
+  ArrowLeft,
+  Loader2,
+  Calendar,
   AlertCircle,
   Film,
   MapPin,
@@ -18,9 +17,9 @@ import {
   Edit3,
   Lock
 } from 'lucide-react';
-import { 
-  ClapperboardIcon, 
-  FilmReelIcon, 
+import {
+  ClapperboardIcon,
+  FilmReelIcon,
   CinemaCheckIcon,
   CinemaFriendshipIcon,
   CinemaRomanceIcon,
@@ -28,7 +27,6 @@ import {
   CinemaVerifiedSeal,
 } from '@/components/icons/CinemaIcons';
 import { useAuth } from '@/context/AuthContext';
-import { POPULAR_GENRES } from '@/lib/constants';
 import { searchCatalog } from '@/lib/omdb';
 import { MediaItem, MatchIntent } from '@/types';
 import { generateDynamicBio, CINEMA_PROMPT_STARTERS } from '@/lib/cinema-bio-generator';
@@ -45,8 +43,11 @@ interface TasteProfilerModalProps {
 export function TasteProfilerModal({ isOpen, onClose, onComplete, onOpenAuth }: TasteProfilerModalProps) {
   const { user, profile, updateUserProfile } = useAuth();
 
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
-  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+  // S11 condensation: the genre-checkbox step is gone — the S12 taste vector
+  // replaced the questionnaire as the matching signal. Genres remain editable
+  // in CinemaDnaModal for anyone who wants to tune them manually; this flow
+  // never overwrites them.
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [top4Favorites, setTop4Favorites] = useState<(any | null)[]>([null, null, null, null]);
   const [bio, setBio] = useState('');
   const [location, setLocation] = useState('Kadıköy, İstanbul');
@@ -55,7 +56,7 @@ export function TasteProfilerModal({ isOpen, onClose, onComplete, onOpenAuth }: 
   const [intentAgreed, setIntentAgreed] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Search state for Step 4 (Top 4)
+  // Search state for Step 3 (Top 4)
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<MediaItem[]>([]);
   const [searching, setSearching] = useState(false);
@@ -80,12 +81,6 @@ export function TasteProfilerModal({ isOpen, onClose, onComplete, onOpenAuth }: 
     setBirthDate(profile?.birthDate || '');
     if (profile?.matchIntent) setMatchIntent(profile.matchIntent);
     setIntentAgreed(Boolean(profile?.intentAgreedAt));
-    
-    if (profile?.favoriteGenres && profile.favoriteGenres.length > 0) {
-      setSelectedGenres(profile.favoriteGenres);
-    } else {
-      setSelectedGenres([]);
-    }
 
     if (profile?.top4Favorites && profile.top4Favorites.length > 0) {
       const initialTop4: (any | null)[] = [null, null, null, null];
@@ -100,9 +95,12 @@ export function TasteProfilerModal({ isOpen, onClose, onComplete, onOpenAuth }: 
     // Overlay draft progress if available
     if (draft) {
       if (typeof draft.step === 'number') {
-        setStep(Math.min(4, Math.max(1, Math.trunc(draft.step))) as 1 | 2 | 3 | 4);
+        // Legacy 4-step drafts: old steps 3 (genres) and 4 (top4+bio) both
+        // land on the condensed final step.
+        const legacy = Math.trunc(draft.step);
+        const remapped = legacy >= 4 ? 3 : legacy;
+        setStep(Math.min(3, Math.max(1, remapped)) as 1 | 2 | 3);
       }
-      if (Array.isArray(draft.selectedGenres)) setSelectedGenres(draft.selectedGenres);
       if (Array.isArray(draft.top4Favorites)) {
         const dTop4: (any | null)[] = [null, null, null, null];
         draft.top4Favorites.slice(0, 4).forEach((fav: any, i: number) => {
@@ -131,7 +129,6 @@ export function TasteProfilerModal({ isOpen, onClose, onComplete, onOpenAuth }: 
         draftKey,
         JSON.stringify({
           step,
-          selectedGenres,
           top4Favorites,
           bio,
           location,
@@ -141,7 +138,7 @@ export function TasteProfilerModal({ isOpen, onClose, onComplete, onOpenAuth }: 
         }),
       );
     } catch {}
-  }, [isOpen, user?.id, step, selectedGenres, top4Favorites, bio, location, birthDate, matchIntent, intentAgreed]);
+  }, [isOpen, user?.id, step, top4Favorites, bio, location, birthDate, matchIntent, intentAgreed]);
 
   // Window ESC handler
   useEffect(() => {
@@ -199,15 +196,6 @@ export function TasteProfilerModal({ isOpen, onClose, onComplete, onOpenAuth }: 
     return null;
   };
 
-  const toggleGenre = (g: string) => {
-    setErrorMsg(null);
-    if (selectedGenres.includes(g)) {
-      setSelectedGenres(selectedGenres.filter((item) => item !== g));
-    } else {
-      setSelectedGenres([...selectedGenres, g]);
-    }
-  };
-
   const handleSelectMovieForSlot = (item: MediaItem) => {
     if (activeSlotIndex === null) return;
     setErrorMsg(null);
@@ -257,15 +245,6 @@ export function TasteProfilerModal({ isOpen, onClose, onComplete, onOpenAuth }: 
     setStep(3);
   };
 
-  const handleStep3Next = () => {
-    if (selectedGenres.length === 0) {
-      setErrorMsg('Lütfen en az 1 favori sinema türü seçin.');
-      return;
-    }
-    setErrorMsg(null);
-    setStep(4);
-  };
-
   const handleFinish = async () => {
     if (saving) return;
 
@@ -278,10 +257,6 @@ export function TasteProfilerModal({ isOpen, onClose, onComplete, onOpenAuth }: 
     const validFavorites = top4Favorites.filter((f): f is NonNullable<typeof f> => Boolean(f && f.id));
     if (validFavorites.length === 0) {
       setErrorMsg('Lütfen tüm zamanların favori başyapıtlarından en az 1 tanesini seçin.');
-      return;
-    }
-    if (selectedGenres.length === 0) {
-      setErrorMsg('Lütfen en az bir film/dizi türü seçin.');
       return;
     }
     if (!bio.trim()) {
@@ -300,7 +275,8 @@ export function TasteProfilerModal({ isOpen, onClose, onComplete, onOpenAuth }: 
         matchIntent: matchIntent,
         // Preserve original intentAgreedAt timestamp if exists, otherwise timestamp now
         intentAgreedAt: profile?.intentAgreedAt || new Date().toISOString(),
-        favoriteGenres: selectedGenres,
+        // S11: favorite_genres is intentionally NOT sent — the field stays
+        // exactly as the user last set it (CinemaDnaModal owns it now).
         top4Favorites: validFavorites,
       });
 
@@ -320,7 +296,7 @@ export function TasteProfilerModal({ isOpen, onClose, onComplete, onOpenAuth }: 
   };
 
   const validTop4ForBio = top4Favorites.filter((f): f is NonNullable<typeof f> => Boolean(f && f.id));
-  const suggestedBioText = generateDynamicBio({ favoriteGenres: selectedGenres, top4Favorites: validTop4ForBio });
+  const suggestedBioText = generateDynamicBio({ favoriteGenres: profile?.favoriteGenres || [], top4Favorites: validTop4ForBio });
 
   return (
     <div 
@@ -344,14 +320,13 @@ export function TasteProfilerModal({ isOpen, onClose, onComplete, onOpenAuth }: 
               </span>
               <span className="text-xs font-black text-[#EF4444] flex items-center gap-1">
                 <ClapperboardIcon size={12} className="text-[#EF4444]" />
-                <span>ADIM {step} / 4</span>
+                <span>ADIM {step} / 3</span>
               </span>
             </div>
             <h2 id="taste-profiler-title" className="text-base sm:text-xl font-black uppercase text-[#FAFAFA] font-sans tracking-tight">
               {step === 1 && '1. SİNEMA KİMLİĞİ & DOĞUM TARİHİ'}
               {step === 2 && '2. İZDAŞ NİYETİ & GÜVENLİK SÖZLEŞMESİ'}
-              {step === 3 && '3. FAVORİ SİNEMA TÜRLERİNİZ'}
-              {step === 4 && '4. 4 BAŞYAPIT & SİNEMA BİYOGRAFİSİ'}
+              {step === 3 && '3. 4 BAŞYAPIT & SİNEMA BİYOGRAFİSİ'}
             </h2>
           </div>
 
@@ -370,12 +345,11 @@ export function TasteProfilerModal({ isOpen, onClose, onComplete, onOpenAuth }: 
           <div className="flex items-center justify-between text-xs font-black uppercase text-neutral-400">
             <span className={step >= 1 ? 'text-[#EF4444]' : ''}>1. Profil</span>
             <span className={step >= 2 ? 'text-[#EF4444]' : ''}>2. Niyet</span>
-            <span className={step >= 3 ? 'text-[#EF4444]' : ''}>3. Türler</span>
-            <span className={step >= 4 ? 'text-[#EF4444]' : ''}>4. Başyapıt & Biyo</span>
+            <span className={step >= 3 ? 'text-[#EF4444]' : ''}>3. Başyapıt & Biyo</span>
           </div>
           <div className="w-full h-2.5 bg-neutral-800 border border-[#404040] overflow-hidden flex">
             <div className={`h-full bg-[#EF4444] transition-all duration-300 ${
-              step === 1 ? 'w-1/4' : step === 2 ? 'w-2/4' : step === 3 ? 'w-3/4' : 'w-full'
+              step === 1 ? 'w-1/3' : step === 2 ? 'w-2/3' : 'w-full'
             }`} />
           </div>
         </div>
@@ -570,7 +544,7 @@ export function TasteProfilerModal({ isOpen, onClose, onComplete, onOpenAuth }: 
                 onClick={handleStep2Next}
                 className="px-6 py-3 min-h-[44px] bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-black uppercase tracking-wider border-2 border-white shadow-[4px_4px_0px_#000000] flex items-center gap-2 cursor-pointer transition-transform active:translate-x-0.5 active:translate-y-0.5"
               >
-                <span>DEVAM ET: FAVORİ TÜRLER</span>
+                <span>DEVAM ET: BAŞYAPITLAR</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
@@ -578,67 +552,9 @@ export function TasteProfilerModal({ isOpen, onClose, onComplete, onOpenAuth }: 
         )}
 
         {/* ========================================================================= */}
-        {/* STEP 3: FAVORITE GENRES & DNA SPECTRUM                                    */}
+        {/* STEP 3: TOP 4 MASTERPIECES & CINEMA BIO (S11 — final step)               */}
         {/* ========================================================================= */}
         {step === 3 && (
-          <div className="space-y-5 animate-in fade-in">
-            <div className="space-y-2">
-              <p className="text-xs text-neutral-400 font-sans leading-relaxed">
-                Sinema zevkinizi en iyi yansıtan türleri seçin (En az 1 adet). Seçtiğiniz türler, İzdaş Radarı&apos;nda diğer sinefillerle olan uyum yüzdenizi belirler.
-              </p>
-              <div className="text-xs font-bold text-[#EF4444]">
-                SEÇİLEN TÜRLER ({selectedGenres.length}): {selectedGenres.slice(0, 4).join(', ') || 'Henüz seçilmedi'}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-2">
-              {POPULAR_GENRES.map((genre) => {
-                const isSelected = selectedGenres.includes(genre);
-                return (
-                  <button
-                    key={genre}
-                    type="button"
-                    onClick={() => toggleGenre(genre)}
-                    className={`p-3 min-h-[48px] text-xs font-black uppercase border-2 text-left transition-all cursor-pointer flex items-center justify-between gap-1.5 select-none ${
-                      isSelected
-                        ? 'bg-[#DC2626] text-white border-[#DC2626] shadow-[3px_3px_0px_#000000]'
-                        : 'bg-neutral-900 text-[#FAFAFA] border-[#404040] hover:border-neutral-500'
-                    }`}
-                  >
-                    <span className="truncate">{genre}</span>
-                    {isSelected && <Check className="w-3.5 h-3.5 stroke-[3] shrink-0" />}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Step 3 Actions */}
-            <div className="flex items-center justify-between pt-4 border-t-2 border-[#404040]">
-              <button
-                type="button"
-                onClick={() => setStep(2)}
-                className="px-4 py-2.5 min-h-[44px] bg-neutral-800 hover:bg-neutral-300 hover:text-black text-xs font-black uppercase border border-[#404040] flex items-center gap-1.5 cursor-pointer transition-colors"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Geri</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleStep3Next}
-                className="px-6 py-3 min-h-[44px] bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-black uppercase tracking-wider border-2 border-white shadow-[4px_4px_0px_#000000] flex items-center gap-2 cursor-pointer transition-transform active:translate-x-0.5 active:translate-y-0.5"
-              >
-                <span>DEVAM ET: 4 BAŞYAPIT & KÜNYE</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* ========================================================================= */}
-        {/* STEP 4: TOP 4 MASTERPIECES & CINEMA BIO                                   */}
-        {/* ========================================================================= */}
-        {step === 4 && (
           <div className="space-y-6 animate-in fade-in">
             {/* Top 4 Reels */}
             <div className="space-y-3">
@@ -870,11 +786,11 @@ export function TasteProfilerModal({ isOpen, onClose, onComplete, onOpenAuth }: 
               />
             </div>
 
-            {/* Step 4 Actions */}
+            {/* Step 3 Actions */}
             <div className="flex items-center justify-between pt-4 border-t-2 border-[#404040]">
               <button
                 type="button"
-                onClick={() => setStep(3)}
+                onClick={() => setStep(2)}
                 className="px-4 py-2.5 min-h-[44px] bg-neutral-800 hover:bg-neutral-300 hover:text-black text-xs font-black uppercase border border-[#404040] flex items-center gap-1.5 cursor-pointer transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" />

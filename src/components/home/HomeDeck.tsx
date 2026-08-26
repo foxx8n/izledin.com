@@ -31,6 +31,7 @@ import {
   clearQueuedSwipes,
 } from "@/lib/swipe-queue";
 import { getLiquidityDecision, type LiquidityDecision } from "@/lib/liquidity";
+import { isOnboarded } from "@/lib/onboarding";
 import { useSwipeDeck, type DeckHistoryEntry } from "@/hooks/useSwipeDeck";
 import type { MediaItem, MovieMateMatch } from "@/types";
 import { SwipeMatchCard } from "@/components/matches/SwipeMatchCard";
@@ -232,7 +233,27 @@ export function HomeDeck() {
     });
   }, []);
 
-  // Title likes persist for real via the watchlist write (no bare gestures).
+  // S12: signed-in title swipes persist to title_swipes so the matcher's
+  // taste-vector term can compute co-like overlap. Fire-and-forget — a failed
+  // write must never block a gesture; latest-wins upsert keeps it idempotent.
+  const persistSwipe = (item: MediaItem, direction: "like" | "pass") => {
+    if (!user) return;
+    createClient()
+      .from("title_swipes")
+      .upsert(
+        {
+          user_id: user.id,
+          media_id: item.id,
+          media_type: item.type,
+          direction,
+        },
+        { onConflict: "user_id,media_id" },
+      )
+      .then();
+  };
+
+  // Title likes persist for real via the watchlist write (no bare gestures)
+  // AND feed the taste vector via title_swipes (S12).
   const handleTitleLike = async (item: MediaItem) => {
     if (!user) return;
     try {
@@ -243,10 +264,14 @@ export function HomeDeck() {
       showToast("Liste güncellenemedi.");
       return;
     }
+    persistSwipe(item, "like");
     setTitleIndex((i) => i + 1);
   };
   const [titleIndex, setTitleIndex] = useState(0);
-  const handleTitlePass = () => setTitleIndex((i) => i + 1);
+  const handleTitlePass = (item: MediaItem) => {
+    persistSwipe(item, "pass");
+    setTitleIndex((i) => i + 1);
+  };
 
   // ── S10 guest funnel: PLAYABLE deck, queue + auth hook ──
   if (!user) {
@@ -345,8 +370,7 @@ export function HomeDeck() {
 
   const currentMatch = matches[deck.index];
   const currentTitle = titleQueue[titleIndex];
-  const needsDna =
-    !profile?.favoriteGenres?.length || !profile?.top4Favorites?.length;
+  const needsDna = !isOnboarded(profile);
 
   return (
     <section className="space-y-5">
@@ -368,8 +392,8 @@ export function HomeDeck() {
             ÖNCE SİNEMA DNA&apos;NI ÇIKAR
           </h3>
           <p className="text-xs text-neutral-400 max-w-md mx-auto">
-            Türlerini ve favori 4 başyapıtını seç; radar ancak o zaman
-            frekansını bulabilir.
+            Favori başyapıtlarını seç; radar ancak o zaman frekansını
+            bulabilir.
           </p>
           <Link
             href="/matches"
