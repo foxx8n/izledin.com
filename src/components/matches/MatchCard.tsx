@@ -2,17 +2,17 @@
 
 import React, { useState } from 'react';
 import {
-  MessageSquare,
   MapPin,
   X,
-  Film,
-  Ticket
+  Film
 } from 'lucide-react';
-import { 
-  CinemaFriendshipIcon, 
-  CinemaRomanceIcon, 
-  CinemaDuoIntentIcon, 
+import {
+  CinemaFriendshipIcon,
+  CinemaRomanceIcon,
+  CinemaDuoIntentIcon,
   CinemaTrustShieldIcon,
+  CinemaHeartIcon,
+  CinemaTicketIcon,
   FilmReelIcon
 } from '@/components/icons/CinemaIcons';
 import { MovieMateMatch } from '@/types';
@@ -20,7 +20,7 @@ import { generateDynamicBio } from '@/lib/cinema-bio-generator';
 
 interface MatchCardProps {
   match: MovieMateMatch;
-  onChatClick: (match: MovieMateMatch) => void;
+  /** Primary like — sends the izdaş request (opens the intro chat on success). */
   onLike?: (match: MovieMateMatch) => void;
   onPass?: (match: MovieMateMatch) => void;
   /** S15 BİLET super-like — DB-side quota applies (free 1/day). */
@@ -28,14 +28,14 @@ interface MatchCardProps {
   onMovieClick?: (title: string, posterUrl: string) => void;
 }
 
-export function MatchCard({ match, onChatClick, onLike, onPass, onBilet, onMovieClick }: MatchCardProps) {
-  const { user, compatibilityScore, sharedGenres, sharedTitles, matchReasons } = match;
+export function MatchCard({ match, onLike, onPass, onBilet, onMovieClick }: MatchCardProps) {
+  const { user, compatibilityScore, matchReasons } = match;
   const [imgError, setImgError] = useState(false);
 
   const intent = user.matchIntent || match.intent || 'friend';
 
   return (
-    <div className="group relative flex flex-col justify-between  bg-[#171717]  text-[#FAFAFA] border-2 sm:border-4  border-[#404040]  shadow-[5px_5px_0px_#000000]  hover:shadow-[7px_7px_0px_#EF4444] hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all duration-200 p-5 font-mono h-full">
+    <div className="group relative flex flex-col justify-between  bg-[#171717]  text-[#FAFAFA] border-2 sm:border-4  border-[#404040]  shadow-[5px_5px_0px_#000000]  hover:shadow-[7px_7px_0px_#EF4444] hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all duration-200 p-4 font-mono h-full">
       
       <div className="flex flex-col flex-1 justify-between gap-3">
         
@@ -94,7 +94,16 @@ export function MatchCard({ match, onChatClick, onLike, onPass, onBilet, onMovie
           {intent === 'both' && (
             <span className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider bg-amber-500/15  text-amber-400 border border-amber-600/30">
               <CinemaDuoIntentIcon size={13} />
-              <span>Tüm Niyetler</span>
+              <span>Fark etmez</span>
+            </span>
+          )}
+
+          {match.resurfaced && (
+            <span
+              className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider bg-sky-500/15 text-sky-400 border border-sky-600/30"
+              title="Daha önce pas geçmiştin; frekansınız yeniden kesişti"
+            >
+              <span>Yeniden Karşında</span>
             </span>
           )}
 
@@ -203,8 +212,9 @@ export function MatchCard({ match, onChatClick, onLike, onPass, onBilet, onMovie
 
       </div>
 
-      {/* Action Buttons — Decisive Binary System [Pas Geç] + [İzdaş Ol & Sohbet Başlat] */}
-      <div className="pt-2 border-t-2  border-[#404040] flex items-center gap-2.5">
+      {/* Action trio — dating-app muscle memory: ✗ pas · BİLET · ♥ İZDAŞ OL.
+          The like sends the request; on mutual approval the chat opens. */}
+      <div className="pt-3 border-t-2  border-[#404040] flex items-center gap-2.5">
         {/* Pass Button */}
         <button
           type="button"
@@ -225,24 +235,23 @@ export function MatchCard({ match, onChatClick, onLike, onPass, onBilet, onMovie
             title="BİLET Gönder — öne çıkan istek (ücretsiz hesapta günde 1)"
             aria-label="BİLET gönder"
           >
-            <Ticket className="w-5 h-5 stroke-[2.5]" />
+            <CinemaTicketIcon size={20} className="shrink-0" />
           </button>
         )}
 
-        {/* Primary Unified Cinephile Match & Chat Action */}
-        <button
-          type="button"
-          onClick={() => onChatClick(match)}
-          className="flex-1 h-12 min-h-[48px] px-4   bg-[#EF4444] hover:bg-[#DC2626]  text-[#0A0A0A] text-xs font-black uppercase tracking-wider border-2  border-[#404040]  shadow-[3px_3px_0px_#000000] hover:shadow-[1px_1px_0px_#0A0A0A] active:translate-x-0.5 active:translate-y-0.5 transition-all flex items-center justify-center gap-2 cursor-pointer font-mono"
-          title="İzdaş Ol & Not Bırak"
-          aria-label="İzdaş Ol ve Not Bırak"
-        >
-          <MessageSquare className="w-4 h-4 stroke-[2.5]" />
-          <span>İzdaş Ol & Not Bırak</span>
-          {match.unreadCount ? (
-            <span className="w-2 h-2 bg-[#F59E0B] rounded-full animate-ping" />
-          ) : null}
-        </button>
+        {/* Primary like action — the request sender */}
+        {onLike && (
+          <button
+            type="button"
+            onClick={() => onLike(match)}
+            className="flex-1 h-12 min-h-[48px] px-4   bg-[#EF4444] hover:bg-[#DC2626]  text-[#0A0A0A] text-xs font-black uppercase tracking-wider border-2  border-[#404040]  shadow-[3px_3px_0px_#000000] hover:shadow-[1px_1px_0px_#0A0A0A] active:translate-x-0.5 active:translate-y-0.5 transition-all flex items-center justify-center gap-2 cursor-pointer font-mono"
+            title="İzdaş ol — karşılıklı beğenide sohbet açılır"
+            aria-label="İzdaş Ol"
+          >
+            <CinemaHeartIcon size={16} filled className="shrink-0" />
+            <span>İZDAŞ OL</span>
+          </button>
+        )}
       </div>
 
     </div>

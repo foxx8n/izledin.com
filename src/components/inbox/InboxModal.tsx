@@ -20,6 +20,8 @@ interface InboxModalProps {
   onClose: () => void;
   onOpenChat: (match: MovieMateMatch) => void;
   onOpenAuth?: () => void;
+  /** Which tab to land on (e.g. the matches-page "Seni Beğenenler" strip). */
+  initialTab?: 'messages' | 'requests';
 }
 
 // Realtime refreshes run at most once per this interval — platform-wide
@@ -27,10 +29,10 @@ interface InboxModalProps {
 // recomputation per event (same storm the Navbar badge debounces).
 const INBOX_REFRESH_MIN_INTERVAL_MS = 2500;
 
-export function InboxModal({ isOpen, onClose, onOpenChat, onOpenAuth }: InboxModalProps) {
+export function InboxModal({ isOpen, onClose, onOpenChat, onOpenAuth, initialTab }: InboxModalProps) {
   const { user, profile } = useAuth();
   const [items, setItems] = useState<InboxItem[]>([]);
-  const [activeTab, setActiveTab] = useState<'messages' | 'requests'>('messages');
+  const [activeTab, setActiveTab] = useState<'messages' | 'requests'>(initialTab ?? 'messages');
   const [requestsSubTab, setRequestsSubTab] = useState<'incoming' | 'outgoing'>('incoming');
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
