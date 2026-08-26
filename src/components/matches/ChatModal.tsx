@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import dynamic from "next/dynamic";
 import {
   X,
   Send,
@@ -10,6 +11,7 @@ import {
   ShieldAlert,
   Check,
   UserX,
+  Clapperboard,
 } from "lucide-react";
 import {
   ClapperboardIcon,
@@ -38,6 +40,18 @@ import {
   acceptMatchRequest,
   rejectMatchRequest,
 } from "@/lib/services/inbox.service";
+
+// S14 ORTAK SEANS — panel + premium upsell are code-split so every chat-only
+// visitor does not pay for them.
+const WatchTogetherPanel = dynamic(
+  () => import("./WatchTogetherPanel").then((m) => m.WatchTogetherPanel),
+  { ssr: false },
+);
+const PremiumModal = dynamic(
+  () =>
+    import("@/components/premium/PremiumModal").then((m) => m.PremiumModal),
+  { ssr: false },
+);
 
 interface ChatModalProps {
   match: MovieMateMatch | null;
@@ -88,6 +102,9 @@ export function ChatModal({
   const [reportError, setReportError] = useState<string | null>(null);
   const [sendError, setSendError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  // S14 ORTAK SEANS tab — only rendered for matched conversations.
+  const [activeTab, setActiveTab] = useState<"chat" | "seans">("chat");
+  const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -114,6 +131,7 @@ export function ChatModal({
     setInitiatorId(match.initiatorId);
     setSendError(null);
     setActionError(null);
+    setActiveTab("chat");
     setLoading(true);
 
     if (user?.id && !match.id.startsWith("prospective_")) {
@@ -690,7 +708,48 @@ export function ChatModal({
           </div>
         )}
 
+        {/* S14 ORTAK SEANS tab strip — matched conversations only (RLS gates
+            the underlying table to matched pairs, so pending chats never see
+            the tab) */}
+        {currentMatchStatus === "matched" && (
+          <div
+            className="flex border-b-2 border-[#404040] bg-[#262626] shrink-0"
+            role="tablist"
+            aria-label="Sohbet sekmeleri"
+          >
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === "chat"}
+              onClick={() => setActiveTab("chat")}
+              className={`flex-1 px-3 py-2.5 min-h-[44px] flex items-center justify-center gap-1.5 text-[10px] sm:text-xs font-black uppercase tracking-wider border-b-4 transition-colors cursor-pointer ${
+                activeTab === "chat"
+                  ? "border-[#EF4444] text-[#FAFAFA]"
+                  : "border-transparent text-neutral-500 hover:text-neutral-300"
+              }`}
+            >
+              <CinemaChatIcon size={14} />
+              <span>Sohbet</span>
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === "seans"}
+              onClick={() => setActiveTab("seans")}
+              className={`flex-1 px-3 py-2.5 min-h-[44px] flex items-center justify-center gap-1.5 text-[10px] sm:text-xs font-black uppercase tracking-wider border-b-4 transition-colors cursor-pointer ${
+                activeTab === "seans"
+                  ? "border-[#EF4444] text-[#FAFAFA]"
+                  : "border-transparent text-neutral-500 hover:text-neutral-300"
+              }`}
+            >
+              <Clapperboard className="w-3.5 h-3.5" />
+              <span>Ortak Seans</span>
+            </button>
+          </div>
+        )}
+
         {/* Messages Body */}
+        {(activeTab === "chat" || currentMatchStatus !== "matched") && (
         <div
           ref={scrollContainerRef}
           className="flex-1 p-4 overflow-y-auto space-y-3  bg-[#171717]"
@@ -794,9 +853,21 @@ export function ChatModal({
           )}
           <div ref={messagesEndRef} />
         </div>
+        )}
+
+        {/* S14 ORTAK SEANS panel — replaces the message body on the seans tab.
+            Free members see the anchor teaser inside the panel itself. */}
+        {currentMatchStatus === "matched" && activeTab === "seans" && match && user && (
+          <WatchTogetherPanel
+            match={match}
+            currentUserId={user.id}
+            isPremium={Boolean(profile?.isPremium)}
+            onUpgradeClick={() => setIsPremiumModalOpen(true)}
+          />
+        )}
 
         {/* Send failure notice */}
-        {sendError && (
+        {sendError && activeTab === "chat" && (
           <div className="px-3 py-2 bg-rose-500/10 border-t-2 border-rose-600/40 text-[11px] font-bold text-rose-300 flex items-center justify-between gap-2">
             <span className="truncate">{sendError}</span>
             <button
@@ -810,8 +881,9 @@ export function ChatModal({
           </div>
         )}
 
-        {/* Input Bar or Pending Notice */}
-        {isPendingFromMe && messages.length > 0 ? (
+        {/* Input Bar or Pending Notice — chat tab only; the seans tab fills
+            the whole body height with its own scroll area */}
+        {activeTab === "chat" && (isPendingFromMe && messages.length > 0 ? (
           <div className="p-3.5 pb-safe border-t-4 border-[#404040] bg-[#171717] flex items-center justify-center gap-2 text-xs font-mono font-bold text-[#FAFAFA] text-center">
             <CinemaTrustShieldIcon size={16} className="text-[#EF4444] shrink-0" />
             <span>Mesaj isteğiniz iletildi. @{match.user.username} onayladığında sohbet aktifleşecektir.</span>
@@ -856,7 +928,13 @@ export function ChatModal({
               )}
             </button>
           </div>
-        )}
+        ))}
+
+        {/* S14 premium anchor — upsell layer for the ORTAK SEANS teaser */}
+        <PremiumModal
+          isOpen={isPremiumModalOpen}
+          onClose={() => setIsPremiumModalOpen(false)}
+        />
       </div>
     </div>
   );
