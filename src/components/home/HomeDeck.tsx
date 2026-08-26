@@ -45,6 +45,15 @@ const AuthModal = dynamic(
   () => import("@/components/auth/AuthModal").then((m) => m.AuthModal),
   { ssr: false },
 );
+const QuickLogModal = dynamic(
+  () =>
+    import("@/components/media/QuickLogModal").then((m) => m.QuickLogModal),
+  { ssr: false },
+);
+const SearchModal = dynamic(
+  () => import("@/components/media/SearchModal").then((m) => m.SearchModal),
+  { ssr: false },
+);
 
 const TITLE_DECK_SIZE = 20;
 /** S10: the auth hook fires after this many pre-signin swipes. */
@@ -64,6 +73,14 @@ export function HomeDeck() {
   const [seenTitleIds, setSeenTitleIds] = useState<Set<string>>(new Set());
   const [watchlistIds, setWatchlistIds] = useState<Set<string>>(new Set());
   const [detailItem, setDetailItem] = useState<MediaItem | null>(null);
+  // Detail-modal → "Günlüğe Yaz" flow (same machinery as KEŞİF).
+  const [quickLogItem, setQuickLogItem] = useState<MediaItem | null>(null);
+  const [isQuickLogOpen, setIsQuickLogOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchTarget, setSearchTarget] = useState<"navigate" | "quicklog">("quicklog");
+  // Bumped after a diary save so the exclusion sets refetch and the logged
+  // title never reappears in a future deck.
+  const [logsVersion, setLogsVersion] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const [discoverySeed] = useState(() =>
@@ -137,7 +154,7 @@ export function HomeDeck() {
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [user, logsVersion]);
 
   // S12 follow-up: titles the user already swiped never come back after a
   // refresh. Local state also absorbs the current session's swipes instantly.
@@ -545,17 +562,17 @@ export function HomeDeck() {
           ) : (
             <div className="bg-[#171717] border-2 sm:border-4 border-[#404040] shadow-[6px_6px_0px_#000000] p-8 font-mono text-center space-y-3 max-w-md mx-auto">
               <h3 className="text-base font-black uppercase text-[#FAFAFA]">
-                GÜNÜN SEANSI BİTTİ
+                BU DESTENİN SONU — PERDE MOLASI
               </h3>
               <p className="text-xs text-neutral-400">
-                Bugünkü desteyi tamamladın. Katalogda keşfedilecek çok başyapıt
-                var.
+                Perde her açılışta görmediğin yeni başyapıtlarla yenilenir.
+                Şimdilik kulübün kataloğunda kaybol.
               </p>
               <Link
                 href="/kesif"
                 className="inline-block px-5 py-2.5 bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-black uppercase border-2 border-[#404040] shadow-[3px_3px_0px_#000000]"
               >
-                KEŞFE DEVAM →
+                KEŞİF'TE KAYBOL →
               </Link>
             </div>
           )}
@@ -575,7 +592,32 @@ export function HomeDeck() {
         item={detailItem}
         isOpen={!!detailItem}
         onClose={() => setDetailItem(null)}
-        onOpenLog={() => {}}
+        onOpenLog={(item) => {
+          setDetailItem(null);
+          setQuickLogItem(item);
+          setIsQuickLogOpen(true);
+        }}
+      />
+
+      <QuickLogModal
+        item={quickLogItem}
+        isOpen={isQuickLogOpen}
+        onClose={() => setIsQuickLogOpen(false)}
+        onSaveLog={() => setLogsVersion((v) => v + 1)}
+        onOpenAuth={() => setShowAuth(true)}
+        onChangeMovie={() => setIsSearchOpen(true)}
+      />
+
+      <SearchModal
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        onSelectMedia={(item) => {
+          setIsSearchOpen(false);
+          if (searchTarget === "quicklog") {
+            setQuickLogItem(item);
+            setIsQuickLogOpen(true);
+          }
+        }}
       />
     </section>
   );
