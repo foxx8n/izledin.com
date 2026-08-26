@@ -82,6 +82,8 @@ export interface Profile {
   matchIntent?: MatchIntent; // 'friend' (Sadece Film Arkadaşı), 'dating' (Sinematik Flört/İlişki), 'both' (Her İkisi)
   /** İZDAŞ GÜVENCESİ: when false the profile never enters anyone's deck. */
   radarVisible?: boolean;
+  /** S15: explicit KVKK opt-in for the weekly İZDAŞ radar e-postası. */
+  digestOptIn?: boolean;
   intentLastChangedAt?: string; // ISO timestamp of last intent change (24h cooldown)
   intentIntegrityScore?: number; // 0 to 100 (Topluluk Dürüstlük & Güven Puanı)
   intentStrikesCount?: number; // Niyet ihlali şikayet sayısı
@@ -116,6 +118,11 @@ export interface MovieMateMatch {
    * but every deck surface must treat it as a prospect until re-liked.
    */
   resurfaced?: boolean;
+  /**
+   * S15 BİLET provenance: this pair row was opened with a super-like by its
+   * initiator. Immutable once set; receivers badge it ("BİLETLE geldi").
+   */
+  isBilet?: boolean;
   lastMessage?: string;
   lastMessageTime?: string;
   unreadCount?: number;

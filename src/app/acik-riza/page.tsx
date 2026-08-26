@@ -3,13 +3,14 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
-import { 
+import {
   ArrowLeft,
   CheckSquare,
   Globe,
   Activity,
   MailCheck
 } from 'lucide-react';
+import { DigestConsentButton } from '@/components/common/DigestConsentButton';
 import { 
   CinemaVerifiedSeal 
 } from '@/components/icons/CinemaIcons';
@@ -131,6 +132,10 @@ export default function AcikRizaPage() {
             <p className="text-xs text-neutral-400 font-mono">
               İŞBU METİN ÜYELİK KAYDI İLE BİRLİKTE ELEKTRONİK ORTAMDA ONAYLANIR
             </p>
+          </div>
+          {/* S15: persist the §3 e-posta consent into profiles.digest_opt_in */}
+          <div className="pt-2 border-t-2 border-[#333333]">
+            <DigestConsentButton />
           </div>
         </section>
 

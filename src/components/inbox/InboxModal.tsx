@@ -456,8 +456,18 @@ export function InboxModal({ isOpen, onClose, onOpenChat, onOpenAuth }: InboxMod
                               </div>
                             </div>
 
-                            <div className="stamp-badge px-2 py-0.5 text-[11px] font-black  bg-[#EF4444]/15 border border-dashed  border-[#EF4444]  text-[#EF4444] whitespace-nowrap flex-shrink-0">
-                              %{item.compatibilityScore} UYUM
+                            <div className="flex items-center gap-1.5 flex-shrink-0">
+                              {item.isBiletForMe && (
+                                <span
+                                  className="px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider bg-[#F59E0B]/15 text-[#F59E0B] border border-[#F59E0B]/40 whitespace-nowrap"
+                                  title="Bu istek BİLET ile öne çıkarılmış"
+                                >
+                                  BİLETLE GELDİ
+                                </span>
+                              )}
+                              <div className="stamp-badge px-2 py-0.5 text-[11px] font-black  bg-[#EF4444]/15 border border-dashed  border-[#EF4444]  text-[#EF4444] whitespace-nowrap">
+                                %{item.compatibilityScore} UYUM
+                              </div>
                             </div>
                           </div>
 

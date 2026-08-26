@@ -30,6 +30,7 @@ export const PROFILE_SELECT_COLUMNS = [
   'is_verified',
   'match_intent',
   'radar_visible',
+  'digest_opt_in',
   'intent_last_changed_at',
   'intent_integrity_score',
   'intent_strikes_count',
@@ -76,6 +77,7 @@ export function mapDbProfileToProfile(row: any): Profile {
     matchEnabled: row.match_enabled !== false,
     matchIntent: (row.match_intent || row.matchIntent || 'friend') as any,
     radarVisible: row.radar_visible !== false,
+    digestOptIn: Boolean(row.digest_opt_in),
     intentLastChangedAt: row.intent_last_changed_at || undefined,
     intentIntegrityScore: row.intent_integrity_score ?? 98,
     intentStrikesCount: row.intent_strikes_count ?? 0,
@@ -115,6 +117,8 @@ export function mapProfileToDb(profile: Partial<Profile>): Record<string, any> {
   if (profile.matchIntent !== undefined) dbData.match_intent = profile.matchIntent;
   // S8 İZDAŞ GÜVENCESİ: radar visibility opt-out
   if (profile.radarVisible !== undefined) dbData.radar_visible = profile.radarVisible;
+  // S15 e-posta özeti opt-in
+  if (profile.digestOptIn !== undefined) dbData.digest_opt_in = profile.digestOptIn;
   if (profile.intentAgreedAt !== undefined) dbData.intent_agreed_at = profile.intentAgreedAt;
   // NOTE: intent_integrity_score / intent_strikes_count / total_watched_count /
   // total_watch_hours are intentionally NOT mapped either. Column grants exclude

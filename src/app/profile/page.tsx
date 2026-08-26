@@ -42,6 +42,7 @@ import { ChatModal } from '@/components/matches/ChatModal';
 import { SharePassportModal } from '@/components/profile/SharePassportModal';
 
 import { useAuth } from '@/context/AuthContext';
+import Link from 'next/link';
 import { getUserWatchLogs } from '@/lib/services/watch-logs.service';
 import { getOMDBDetails } from '@/lib/omdb';
 import { WatchLog, MediaItem, Profile, MovieMateMatch } from '@/types';
@@ -710,6 +711,40 @@ export default function ProfilePage() {
                 <span>Bu 4 film profilinizde ve İzdaşlar (Eşleşme) radarında ana sinematik vitrininiz olarak sergilenir.</span>
               </div>
 
+            </div>
+
+            {/* S15: weekly İZDAŞ radar e-postası — explicit KVKK opt-in, default off */}
+            <div className="bg-[#141414] text-[#FAFAFA] border-2 border-[#333333] p-5 font-mono">
+              <div className="flex items-start justify-between gap-4">
+                <div className="space-y-1.5 min-w-0">
+                  <h3 className="text-xs font-black uppercase tracking-wider text-[#FAFAFA]">
+                    HAFTALIK İZDAŞ RADARI E-POSTASI
+                  </h3>
+                  <p className="text-[11px] text-[#A3A3A3] leading-relaxed font-sans">
+                    Radarında yeni bir izdaş belirdiğinde haftada bir e-posta ile
+                    haber ver. Dilediğin an kapatabilirsin.{' '}
+                    <Link href="/acik-riza" className="text-[#EF4444] hover:underline cursor-pointer">
+                      Açık rıza metni
+                    </Link>
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await updateUserProfile({ digestOptIn: !profile?.digestOptIn });
+                    } catch {}
+                  }}
+                  aria-pressed={Boolean(profile?.digestOptIn)}
+                  className={`px-4 py-2.5 min-h-[44px] min-w-[92px] text-[11px] font-black uppercase tracking-wider border-2 shadow-[2px_2px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer shrink-0 ${
+                    profile?.digestOptIn
+                      ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-[#404040]'
+                      : 'bg-[#171717] hover:bg-[#262626] text-[#A3A3A3] hover:text-white border-[#404040]'
+                  }`}
+                >
+                  {profile?.digestOptIn ? 'AÇIK' : 'KAPALI'}
+                </button>
+              </div>
             </div>
           </section>
         )}

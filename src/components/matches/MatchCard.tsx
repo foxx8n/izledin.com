@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
-import { 
-  MessageSquare, 
-  MapPin, 
+import {
+  MessageSquare,
+  MapPin,
   X,
-  Film
+  Film,
+  Ticket
 } from 'lucide-react';
 import { 
   CinemaFriendshipIcon, 
@@ -22,10 +23,12 @@ interface MatchCardProps {
   onChatClick: (match: MovieMateMatch) => void;
   onLike?: (match: MovieMateMatch) => void;
   onPass?: (match: MovieMateMatch) => void;
+  /** S15 BİLET super-like — DB-side quota applies (free 1/day). */
+  onBilet?: (match: MovieMateMatch) => void;
   onMovieClick?: (title: string, posterUrl: string) => void;
 }
 
-export function MatchCard({ match, onChatClick, onLike, onPass, onMovieClick }: MatchCardProps) {
+export function MatchCard({ match, onChatClick, onLike, onPass, onBilet, onMovieClick }: MatchCardProps) {
   const { user, compatibilityScore, sharedGenres, sharedTitles, matchReasons } = match;
   const [imgError, setImgError] = useState(false);
 
@@ -212,6 +215,19 @@ export function MatchCard({ match, onChatClick, onLike, onPass, onMovieClick }: 
         >
           <X className="w-5 h-5 stroke-[3]" />
         </button>
+
+        {/* S15 BİLET — super-like; free accounts get 1/day (DB-enforced) */}
+        {onBilet && (
+          <button
+            type="button"
+            onClick={() => onBilet?.(match)}
+            className="h-12 w-12 min-w-[48px] min-h-[48px] flex items-center justify-center  bg-[#F59E0B]/15   hover:bg-[#F59E0B]  text-[#F59E0B] hover:text-[#0A0A0A] border-2  border-[#404040]  shadow-[2px_2px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer shrink-0"
+            title="BİLET Gönder — öne çıkan istek (ücretsiz hesapta günde 1)"
+            aria-label="BİLET gönder"
+          >
+            <Ticket className="w-5 h-5 stroke-[2.5]" />
+          </button>
+        )}
 
         {/* Primary Unified Cinephile Match & Chat Action */}
         <button

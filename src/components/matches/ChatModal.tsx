@@ -411,6 +411,17 @@ export function ChatModal({
                 <span className=" text-[#EF4444] font-black flex-shrink-0">
                   %{match.compatibilityScore} UYUM
                 </span>
+                {match.isBilet && initiatorId !== user?.id && (
+                  <>
+                    <span>•</span>
+                    <span
+                      className=" text-[#F59E0B] font-black flex-shrink-0"
+                      title="Bu istek BİLET ile öne çıkarılmış"
+                    >
+                      BİLETLE GELDİ
+                    </span>
+                  </>
+                )}
               </div>
             </div>
           </div>

@@ -267,6 +267,38 @@ export default function MatchesPage() {
     setIsChatOpen(true);
   };
 
+  // S15 BİLET: super-like with DB-side quota (free 1/day). Same flow as a
+  // like, but flagged so the receiver sees the request came with a BİLET.
+  const handleBiletMatch = async (match: MovieMateMatch) => {
+    if (!user) {
+      setIsAuthOpen(true);
+      return;
+    }
+
+    const result = await requestMatch(
+      user.id,
+      match.user.id,
+      'pending',
+      match.compatibilityScore,
+      match.sharedGenres,
+      match.sharedTitles,
+      true
+    );
+
+    if (!result.ok || !result.matchId) {
+      showDeckNotice(
+        result.rejected
+          ? `@${match.user.username} bu eşleşmeye daha önce pas geçmiş. Yeni bir mesaj isteği gönderilemedi.`
+          : result.limitReached
+            ? 'Günlük BİLET sınırına ulaştın (1). Kulüp üyeliği ile sınırsız.'
+            : 'BİLET gönderilemedi. Lütfen tekrar deneyin.'
+      );
+      return;
+    }
+
+    showDeckNotice(`BİLET gönderildi — @${match.user.username} onayladığında sohbet açılır.`);
+  };
+
   // The match cards hand over only (title, posterUrl), so resolve the REAL
   // catalog entry by title before opening the detail modal. No invented
   // stand-in item — if the lookup finds nothing we say so plainly.
@@ -669,6 +701,7 @@ export default function MatchesPage() {
                   onChatClick={handleOpenChat}
                   onLike={handleLikeMatch}
                   onPass={handleGridPass}
+                  onBilet={handleBiletMatch}
                   onMovieClick={handleMovieClick}
                 />
               </div>

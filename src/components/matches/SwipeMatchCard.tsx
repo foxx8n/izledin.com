@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useCallback } from 'react';
-import { MessageSquare, MapPin, X, Film, Check } from 'lucide-react';
+import { MessageSquare, MapPin, X, Film, Check, Ticket } from 'lucide-react';
 import { 
   CinemaFriendshipIcon, 
   CinemaRomanceIcon, 
@@ -19,6 +19,8 @@ interface SwipeMatchCardProps {
   onChatClick: (match: MovieMateMatch) => void;
   onLike?: (match: MovieMateMatch) => void;
   onPass?: (match: MovieMateMatch) => void;
+  /** S15 BİLET super-like — same deck exit as a like, DB-side quota applies. */
+  onBilet?: (match: MovieMateMatch) => void;
   onMovieClick?: (title: string, posterUrl: string) => void;
 }
 
@@ -31,7 +33,7 @@ function triggerHaptic(pattern: number[]) {
   }
 }
 
-export function SwipeMatchCard({ match, nextMatch, onChatClick, onLike, onPass, onMovieClick }: SwipeMatchCardProps) {
+export function SwipeMatchCard({ match, nextMatch, onChatClick, onLike, onPass, onBilet, onMovieClick }: SwipeMatchCardProps) {
   const { user, compatibilityScore, sharedGenres, sharedTitles, matchReasons } = match;
   const cardRef = useRef<HTMLDivElement>(null);
   const [imgError, setImgError] = useState(false);
@@ -92,14 +94,14 @@ export function SwipeMatchCard({ match, nextMatch, onChatClick, onLike, onPass, 
     }
   }, [match, onLike, onPass]);
 
-  const exitCard = (dir: 'pass' | 'like') => {
+  const exitCard = (dir: 'pass' | 'like', likeOverride?: (m: MovieMateMatch) => void) => {
     if (isExiting) return;
     triggerHaptic([12]);
     setIsExiting(dir);
     setDragX(dir === 'pass' ? -window.innerWidth * SWIPE_EXIT_DISTANCE : window.innerWidth * SWIPE_EXIT_DISTANCE);
     setTimeout(() => {
       if (dir === 'pass') onPass?.(match);
-      else onLike?.(match);
+      else (likeOverride ?? onLike)?.(match);
       setIsExiting(null);
       setDragX(0);
     }, 260);
@@ -396,6 +398,24 @@ export function SwipeMatchCard({ match, nextMatch, onChatClick, onLike, onPass, 
             >
               <X className="w-5 h-5 stroke-[3]" />
             </button>
+
+            {/* S15 BİLET — super-like; exits like a like but flags the request.
+                Free members get 1/day (DB-enforced), Kulüp members unlimited. */}
+            {onBilet && (
+              <button
+                type="button"
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  exitCard('like', onBilet);
+                }}
+                className="h-12 w-12 min-w-[48px] min-h-[48px] flex items-center justify-center  bg-[#F59E0B]/15   hover:bg-[#F59E0B]  text-[#F59E0B] hover:text-[#0A0A0A] border-2  border-[#404040]  shadow-[2px_2px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer shrink-0"
+                title="BİLET Gönder — öne çıkan istek (ücretsiz hesapta günde 1)"
+                aria-label="BİLET gönder"
+              >
+                <Ticket className="w-5 h-5 stroke-[2.5]" />
+              </button>
+            )}
 
             {/* Primary Unified Cinephile Match & Chat Action */}
             <button

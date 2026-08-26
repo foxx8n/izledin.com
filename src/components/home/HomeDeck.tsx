@@ -169,6 +169,28 @@ export function HomeDeck() {
       match.sharedTitles,
     );
   };
+  // S15 BİLET — super-like with DB-side quota (free 1/day, Kulüp unlimited).
+  const commitBilet = async (match: MovieMateMatch) => {
+    if (!user) return;
+    const result = await requestMatch(
+      user.id,
+      match.user.id,
+      "pending",
+      match.compatibilityScore,
+      match.sharedGenres,
+      match.sharedTitles,
+      true,
+    );
+    if (result.ok && result.matchId) {
+      match.id = result.matchId;
+      match.status = "pending";
+      match.initiatorId = user.id;
+      showToast("BİLET gönderildi — isteğin öne çıktı.");
+    } else if (result.limitReached) {
+      showToast("Günlük BİLET sınırına ulaştın (1). Kulüp üyeliği ile sınırsız.");
+    }
+    // Sticky rejections stay silent, same as commitLike.
+  };
   const removeCard = (match: MovieMateMatch) =>
     setMatches((prev) => prev.filter((m) => m.id !== match.id));
   const reinsertCard = (entry: DeckHistoryEntry) =>
@@ -410,6 +432,7 @@ export function HomeDeck() {
               nextMatch={matches[deck.index + 1]}
               onLike={(m) => deck.swipeLike(m)}
               onPass={(m) => deck.swipePass(m)}
+              onBilet={commitBilet}
               onChatClick={() => {}}
             />
           </div>

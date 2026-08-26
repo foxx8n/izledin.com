@@ -12,6 +12,8 @@ export interface InboxItem {
   status: 'pending' | 'matched' | 'passed';
   isPendingForMe: boolean; // Pending match where initiator is the other person
   initiatorId?: string;
+  /** S15: the request arrived with a BİLET super-like from the partner. */
+  isBiletForMe?: boolean;
   updatedAt: string;
   sortKey?: string; // ISO timestamp used for ordering (updatedAt is display-only)
 }
@@ -35,6 +37,7 @@ export async function getInboxSummary(currentUserId: string): Promise<InboxSumma
        compatibility_score,
        status,
        initiator_id,
+       is_bilet,
        updated_at,
        last_message:messages(content, created_at, sender_id, is_read)`,
     )
@@ -137,6 +140,7 @@ export async function getInboxSummary(currentUserId: string): Promise<InboxSumma
       status: row.status,
       isPendingForMe,
       initiatorId: row.initiator_id || undefined,
+      isBiletForMe: !!row.is_bilet && isPendingForMe,
       updatedAt: lastMessage
         ? lastMessage.createdAt
         : new Date(row.updated_at).toLocaleTimeString([], {

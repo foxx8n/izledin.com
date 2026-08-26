@@ -69,6 +69,7 @@ export async function getUserMatches(currentUserId: string): Promise<MovieMateMa
         : [],
       status: row.status || 'pending',
       initiatorId: row.initiator_id || undefined,
+      isBilet: !!row.is_bilet,
     });
   }
 
@@ -217,7 +218,8 @@ async function upsertMatchRequest(
   requestedStatus: 'pending' | 'passed',
   score?: number,
   sharedGenres?: string[],
-  sharedTitles?: any[]
+  sharedTitles?: any[],
+  isBilet?: boolean
 ): Promise<MatchRequestResult> {
   const supabase = createClient();
 
@@ -227,6 +229,9 @@ async function upsertMatchRequest(
     p_compatibility_score: score ?? null,
     p_shared_genres: sharedGenres ?? null,
     p_shared_titles: sharedTitles ?? null,
+    // S15 BİLET: DB-side quota (free 1/day) rejects with P0001 containing
+    // both 'BİLET' and 'sınırına' — caught by the limitReached classifier.
+    p_is_bilet: isBilet ? true : false,
   });
 
   if (error) {
@@ -261,7 +266,8 @@ export async function requestMatch(
   requestedStatus: 'pending' | 'passed',
   score?: number,
   sharedGenres?: string[],
-  sharedTitles?: any[]
+  sharedTitles?: any[],
+  isBilet?: boolean
 ): Promise<MatchRequestResult> {
   void currentUserId;
   return upsertMatchRequest(
@@ -269,7 +275,8 @@ export async function requestMatch(
     requestedStatus,
     score,
     sharedGenres,
-    sharedTitles
+    sharedTitles,
+    isBilet
   );
 }
 
