@@ -87,7 +87,7 @@ export function HomeDeck() {
     typeof window !== "undefined" ? getOrCreateDiscoverySeed() : "default_seed",
   );
 
-  const titleQueue = useMemo(() => {
+  const unseenPool = useMemo(() => {
     if (!profile) return [];
     const ranked = sortMediaCatalog(
       STATIC_MASTER_CATALOG as MediaItem[],
@@ -98,11 +98,15 @@ export function HomeDeck() {
     // Refresh-stability: anything already swiped (title_swipes) or logged
     // (any watch status) never re-enters the deck — otherwise every reload
     // dealt a fresh-looking 20 while the top of the catalog stayed the same.
-    return ranked
-      .filter((m) => !seenTitleIds.has(m.id) && !watchlistIds.has(m.id))
-      .slice(0, TITLE_DECK_SIZE);
+    return ranked.filter(
+      (m) => !seenTitleIds.has(m.id) && !watchlistIds.has(m.id),
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile, seenTitleIds, watchlistIds]);
+  const titleQueue = useMemo(
+    () => unseenPool.slice(0, TITLE_DECK_SIZE),
+    [unseenPool],
+  );
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -344,6 +348,81 @@ export function HomeDeck() {
     setTitleIndex((i) => i + 1);
   };
 
+  // ── Real PERDE MOLASI: a persisted cooldown, not a per-refresh promise ──
+  // Finishing the dealt deck locks it until the next local midnight. The
+  // timestamp lives in localStorage keyed by user, so F5 / new tabs all see
+  // the same mola; only the clock can end it.
+  const perdeCooldownKey = user ? `izledin_perde_next_${user.id}` : null;
+  const [cooldownUntil, setCooldownUntil] = useState<number | null>(null);
+  const [, setTick] = useState(0);
+
+  useEffect(() => {
+    if (!user || !perdeCooldownKey) {
+      setCooldownUntil(null);
+      return;
+    }
+    try {
+      const raw = localStorage.getItem(perdeCooldownKey);
+      const t = raw ? Number(raw) : 0;
+      if (Number.isFinite(t) && t > Date.now()) {
+        setCooldownUntil(t);
+      } else if (raw) {
+        localStorage.removeItem(perdeCooldownKey);
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  const deckHasNext = titleQueue.length > titleIndex;
+  const poolGenuinelyEmpty = unseenPool.length === 0;
+
+  // Deal exhausted -> arm the cooldown once.
+  useEffect(() => {
+    if (!user || !perdeCooldownKey || cooldownUntil !== null) return;
+    if (deckHasNext || poolGenuinelyEmpty) return;
+    const nextMidnight = new Date();
+    nextMidnight.setHours(24, 0, 0, 0);
+    const until = nextMidnight.getTime();
+    try {
+      localStorage.setItem(perdeCooldownKey, String(until));
+    } catch {}
+    setCooldownUntil(until);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    deckHasNext,
+    poolGenuinelyEmpty,
+    cooldownUntil,
+    user?.id,
+    perdeCooldownKey,
+  ]);
+
+  // Countdown tick; when the clock runs out, deal a fresh window.
+  useEffect(() => {
+    if (cooldownUntil === null) return;
+    const iv = setInterval(() => {
+      if (Date.now() >= cooldownUntil) {
+        if (perdeCooldownKey) {
+          try {
+            localStorage.removeItem(perdeCooldownKey);
+          } catch {}
+        }
+        setCooldownUntil(null);
+        setTitleIndex(0);
+      } else {
+        setTick((v) => v + 1);
+      }
+    }, 30000);
+    return () => clearInterval(iv);
+  }, [cooldownUntil, perdeCooldownKey]);
+
+  const formatMolaRemaining = () => {
+    if (!cooldownUntil) return "";
+    const ms = Math.max(0, cooldownUntil - Date.now());
+    const h = Math.floor(ms / 3600000);
+    const m = Math.floor((ms % 3600000) / 60000);
+    return h > 0 ? `${h} sa ${m} dk` : `${m} dk`;
+  };
+
   // ── S10 guest funnel: PLAYABLE deck, queue + auth hook ──
   if (!user) {
     const current = guestQueue[guestIndex];
@@ -562,12 +641,18 @@ export function HomeDeck() {
           ) : (
             <div className="bg-[#171717] border-2 sm:border-4 border-[#404040] shadow-[6px_6px_0px_#000000] p-8 font-mono text-center space-y-3 max-w-md mx-auto">
               <h3 className="text-base font-black uppercase text-[#FAFAFA]">
-                BU DESTENİN SONU — PERDE MOLASI
+                PERDE MOLASI
               </h3>
               <p className="text-xs text-neutral-400">
-                Perde her açılışta görmediğin yeni başyapıtlarla yenilenir.
-                Şimdilik kulübün kataloğunda kaybol.
+                {poolGenuinelyEmpty
+                  ? "Görmediğin yeni başyapıt kalmadı — günlüğüne yenilerini ekledikçe perde yenilenir."
+                  : "Bugünkü desteyi bitirdin. Perde gece yarısı yenilenir; şimdilik kulübün kataloğunda kaybol."}
               </p>
+              {cooldownUntil && (
+                <p className="text-[10px] uppercase tracking-widest text-neutral-500">
+                  YENİ PERDE ~{formatMolaRemaining()} SONRA AÇILIR
+                </p>
+              )}
               <Link
                 href="/kesif"
                 className="inline-block px-5 py-2.5 bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-black uppercase border-2 border-[#404040] shadow-[3px_3px_0px_#000000]"
