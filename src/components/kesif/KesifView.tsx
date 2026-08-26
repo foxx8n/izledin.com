@@ -55,6 +55,11 @@ const AuthModal = dynamic(
   () => import("@/components/auth/AuthModal").then((m) => m.AuthModal),
   { ssr: false },
 );
+const PremiumModal = dynamic(
+  () =>
+    import("@/components/premium/PremiumModal").then((m) => m.PremiumModal),
+  { ssr: false },
+);
 
 const DISCOVERY_PAGE_SIZE = 15;
 
@@ -670,6 +675,18 @@ export function KesifView() {
         isOpen={isAuthOpen}
         onClose={() => setIsAuthOpen(false)}
         defaultMode={authMode}
+      />
+
+      {/* Navbar's izledin+ trigger wires here — the modal was missing, so the
+          button flipped state nothing rendered (the only surface without it). */}
+      <PremiumModal
+        isOpen={isPremiumOpen}
+        onClose={() => setIsPremiumOpen(false)}
+        onOpenAuth={() => {
+          setIsPremiumOpen(false);
+          setAuthMode("login");
+          setIsAuthOpen(true);
+        }}
       />
     </div>
   );
