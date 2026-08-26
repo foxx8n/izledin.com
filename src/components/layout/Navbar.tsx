@@ -318,6 +318,48 @@ export function Navbar({
     user?.user_metadata?.avatar_url ||
     `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(displayName)}&backgroundColor=0A0A0A&textColor=DC2626&fontWeight=900`;
 
+  // ─── Shared: User Menu Items ────────────────────────────────────────────────
+  // ONE source of truth for both the mobile header dropdown and the sidebar
+  // dropdown. Profile-scoped actions ONLY — routes that already live in the
+  // nav/bottom bar or have their own dedicated buttons (inbox, izdaş, diary,
+  // izledin+) must never reappear here; duplicated entries aged into noise.
+  const renderUserMenuItems = (close: () => void) => (
+    <>
+      <Link
+        href="/profile"
+        onClick={close}
+        className="flex items-center gap-2 p-2  hover:bg-[#262626] transition-colors min-h-[44px]"
+      >
+        <CinemaUserIcon size={14} className=" text-[#EF4444]" />
+        <span>Profilim</span>
+      </Link>
+
+      {isUserAdmin && (
+        <Link
+          href="/admin"
+          onClick={close}
+          className="w-full flex items-center gap-2 p-2  bg-[#DC2626]/20 hover:bg-[#DC2626]   text-[#EF4444] hover:text-white font-black transition-colors border border-[#DC2626] min-h-[44px]"
+        >
+          <ShieldAlert className="w-3.5 h-3.5" />
+          <span>ADMİN PANELİ</span>
+        </Link>
+      )}
+
+      <div className="pt-2 mt-1 border-t-2  border-[#404040]">
+        <button
+          onClick={() => {
+            close();
+            signOut();
+          }}
+          className="w-full flex items-center gap-2 p-2 text-xs font-black  text-[#EF4444]  hover:bg-[#262626] transition-colors text-left uppercase font-mono cursor-pointer min-h-[44px]"
+        >
+          <LogOut className="w-3.5 h-3.5" />
+          <span>Çıkış Yap</span>
+        </button>
+      </div>
+    </>
+  );
+
   // ─── Shared: Announcement Banners ────────────────────────────────────────────
   // Rendered inside BOTH the mobile header AND the desktop sidebar so they are
   // always visible regardless of breakpoint.
@@ -506,100 +548,7 @@ export function Navbar({
                       </div>
 
                       <div className="space-y-1 font-mono text-xs font-bold uppercase">
-                        <button
-                          onClick={() => {
-                            setUserMenuOpen(false);
-                            handleOpenInbox();
-                          }}
-                          className="w-full flex items-center justify-between p-2  hover:bg-[#262626] transition-colors text-left cursor-pointer"
-                        >
-                          <div className="flex items-center gap-1 sm:gap-2">
-                            <CinemaChatIcon
-                              size={14}
-                              className=" text-[#EF4444]"
-                            />
-                            <span>Gelen Kutusu</span>
-                          </div>
-                          {unreadCount > 0 && (
-                            <span className="px-1.5 py-0.2 bg-[#DC2626] text-white text-[10px] font-black">
-                              {unreadCount}
-                            </span>
-                          )}
-                        </button>
-
-                        <Link
-                          href="/profile"
-                          onClick={() => setUserMenuOpen(false)}
-                          className="flex items-center gap-2 p-2  hover:bg-[#262626] transition-colors"
-                        >
-                          <CinemaUserIcon
-                            size={14}
-                            className=" text-[#EF4444]"
-                          />
-                          <span>Sinema DNA Profilim</span>
-                        </Link>
-
-                        <Link
-                          href="/matches"
-                          onClick={() => setUserMenuOpen(false)}
-                          className="flex items-center gap-2 p-2  hover:bg-[#262626] transition-colors"
-                        >
-                          <CinemaFrequencyIcon
-                            size={14}
-                            className=" text-[#EF4444]"
-                          />
-                          <span>İzdaşlarım</span>
-                        </Link>
-
-                        <Link
-                          href="/diary"
-                          onClick={() => setUserMenuOpen(false)}
-                          className="flex items-center gap-2 p-2  hover:bg-[#262626] transition-colors"
-                        >
-                          <FilmStripIcon
-                            size={14}
-                            className=" text-[#EF4444]"
-                          />
-                          <span>İzleme Günlüğüm</span>
-                        </Link>
-
-                        <button
-                          onClick={() => {
-                            setUserMenuOpen(false);
-                            handleOpenPremium();
-                          }}
-                          className="w-full flex items-center gap-2 p-2  text-[#EF4444]  hover:bg-[#262626] transition-colors text-left cursor-pointer font-bold"
-                        >
-                          <CinemaPlusPassIcon
-                            size={14}
-                            className=" text-[#EF4444]"
-                          />
-                          <span>izledin+ VIP Kulübü</span>
-                        </button>
-
-                        {isUserAdmin && (
-                          <Link
-                            href="/admin"
-                            onClick={() => setUserMenuOpen(false)}
-                            className="w-full flex items-center gap-2 p-2  bg-[#DC2626]/20 hover:bg-[#DC2626]   text-[#EF4444] hover:text-white font-black transition-colors border border-[#DC2626] mt-1"
-                          >
-                            <ShieldAlert className="w-3.5 h-3.5" />
-                            <span>ADMİN PANELİ</span>
-                          </Link>
-                        )}
-                      </div>
-
-                      <div className="pt-2 border-t-2  border-[#404040] mt-2">
-                        <button
-                          onClick={() => {
-                            setUserMenuOpen(false);
-                            signOut();
-                          }}
-                          className="w-full flex items-center gap-2 p-2 text-xs font-black  text-[#EF4444]  hover:bg-[#262626] transition-colors text-left uppercase font-mono cursor-pointer"
-                        >
-                          <LogOut className="w-3.5 h-3.5" />
-                          <span>Oturumu Kapat</span>
-                        </button>
+                        {renderUserMenuItems(() => setUserMenuOpen(false))}
                       </div>
                     </div>
                   )}
@@ -824,10 +773,35 @@ export function Navbar({
           })}
         </nav>
 
-        {/* ── 4. Spacer ────────────────────────────────────────────────────── */}
+        {/* ── 4. Gelen Kutusu — communication sits with navigation ──────────── */}
+        {user && (
+          <nav className="px-4 pb-2 flex flex-col shrink-0">
+            <button
+              onClick={handleOpenInbox}
+              className={`flex items-center justify-between px-3 py-3 text-xs font-black tracking-wider uppercase transition-all min-h-[44px] ${
+                unreadCount > 0
+                  ? "bg-[#171717] text-[#FAFAFA] border-2 border-[#404040] shadow-[2px_2px_0px_#000000]"
+                  : "text-[#A3A3A3] hover:text-white hover:bg-[#171717]"
+              }`}
+              title="Gelen Kutusu & Eşleşme İstekleri"
+            >
+              <span className="flex items-center gap-3">
+                <CinemaChatIcon size={16} className="text-[#EF4444] shrink-0" />
+                <span>Gelen Kutusu</span>
+              </span>
+              {unreadCount > 0 && (
+                <span className="px-2 py-0.5 bg-[#DC2626] text-white text-[10px] font-black border border-[#0A0A0A]">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+          </nav>
+        )}
+
+        {/* ── 5. Spacer ────────────────────────────────────────────────────── */}
         <div className="flex-1" />
 
-        {/* ── 5. Quick Log Button ──────────────────────────────────────────── */}
+        {/* ── 6. Quick Log Button ──────────────────────────────────────────── */}
         <div className="px-4 pb-3 shrink-0">
           <button
             onClick={handleOpenQuickLog}
@@ -838,41 +812,20 @@ export function Navbar({
           </button>
         </div>
 
-        {/* ── 6. izledin+ Badge ────────────────────────────────────────────── */}
-        <div className="px-4 pb-2 flex items-center gap-2 shrink-0 border-t-2  border-[#262626] pt-3">
+        {/* ── 7. izledin+ Kulüp Upsell ─────────────────────────────────────── */}
+        <div className="px-4 pb-3 flex items-center gap-2 shrink-0">
           <button
             onClick={handleOpenPremium}
             className="flex items-center justify-center gap-2 flex-1 p-2.5  bg-[#171717]  hover:bg-[#262626] text-[#DC2626] border-2  border-[#DC2626]/50 hover:border-[#DC2626]  shadow-[2px_2px_0px_#000000] transition-all cursor-pointer min-w-[44px] min-h-[44px] font-mono text-xs font-black uppercase tracking-wider"
-            title="izledin+ VIP Kulübü"
+            title="izledin+ Kulüp"
           >
             <CinemaPlusPassIcon size={16} className="text-[#DC2626]" />
-            <span>izledin+</span>
+            <span>izledin+ KULÜP</span>
           </button>
         </div>
 
-        {/* ── 6b. Gelen Kutusu (Dedicated Sidebar Button) ───────────────────── */}
-        {user && (
-          <div className="px-4 pb-2 shrink-0">
-            <button
-              onClick={handleOpenInbox}
-              className="w-full flex items-center justify-between px-3 py-2.5 bg-[#171717] hover:bg-[#262626] text-[#FAFAFA] border-2 border-[#262626] hover:border-[#EF4444] shadow-[2px_2px_0px_#000000] transition-all cursor-pointer min-h-[44px] font-mono text-xs font-black uppercase tracking-wider"
-              title="Gelen Kutusu & Eşleşme İstekleri"
-            >
-              <div className="flex items-center gap-2">
-                <CinemaChatIcon size={16} className="text-[#EF4444]" />
-                <span>Gelen Kutusu</span>
-              </div>
-              {unreadCount > 0 && (
-                <span className="px-2 py-0.5 bg-[#DC2626] text-white text-[10px] font-black border border-[#0A0A0A]">
-                  {unreadCount}
-                </span>
-              )}
-            </button>
-          </div>
-        )}
-
-        {/* ── 7. User Avatar / Name + Dropdown  OR  Login Button ───────────── */}
-        <div className="px-4 pb-5 shrink-0 border-t-2 border-[#262626] pt-3 mt-1">
+        {/* ── 8. User Avatar / Name + Dropdown  OR  Login Button ───────────── */}
+        <div className="px-4 pb-5 shrink-0 border-t-2 border-[#262626] pt-3">
           {user ? (
             <div className="relative" ref={sidebarUserMenuRef}>
               <button
@@ -919,100 +872,7 @@ export function Navbar({
                   </div>
 
                   <div className="space-y-1 font-mono text-xs font-bold uppercase">
-                    <button
-                      onClick={() => {
-                        setSidebarUserMenuOpen(false);
-                        handleOpenInbox();
-                      }}
-                      className="w-full flex items-center justify-between p-2  hover:bg-[#262626] transition-colors text-left cursor-pointer min-h-[44px]"
-                    >
-                      <div className="flex items-center gap-1 sm:gap-2">
-                        <CinemaChatIcon
-                          size={14}
-                          className=" text-[#EF4444]"
-                        />
-                        <span>Gelen Kutusu</span>
-                      </div>
-                      {unreadCount > 0 && (
-                        <span className="px-1.5 py-0.2 bg-[#DC2626] text-white text-[10px] font-black">
-                          {unreadCount}
-                        </span>
-                      )}
-                    </button>
-
-                    <Link
-                      href="/profile"
-                      onClick={() => setSidebarUserMenuOpen(false)}
-                      className="flex items-center gap-2 p-2  hover:bg-[#262626] transition-colors min-h-[44px]"
-                    >
-                      <CinemaUserIcon
-                        size={14}
-                        className=" text-[#EF4444]"
-                      />
-                      <span>Sinema DNA Profilim</span>
-                    </Link>
-
-                    <Link
-                      href="/matches"
-                      onClick={() => setSidebarUserMenuOpen(false)}
-                      className="flex items-center gap-2 p-2  hover:bg-[#262626] transition-colors min-h-[44px]"
-                    >
-                      <CinemaFrequencyIcon
-                        size={14}
-                        className=" text-[#EF4444]"
-                      />
-                      <span>İzdaşlarım</span>
-                    </Link>
-
-                    <Link
-                      href="/diary"
-                      onClick={() => setSidebarUserMenuOpen(false)}
-                      className="flex items-center gap-2 p-2  hover:bg-[#262626] transition-colors min-h-[44px]"
-                    >
-                      <FilmStripIcon
-                        size={14}
-                        className=" text-[#EF4444]"
-                      />
-                      <span>İzleme Günlüğüm</span>
-                    </Link>
-
-                    <button
-                      onClick={() => {
-                        setSidebarUserMenuOpen(false);
-                        handleOpenPremium();
-                      }}
-                      className="w-full flex items-center gap-2 p-2  text-[#EF4444]  hover:bg-[#262626] transition-colors text-left cursor-pointer font-bold min-h-[44px]"
-                    >
-                      <CinemaPlusPassIcon
-                        size={14}
-                        className=" text-[#EF4444]"
-                      />
-                      <span>izledin+ VIP Kulübü</span>
-                    </button>
-
-                    {isUserAdmin && (
-                      <Link
-                        href="/admin"
-                        onClick={() => setSidebarUserMenuOpen(false)}
-                        className="w-full flex items-center gap-2 p-2  bg-[#DC2626]/20 hover:bg-[#DC2626]   text-[#EF4444] hover:text-white font-black transition-colors border border-[#DC2626] min-h-[44px]"
-                      >
-                        <ShieldAlert className="w-3.5 h-3.5" />
-                        <span>ADMİN PANELİ</span>
-                      </Link>
-                    )}
-                  </div>
-
-                  <div className="pt-2 border-t-2  border-[#404040] mt-2">
-                    <button
-                      onClick={() => {
-                        setSidebarUserMenuOpen(false);
-                        signOut();
-                      }}
-                      className="w-full flex items-center gap-2 p-2 text-xs font-black  text-[#EF4444]  hover:bg-[#262626] transition-colors text-left uppercase font-mono cursor-pointer min-h-[44px]"
-                    >
-                      <LogOut className="w-3.5 h-3.5" />
-                      <span>Oturumu Kapat</span>
-                    </button>
+                    {renderUserMenuItems(() => setSidebarUserMenuOpen(false))}
                   </div>
                 </div>
               )}
