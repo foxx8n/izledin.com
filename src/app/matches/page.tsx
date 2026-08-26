@@ -33,6 +33,8 @@ import { AuthModal } from '@/components/auth/AuthModal';
 
 import { useAuth } from '@/context/AuthContext';
 import { computeDiscoverMatches, createOrUpdateMatch, requestMatch } from '@/lib/services/matches.service';
+import { useSwipeDeck, type DeckHistoryEntry } from '@/hooks/useSwipeDeck';
+import { SwipeMatchCard } from '@/components/matches/SwipeMatchCard';
 import { trackEvent, TELEMETRY_EVENTS } from '@/lib/telemetry';
 import { getInboxSummary, type InboxItem } from '@/lib/services/inbox.service';
 import { searchCatalog } from '@/lib/omdb';
@@ -297,6 +299,52 @@ export default function MatchesPage() {
 
     showDeckNotice(`BİLET gönderildi — @${match.user.username} onayladığında sohbet açılır.`);
   };
+
+  // ── Mobile swipe stack (< lg): the directory rendered as a single-card
+  // deck over the FILTERED pool. Desktop keeps the grid — one consistent
+  // experience per device: gestures where touch lives, scanning where the
+  // pointer lives. Same S3 delayed-commit machinery as the home deck.
+  const stackCommitPass = async (match: MovieMateMatch) => {
+    if (!user || !match.user?.id) return;
+    await createOrUpdateMatch(
+      user.id,
+      match.user.id,
+      'passed',
+      match.compatibilityScore,
+      match.sharedGenres,
+      match.sharedTitles
+    );
+  };
+  const reinsertStackCard = (entry: DeckHistoryEntry) => {
+    setMatches((prev) => {
+      if (prev.some((m) => m.id === entry.match.id)) return prev;
+      const next = [...prev];
+      next.splice(Math.min(entry.index, next.length), 0, entry.match);
+      return next;
+    });
+  };
+  const stackDeck = useSwipeDeck({
+    onLikeCommit: (m) => handleLikeMatch(m),
+    onPassGesture: (m) =>
+      setMatches((prev) => prev.filter((x) => x.id !== m.id)),
+    onPassCommit: (m) => stackCommitPass(m),
+    onPassUndo: reinsertStackCard,
+  });
+
+  // Pool definition changed (tabs/filters/refetch) -> deal from the top.
+  useEffect(() => {
+    stackDeck.reset();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    selectedIntent,
+    selectedGenre,
+    selectedCity,
+    selectedDistrict,
+    selectedAgeRange,
+    loading,
+  ]);
+
+  const stackCurrent = filteredMatches[stackDeck.index];
 
   // The match cards hand over only (title, posterUrl), so resolve the REAL
   // catalog entry by title before opening the detail modal. No invented
@@ -685,22 +733,71 @@ export default function MatchesPage() {
             </div>
           </div>
         ) : (
-          /* ========================================================================= */
-          /* DESKTOP MULTI-COLUMN EQUAL-HEIGHT GRID MODE */
-          /* ========================================================================= */
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 items-stretch">
-            {filteredMatches.map((match) => (
-              <div key={match.id} className="h-full flex flex-col">
-                <MatchCard
-                  match={match}
-                  onLike={handleLikeMatch}
-                  onPass={handleGridPass}
-                  onBilet={handleBiletMatch}
-                  onMovieClick={handleMovieClick}
-                />
+          <>
+            {/* ≥lg: directory grid — pointer-native scanning */}
+            <div className="hidden lg:block">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 items-stretch">
+                {filteredMatches.map((match) => (
+                  <div key={match.id} className="h-full flex flex-col">
+                    <MatchCard
+                      match={match}
+                      onLike={handleLikeMatch}
+                      onPass={handleGridPass}
+                      onBilet={handleBiletMatch}
+                      onMovieClick={handleMovieClick}
+                    />
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+
+            {/* <lg: single-card swipe stack over the filtered pool —
+                gesture-native, same delayed-commit machinery as PERDE */}
+            <div className="lg:hidden max-w-md mx-auto w-full pb-24">
+              {stackCurrent ? (
+                <>
+                  <SwipeMatchCard
+                    match={stackCurrent}
+                    nextMatch={filteredMatches[stackDeck.index + 1]}
+                    onLike={(m) => stackDeck.swipeLike(m)}
+                    onPass={(m) => stackDeck.swipePass(m)}
+                    onChatClick={() => {}}
+                  />
+                  <div className="flex items-center justify-between font-mono text-[11px] font-black uppercase mt-3">
+                    <span className="text-neutral-500">
+                      KART {Math.min(stackDeck.index + 1, filteredMatches.length)} /{' '}
+                      {filteredMatches.length}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => stackDeck.undo()}
+                      disabled={!stackDeck.canUndo}
+                      className="text-[#EF4444] disabled:text-neutral-600 hover:text-white transition-colors cursor-pointer disabled:cursor-default"
+                    >
+                      ⟲ GERİ AL
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="py-10 text-center bg-[#171717] border-2 border-[#404040] p-6 font-mono space-y-4">
+                  <p className="text-xs font-black uppercase text-[#FAFAFA] tracking-wider">
+                    BU HAVUZDA KART KALMADI
+                  </p>
+                  <p className="text-[11px] text-neutral-400 font-sans">
+                    Filtreleri sıfırlayarak havuzu genişlet veya radarı yenile.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={resetFilters}
+                    className="h-11 min-h-[44px] px-5 bg-[#EF4444] hover:bg-[#DC2626] text-[#0A0A0A] text-xs font-black uppercase border-2 border-[#404040] shadow-[3px_3px_0px_#000000] inline-flex items-center gap-2 cursor-pointer"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>FİLTRELERİ SIFIRLA</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </>
         )}
 
         {/* Transient Grid Mode Undo Toast (P3 harden) */}
