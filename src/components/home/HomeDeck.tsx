@@ -16,7 +16,6 @@ import {
 } from "@/lib/services/matches.service";
 import {
   getUserWatchLogs,
-  toggleWatchlistItem,
 } from "@/lib/services/watch-logs.service";
 import { STATIC_MASTER_CATALOG } from "@/lib/omdb";
 import {
@@ -312,19 +311,14 @@ export function HomeDeck() {
       .then();
   };
 
-  // Title likes persist for real via the watchlist write (no bare gestures)
-  // AND feed the taste vector via title_swipes (S12).
-  const handleTitleLike = async (item: MediaItem) => {
+  // Owner ruling: SEVDİM = matching signal ONLY. The deck writes title_swipes
+  // and nothing else — watch_logs stays a place for DELIBERATE diary entries,
+  // so the community feed, watch-stats trigger and the diary itself never see
+  // swipe noise again. List management lives in KEŞİF (+ button) / detail.
+  const handleTitleLike = (item: MediaItem) => {
     if (!user) return;
-    try {
-      await toggleWatchlistItem(user.id, item);
-      setWatchlistIds((prev) => new Set(prev).add(item.id));
-      showToast(`"${item.title}" listene eklendi.`);
-    } catch {
-      showToast("Liste güncellenemedi.");
-      return;
-    }
     persistSwipe(item, "like");
+    showToast(`"${item.title}" beğenin kaydedildi.`);
     setTitleIndex((i) => i + 1);
   };
   const [titleIndex, setTitleIndex] = useState(0);

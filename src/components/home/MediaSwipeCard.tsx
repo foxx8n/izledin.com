@@ -25,9 +25,8 @@ function triggerHaptic(pattern: number[]) {
 
 /**
  * PERDE title card — the media variant of the SwipeMatchCard drag engine
- * (S5). Swipe right = SEVDİM (real persistence via the caller's watchlist
- * write + S12 title_swipes taste vector); swipe left = PAS (also persisted to
- * title_swipes since S12 — both directions feed co-like matching).
+ * (S5). Both directions persist to title_swipes only: SEVDİM is a matching
+ * signal, never a diary entry (owner ruling) — list management lives in KEŞİF.
  */
 export function MediaSwipeCard({
   item,
