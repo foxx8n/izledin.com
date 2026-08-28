@@ -84,6 +84,14 @@ export interface Profile {
   radarVisible?: boolean;
   /** S15: explicit KVKK opt-in for the weekly İZDAŞ radar e-postası. */
   digestOptIn?: boolean;
+  /**
+   * One-time identity change: when set (ISO timestamp), the system-generated
+   * full_name + username have been changed once and are now permanent. NULL
+   * means the single allowance is still available (onboarding step 1 or the
+   * profile-page button). Writes go through the update_my_identity RPC only —
+   * the columns are not client-writable.
+   */
+  identityChangedAt?: string;
   intentLastChangedAt?: string; // ISO timestamp of last intent change (24h cooldown)
   intentIntegrityScore?: number; // 0 to 100 (Topluluk Dürüstlük & Güven Puanı)
   intentStrikesCount?: number; // Niyet ihlali şikayet sayısı

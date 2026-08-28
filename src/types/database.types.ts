@@ -160,6 +160,7 @@ export type Database = {
           favorite_genres: string[] | null
           full_name: string | null
           id: string
+          identity_changed_at: string | null
           is_premium: boolean | null
           location: string | null
           match_enabled: boolean | null
@@ -177,6 +178,7 @@ export type Database = {
           favorite_genres?: string[] | null
           full_name?: string | null
           id: string
+          identity_changed_at?: string | null
           is_premium?: boolean | null
           location?: string | null
           match_enabled?: boolean | null
@@ -194,6 +196,7 @@ export type Database = {
           favorite_genres?: string[] | null
           full_name?: string | null
           id?: string
+          identity_changed_at?: string | null
           is_premium?: boolean | null
           location?: string | null
           match_enabled?: boolean | null

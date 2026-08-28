@@ -10,9 +10,12 @@ import {
   Loader2,
   Calendar,
   AlertCircle,
+  AlertTriangle,
   Film,
   MapPin,
   ShieldCheck,
+  Sparkles,
+  User,
   Users,
   Edit3,
   Lock
@@ -30,6 +33,7 @@ import { useAuth } from '@/context/AuthContext';
 import { searchCatalog } from '@/lib/omdb';
 import { MediaItem, MatchIntent } from '@/types';
 import { generateDynamicBio, CINEMA_PROMPT_STARTERS } from '@/lib/cinema-bio-generator';
+import { updateMyIdentity, normalizeUsername, validateIdentity } from '@/lib/services/profile.service';
 import { LocationSelector } from '@/components/common/LocationSelector';
 import { BirthDateSelector } from '@/components/ui/BirthDateSelector';
 
@@ -41,7 +45,7 @@ interface TasteProfilerModalProps {
 }
 
 export function TasteProfilerModal({ isOpen, onClose, onComplete, onOpenAuth }: TasteProfilerModalProps) {
-  const { user, profile, updateUserProfile } = useAuth();
+  const { user, profile, updateUserProfile, refreshProfile } = useAuth();
 
   // S11 condensation: the genre-checkbox step is gone — the S12 taste vector
   // replaced the questionnaire as the matching signal. Genres remain editable
@@ -55,6 +59,15 @@ export function TasteProfilerModal({ isOpen, onClose, onComplete, onOpenAuth }: 
   const [matchIntent, setMatchIntent] = useState<MatchIntent>('friend');
   const [intentAgreed, setIntentAgreed] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // One-time identity (ad & rumuz): prefilled with the system-provisioned
+  // values; only a real change spent through updateMyIdentity burns the
+  // lifetime allowance. identityLockedLocal covers the optimistic lock between
+  // a successful RPC and the background profile refresh landing.
+  const [identityName, setIdentityName] = useState('');
+  const [identityUsername, setIdentityUsername] = useState('');
+  const [identityLockedLocal, setIdentityLockedLocal] = useState(false);
+  const [identitySaving, setIdentitySaving] = useState(false);
 
   // Search state for Step 3 (Top 4)
   const [searchQuery, setSearchQuery] = useState('');
@@ -81,6 +94,9 @@ export function TasteProfilerModal({ isOpen, onClose, onComplete, onOpenAuth }: 
     setBirthDate(profile?.birthDate || '');
     if (profile?.matchIntent) setMatchIntent(profile.matchIntent);
     setIntentAgreed(Boolean(profile?.intentAgreedAt));
+    setIdentityName(profile?.fullName || '');
+    setIdentityUsername(profile?.username || '');
+    setIdentityLockedLocal(Boolean(profile?.identityChangedAt));
 
     if (profile?.top4Favorites && profile.top4Favorites.length > 0) {
       const initialTop4: (any | null)[] = [null, null, null, null];
@@ -178,6 +194,16 @@ export function TasteProfilerModal({ isOpen, onClose, onComplete, onOpenAuth }: 
 
   if (!isOpen) return null;
 
+  const identityUsed = Boolean(profile?.identityChangedAt) || identityLockedLocal;
+  const nextHandle = normalizeUsername(identityUsername);
+  // "Changed" only when a value actually differs from the stored profile —
+  // merely visiting step 1 with the system-provided names never spends the
+  // single lifetime allowance.
+  const identityChanged =
+    !identityUsed &&
+    (identityName.trim() !== (profile?.fullName ?? '') ||
+      nextHandle !== (profile?.username ?? ''));
+
   const validateBirthDate = (dateStr: string): string | null => {
     if (!dateStr) return 'Lütfen doğum tarihinizi seçin.';
     const d = new Date(dateStr);
@@ -223,7 +249,7 @@ export function TasteProfilerModal({ isOpen, onClose, onComplete, onOpenAuth }: 
     setTop4Favorites(next);
   };
 
-  const handleStep1Next = () => {
+  const handleStep1Next = async () => {
     // If birth date is already locked on user profile, it's valid
     if (!profile?.birthDate) {
       const err = validateBirthDate(birthDate);
@@ -232,6 +258,42 @@ export function TasteProfilerModal({ isOpen, onClose, onComplete, onOpenAuth }: 
         return;
       }
     }
+
+    // One-time identity: only a real change goes through the RPC and burns
+    // the lifetime allowance (the server keeps its own no-op guard too).
+    if (identityChanged) {
+      const name = identityName.trim();
+      const validationError = validateIdentity(name, nextHandle);
+      if (validationError) {
+        setErrorMsg(validationError);
+        return;
+      }
+      setIdentitySaving(true);
+      setErrorMsg(null);
+      try {
+        const res = await updateMyIdentity(name, nextHandle);
+        if (!res.ok) {
+          setErrorMsg(res.error || 'Kimlik değişikliği kaydedilemedi.');
+          return;
+        }
+        // Optimistic local lock; the background refresh reconciles with the
+        // DB stamp. Step advances first so the continuously-persisted draft
+        // records step 2 before the profile-triggered re-sync reads it back.
+        setIdentityLockedLocal(true);
+        setIdentityName(name);
+        setIdentityUsername(nextHandle);
+        setStep(2);
+        void refreshProfile();
+        return;
+      } catch (err) {
+        console.error('Identity change failed:', err);
+        setErrorMsg('Kimlik değişikliği kaydedilirken bir sorun oluştu.');
+        return;
+      } finally {
+        setIdentitySaving(false);
+      }
+    }
+
     setErrorMsg(null);
     setStep(2);
   };
@@ -377,7 +439,97 @@ export function TasteProfilerModal({ isOpen, onClose, onComplete, onOpenAuth }: 
         {/* ========================================================================= */}
         {step === 1 && (
           <div className="space-y-5 animate-in fade-in">
-            
+
+            {/* Identity: system-provisioned name & nickname — ONE lifetime change */}
+            {profile && (
+              <div className="space-y-1.5 p-4 bg-neutral-900 border-2 border-[#333333]">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <label className="text-xs font-black uppercase text-[#FAFAFA] flex items-center gap-2">
+                    <User className="w-4 h-4 text-[#EF4444]" />
+                    <span>ADINIZ &amp; RUMUZUNUZ:</span>
+                  </label>
+                  {identityUsed ? (
+                    <span className="px-2 py-0.5 bg-[#171717] border border-emerald-500/60 text-[10px] font-black text-emerald-400 uppercase flex items-center gap-1">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>MÜHÜRLENDİ</span>
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-[#F59E0B] font-mono flex items-center gap-1">
+                      <Sparkles className="w-3 h-3" />
+                      <span>TEK KULLANIMLIK HAK</span>
+                    </span>
+                  )}
+                </div>
+
+                {identityUsed ? (
+                  <div className="p-3 bg-[#171717] border border-[#404040] space-y-1 mt-2">
+                    <div className="flex items-center gap-2 text-xs font-bold text-white">
+                      <Lock className="w-3.5 h-3.5 text-[#EF4444]" />
+                      <span>{profile.fullName} · @{profile.username}</span>
+                    </div>
+                    <p className="text-[11px] text-neutral-400 font-sans">
+                      Ad ve rumuz değiştirme hakkınızı kullandınız — bu bilgiler artık kalıcıdır.
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-xs text-neutral-400 font-sans leading-relaxed">
+                      Sistem sizin için{' '}
+                      <span className="text-white font-bold">
+                        {profile.fullName} (@{profile.username})
+                      </span>{' '}
+                      kimliğini otomatik oluşturdu. Beğenmediyseniz yalnızca 1 kez değiştirebilirsiniz — şimdi
+                      değiştirmezseniz hakkınız profil sayfanızda sizi bekler.
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black uppercase text-neutral-400 block">
+                          AD (GÖRÜNEN İSİM)
+                        </label>
+                        <input
+                          type="text"
+                          value={identityName}
+                          maxLength={40}
+                          onChange={(e) => setIdentityName(e.target.value)}
+                          placeholder="Gerçek adınız veya takma adınız"
+                          aria-label="Ad"
+                          className="w-full h-11 bg-[#171717] text-[#FAFAFA] placeholder-neutral-500 border-2 border-[#404040] px-3 text-xs font-bold focus:outline-none focus:border-[#DC2626]"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black uppercase text-neutral-400 block">
+                          RUMUZ (PROFİL ADRESİNİZ)
+                        </label>
+                        <div className="flex items-stretch">
+                          <span className="px-2.5 flex items-center bg-[#171717] border-2 border-r-0 border-[#404040] text-neutral-400 text-xs font-mono">
+                            @
+                          </span>
+                          <input
+                            type="text"
+                            value={identityUsername}
+                            maxLength={24}
+                            onChange={(e) => setIdentityUsername(e.target.value)}
+                            placeholder="rumuz"
+                            aria-label="Rumuz"
+                            className="flex-1 min-w-0 h-11 bg-[#171717] text-[#FAFAFA] placeholder-neutral-500 border-2 border-[#404040] px-3 text-xs font-mono font-bold focus:outline-none focus:border-[#DC2626]"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    {identityChanged && (
+                      <p className="text-[10px] text-[#F59E0B] font-mono flex items-start gap-1.5 pt-0.5">
+                        <AlertTriangle className="w-3 h-3 shrink-0 mt-0.5" />
+                        <span>
+                          Devam ederseniz değiştirme hakkınız KALICI olarak kullanılır ve profil adresiniz
+                          izledin.com/u/{nextHandle} olur.
+                        </span>
+                      </p>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+
             {/* Birth Date Selector (Locked if already set in profile) */}
             <div className="space-y-1.5 p-4 bg-neutral-900 border-2 border-[#333333]">
               <div className="flex items-center justify-between">
@@ -434,10 +586,20 @@ export function TasteProfilerModal({ isOpen, onClose, onComplete, onOpenAuth }: 
               <button
                 type="button"
                 onClick={handleStep1Next}
-                className="px-6 py-3 min-h-[44px] bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-black uppercase tracking-wider border-2 border-white shadow-[4px_4px_0px_#000000] flex items-center gap-2 cursor-pointer transition-transform active:translate-x-0.5 active:translate-y-0.5"
+                disabled={identitySaving}
+                className="px-6 py-3 min-h-[44px] bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-black uppercase tracking-wider border-2 border-white shadow-[4px_4px_0px_#000000] flex items-center gap-2 cursor-pointer transition-transform active:translate-x-0.5 active:translate-y-0.5 disabled:opacity-50"
               >
-                <span>DEVAM ET: İZDAŞ NİYETİ</span>
-                <ArrowRight className="w-4 h-4" />
+                {identitySaving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>KİMLİK MÜHÜRLENİYOR...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>DEVAM ET: İZDAŞ NİYETİ</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
               </button>
             </div>
           </div>

@@ -40,6 +40,7 @@ import { AuthModal } from '@/components/auth/AuthModal';
 import { InboxModal } from '@/components/inbox/InboxModal';
 import { ChatModal } from '@/components/matches/ChatModal';
 import { SharePassportModal } from '@/components/profile/SharePassportModal';
+import { IdentityChangeModal } from '@/components/profile/IdentityChangeModal';
 
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
@@ -64,6 +65,9 @@ export default function ProfilePage() {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isSharePassportOpen, setIsSharePassportOpen] = useState(false);
+  // One-time identity change (ad & rumuz) — separate from the DNA calibrator;
+  // the allowance is shared with onboarding step 1.
+  const [isIdentityOpen, setIsIdentityOpen] = useState(false);
   const [isEditingBio, setIsEditingBio] = useState(false);
   const [bioInput, setBioInput] = useState('');
   const [isSavingBio, setIsSavingBio] = useState(false);
@@ -328,7 +332,38 @@ export default function ProfilePage() {
                 </div>
               </button>
 
-              {/* 2. 35MM PASAPORT PAYLAŞ BUTONU */}
+              {/* 2. TEK HAKLI İSİM & RUMUZ DEĞİŞİKLİĞİ — hakkı kullanınca buton tamamen kaybolur */}
+              {profile && !profile.identityChangedAt && (
+                <button
+                  onClick={() => setIsIdentityOpen(true)}
+                  className="group relative cursor-pointer overflow-hidden border-2 border-[#10B981] bg-[#0A0A0A] p-0.5 text-[#FAFAFA] shadow-[4px_4px_0px_#10B981] transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[5px_5px_0px_#10B981] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[2px_2px_0px_#10B981]"
+                  title="Sistem tarafından oluşturulan adınızı ve rumuzunuzu değiştirin — bu hakkı yalnızca 1 kez kullanabilirsiniz"
+                >
+                  <div className="flex items-center bg-[#171717] px-3 py-2 border border-[#262626] group-hover:border-[#10B981]/50 transition-colors">
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex h-7 w-7 items-center justify-center border border-[#10B981]/60 bg-[#10B981]/15 text-[#10B981] shadow-[1px_1px_0px_#000000] shrink-0">
+                        <UserIcon size={14} />
+                      </div>
+                      <div className="text-left leading-none">
+                        <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-[#10B981]">
+                          <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse" />
+                          <span>TEK HAK</span>
+                        </div>
+                        <div className="text-xs font-black uppercase tracking-wider text-white mt-0.5 font-sans">
+                          İSİM &amp; RUMUZ
+                        </div>
+                      </div>
+                    </div>
+                    <div className="ml-3 pl-2.5 border-l border-[#333333] flex items-center">
+                      <span className="px-1.5 py-0.5 bg-[#10B981] text-[#0A0A0A] text-[10px] font-black uppercase tracking-tighter">
+                        1X
+                      </span>
+                    </div>
+                  </div>
+                </button>
+              )}
+
+              {/* 3. 35MM PASAPORT PAYLAŞ BUTONU */}
               <button
                 type="button"
                 onClick={() => setIsSharePassportOpen(true)}
@@ -962,6 +997,11 @@ export default function ProfilePage() {
         isOpen={isChatOpen}
         onClose={() => setIsChatOpen(false)}
         onOpenAuth={() => setIsAuthOpen(true)}
+      />
+
+      <IdentityChangeModal
+        isOpen={isIdentityOpen}
+        onClose={() => setIsIdentityOpen(false)}
       />
 
       <SharePassportModal

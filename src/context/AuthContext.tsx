@@ -63,6 +63,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (!upsertError && newProfileRow) {
           p = mapDbProfileToProfile(newProfileRow);
+        } else if (upsertError) {
+          // The upsert payload carries username/full_name/created_at, which are
+          // NOT in authenticated's UPDATE grants — so a load that races into
+          // ON CONFLICT DO UPDATE fails the whole statement with 42501. The
+          // winner of the race (or handle_new_user) created the row; fetch it
+          // instead of leaving profile state null.
+          const { data: racedRow } = await supabase
+            .from('profiles')
+            .select(PROFILE_SELECT_COLUMNS)
+            .eq('id', userId)
+            .maybeSingle();
+          if (racedRow) {
+            p = mapDbProfileToProfile(racedRow);
+          }
         }
       }
 

@@ -31,6 +31,7 @@ export const PROFILE_SELECT_COLUMNS = [
   'match_intent',
   'radar_visible',
   'digest_opt_in',
+  'identity_changed_at',
   'intent_last_changed_at',
   'intent_integrity_score',
   'intent_strikes_count',
@@ -78,6 +79,7 @@ export function mapDbProfileToProfile(row: any): Profile {
     matchIntent: (row.match_intent || row.matchIntent || 'friend') as any,
     radarVisible: row.radar_visible !== false,
     digestOptIn: Boolean(row.digest_opt_in),
+    identityChangedAt: row.identity_changed_at || undefined,
     intentLastChangedAt: row.intent_last_changed_at || undefined,
     intentIntegrityScore: row.intent_integrity_score ?? 98,
     intentStrikesCount: row.intent_strikes_count ?? 0,
@@ -98,8 +100,11 @@ export function mapProfileToDb(profile: Partial<Profile>): Record<string, any> {
     updated_at: new Date().toISOString(),
   };
 
-  if (profile.username !== undefined) dbData.username = profile.username;
-  if (profile.fullName !== undefined) dbData.full_name = profile.fullName;
+  // NOTE: username / full_name are intentionally NOT mapped here. They left
+  // authenticated's column UPDATE grants with the one-time identity change
+  // (20260828_one_time_identity_change) — any SET clause touching them fails
+  // the whole statement with 42501. The single write path is the
+  // update_my_identity() RPC (see updateMyIdentity below).
   if (profile.avatarUrl !== undefined) dbData.avatar_url = profile.avatarUrl;
   if (profile.bio !== undefined) dbData.bio = profile.bio;
   if (profile.location !== undefined) dbData.location = profile.location;
@@ -224,6 +229,80 @@ export async function updateProfile(userId: string, updates: Partial<Profile>): 
   }
 
   return mapDbProfileToProfile(await withOwnBirthDate(supabase, userId, upsertData));
+}
+
+// ── One-time identity change (ad & rumuz) ───────────────────────────────────
+// username/full_name left authenticated's column UPDATE grants with the
+// one-time identity change (20260828_one_time_identity_change): the only
+// client write path is the update_my_identity() SECURITY DEFINER RPC, which
+// enforces validation, reserved handles, uniqueness and the one-time rule.
+export const IDENTITY_NAME_MIN = 2;
+export const IDENTITY_NAME_MAX = 40;
+export const IDENTITY_USERNAME_MIN = 3;
+export const IDENTITY_USERNAME_MAX = 24;
+export const USERNAME_PATTERN = /^[a-z0-9_]{3,24}$/;
+
+/** Mirror of the RPC's normalizer: spaces/dots/hyphens fold to _, rest strips. */
+export function normalizeUsername(raw: string): string {
+  return raw
+    .toLowerCase()
+    .replace(/[\s.-]+/g, '_')
+    .replace(/[^a-z0-9_]/g, '')
+    .slice(0, IDENTITY_USERNAME_MAX);
+}
+
+/** Client-side mirror of the RPC's validation — returns a Turkish message or null. */
+export function validateIdentity(fullName: string, username: string): string | null {
+  const name = fullName.trim();
+  if (name.length < IDENTITY_NAME_MIN || name.length > IDENTITY_NAME_MAX) {
+    return `Ad en az ${IDENTITY_NAME_MIN}, en fazla ${IDENTITY_NAME_MAX} karakter olmalı.`;
+  }
+  if (!USERNAME_PATTERN.test(username)) {
+    return `Rumuz ${IDENTITY_USERNAME_MIN}-${IDENTITY_USERNAME_MAX} karakter olmalı; sadece küçük harf, rakam ve alt çizgi (_) kullanılabilir.`;
+  }
+  return null;
+}
+
+const IDENTITY_ERROR_MESSAGES: Record<string, string> = {
+  AUTH_REQUIRED: 'Oturum bulunamadı. Sayfayı yenileyip tekrar deneyin.',
+  PROFILE_NOT_FOUND: 'Profil kaydınız bulunamadı. Lütfen sayfayı yenileyin.',
+  IDENTITY_CHANGE_USED: 'Kimlik değiştirme hakkınızı zaten kullandınız.',
+  NAME_INVALID: `Ad en az ${IDENTITY_NAME_MIN}, en fazla ${IDENTITY_NAME_MAX} karakter olmalı.`,
+  USERNAME_INVALID: `Rumuz ${IDENTITY_USERNAME_MIN}-${IDENTITY_USERNAME_MAX} karakter olmalı; sadece küçük harf, rakam ve alt çizgi (_) kullanılabilir.`,
+  USERNAME_RESERVED: 'Bu rumuz sistem için rezerve edilmiştir.',
+  USERNAME_TAKEN: 'Bu rumuz başka bir üye tarafından kullanılıyor. Lütfen farklı bir rumuz seçin.',
+};
+
+function mapIdentityError(rawMessage: string): string {
+  const code = Object.keys(IDENTITY_ERROR_MESSAGES).find((k) => rawMessage.includes(k));
+  return code
+    ? IDENTITY_ERROR_MESSAGES[code]
+    : 'Değişiklik kaydedilemedi. Lütfen tekrar deneyin.';
+}
+
+export interface IdentityChangeResult {
+  ok: boolean;
+  error?: string;
+}
+
+/**
+ * The single, permanent name+nickname change. Burns profiles.identity_changed_at
+ * server-side; identical values are a no-op and preserve the allowance.
+ * Callers should refreshProfile() afterwards — the RPC return row is only a
+ * convenience for direct PostgREST consumers.
+ */
+export async function updateMyIdentity(fullName: string, username: string): Promise<IdentityChangeResult> {
+  const supabase = createClient();
+  const { error } = await supabase.rpc('update_my_identity', {
+    p_full_name: fullName,
+    p_username: username,
+  });
+
+  if (error) {
+    console.error('update_my_identity failed:', error.message);
+    return { ok: false, error: mapIdentityError(error.message) };
+  }
+  return { ok: true };
 }
 
 export async function listDiscoverProfiles(excludeUserId?: string, limit: number = 25): Promise<Profile[]> {

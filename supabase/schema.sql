@@ -41,6 +41,11 @@
 -- intent_integrity_score int DEF 98 | intent_strikes_count int DEF 0
 -- intent_agreed_at timestamptz | intent_last_changed_at timestamptz DEF now()
 --   (24h cooldown between intent changes enforced by trigger)
+-- identity_changed_at timestamptz
+--   one-time name+username change stamp (NULL = allowance available).
+--   username/full_name are NOT client-writable: the only write path is the
+--   update_my_identity() RPC (validation, reserved handles, uniqueness,
+--   one-time rule, no-op preserves the allowance).
 -- IDX: pkey, lower(username) uniq, created_at DESC, GIN x3,
 --      id WHERE match_enabled (partial)
 
