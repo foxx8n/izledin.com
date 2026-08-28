@@ -263,7 +263,7 @@ export function TasteProfilerModal({ isOpen, onClose, onComplete, onOpenAuth }: 
     // the lifetime allowance (the server keeps its own no-op guard too).
     if (identityChanged) {
       const name = identityName.trim();
-      const validationError = validateIdentity(name, nextHandle);
+      const validationError = validateIdentity(name, nextHandle, profile?.username);
       if (validationError) {
         setErrorMsg(validationError);
         return;

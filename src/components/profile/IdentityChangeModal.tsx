@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   X,
-  Check,
   Loader2,
   AlertCircle,
   AtSign,
@@ -11,7 +10,6 @@ import {
   AlertTriangle,
   User
 } from 'lucide-react';
-import { CinemaVerifiedSeal } from '@/components/icons/CinemaIcons';
 import { useAuth } from '@/context/AuthContext';
 import {
   IDENTITY_NAME_MAX,
@@ -37,7 +35,6 @@ export function IdentityChangeModal({ isOpen, onClose }: IdentityChangeModalProp
   const [fullName, setFullName] = useState('');
   const [username, setUsername] = useState('');
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Sync state from profile on open
@@ -46,7 +43,6 @@ export function IdentityChangeModal({ isOpen, onClose }: IdentityChangeModalProp
     setFullName(profile?.fullName || '');
     setUsername(profile?.username || '');
     setErrorMsg(null);
-    setSaved(false);
   }, [isOpen, profile?.fullName, profile?.username]);
 
   // Window ESC handler
@@ -71,7 +67,7 @@ export function IdentityChangeModal({ isOpen, onClose }: IdentityChangeModalProp
   const handleSave = async () => {
     if (saving || !changed) return;
 
-    const validationError = validateIdentity(fullName, nextHandle);
+    const validationError = validateIdentity(fullName, nextHandle, profile.username);
     if (validationError) {
       setErrorMsg(validationError);
       return;
@@ -85,8 +81,10 @@ export function IdentityChangeModal({ isOpen, onClose }: IdentityChangeModalProp
         setErrorMsg(res.error || 'Değişiklik kaydedilemedi.');
         return;
       }
+      // Sealed: refresh context from the DB stamp, then close — the profile
+      // card itself is the confirmation (new identity, button gone).
       await refreshProfile();
-      setSaved(true);
+      onClose();
     } catch (err) {
       console.error('Identity change error:', err);
       setErrorMsg('Değişiklik kaydedilirken bir sorun oluştu.');
@@ -134,26 +132,7 @@ export function IdentityChangeModal({ isOpen, onClose }: IdentityChangeModalProp
           </button>
         </div>
 
-        {saved ? (
-          /* Success state — the one and only confirmation */
-          <div className="space-y-5 text-center py-4">
-            <CinemaVerifiedSeal size={44} className="text-[#10B981] mx-auto" />
-            <h3 className="text-lg font-black uppercase text-white font-sans">KİMLİĞİNİZ MÜHÜRLENDİ</h3>
-            <p className="text-xs text-[#A3A3A3] font-sans leading-relaxed max-w-sm mx-auto">
-              Yeni kimliğiniz <span className="text-white font-bold">{fullName.trim()} (@{nextHandle})</span>.
-              Bu bilgiler artık kalıcıdır — değiştirme hakkınız kullandınız.
-            </p>
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-6 py-3 min-h-[44px] bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-black uppercase tracking-wider border-2 border-white shadow-[4px_4px_0px_#000000] inline-flex items-center gap-2 cursor-pointer transition-transform active:translate-x-0.5 active:translate-y-0.5"
-            >
-              <Check className="w-4 h-4 stroke-[3]" />
-              <span>TAMAM</span>
-            </button>
-          </div>
-        ) : (
-          <>
+        <>
             {/* One-shot warning */}
             <div className="p-4 bg-amber-500/10 border-2 border-amber-500/60 space-y-1.5">
               <div className="flex items-start gap-2.5">
@@ -205,7 +184,7 @@ export function IdentityChangeModal({ isOpen, onClose }: IdentityChangeModalProp
               <div className="space-y-1">
                 <label className="text-[10px] font-black uppercase text-neutral-400 flex items-center gap-1.5">
                   <AtSign className="w-3.5 h-3.5 text-[#EF4444]" />
-                  <span>RUMUZ — 3-24 KARAKTER (a-z, 0-9, _)</span>
+                  <span>RUMUZ — 5-24 KARAKTER (a-z, 0-9, _)</span>
                 </label>
                 <div className="flex items-stretch">
                   <span className="px-2.5 flex items-center bg-[#171717] border-2 border-r-0 border-[#404040] text-neutral-400 text-xs font-mono">
@@ -258,8 +237,7 @@ export function IdentityChangeModal({ isOpen, onClose }: IdentityChangeModalProp
                 )}
               </button>
             </div>
-          </>
-        )}
+        </>
       </div>
     </div>
   );

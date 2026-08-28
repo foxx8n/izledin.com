@@ -238,9 +238,9 @@ export async function updateProfile(userId: string, updates: Partial<Profile>): 
 // enforces validation, reserved handles, uniqueness and the one-time rule.
 export const IDENTITY_NAME_MIN = 2;
 export const IDENTITY_NAME_MAX = 40;
-export const IDENTITY_USERNAME_MIN = 3;
+export const IDENTITY_USERNAME_MIN = 5;
 export const IDENTITY_USERNAME_MAX = 24;
-export const USERNAME_PATTERN = /^[a-z0-9_]{3,24}$/;
+export const USERNAME_PATTERN = /^[a-z0-9_]{5,24}$/;
 
 /** Mirror of the RPC's normalizer: spaces/dots/hyphens fold to _, rest strips. */
 export function normalizeUsername(raw: string): string {
@@ -251,14 +251,18 @@ export function normalizeUsername(raw: string): string {
     .slice(0, IDENTITY_USERNAME_MAX);
 }
 
-/** Client-side mirror of the RPC's validation — returns a Turkish message or null. */
-export function validateIdentity(fullName: string, username: string): string | null {
+/**
+ * Client-side mirror of the RPC's validation — returns a Turkish message or null.
+ * The min-length rule applies to NEW handles only: keeping your existing
+ * (possibly shorter, system-generated) handle is always allowed.
+ */
+export function validateIdentity(fullName: string, username: string, currentUsername?: string): string | null {
   const name = fullName.trim();
   if (name.length < IDENTITY_NAME_MIN || name.length > IDENTITY_NAME_MAX) {
     return `Ad en az ${IDENTITY_NAME_MIN}, en fazla ${IDENTITY_NAME_MAX} karakter olmalı.`;
   }
-  if (!USERNAME_PATTERN.test(username)) {
-    return `Rumuz ${IDENTITY_USERNAME_MIN}-${IDENTITY_USERNAME_MAX} karakter olmalı; sadece küçük harf, rakam ve alt çizgi (_) kullanılabilir.`;
+  if (username !== currentUsername && !USERNAME_PATTERN.test(username)) {
+    return `Rumuz en az ${IDENTITY_USERNAME_MIN}, en fazla ${IDENTITY_USERNAME_MAX} karakter olmalı; sadece küçük harf, rakam ve alt çizgi (_) kullanılabilir.`;
   }
   return null;
 }
