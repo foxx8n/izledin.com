@@ -12,6 +12,9 @@ import {
   ArrowLeft
 } from 'lucide-react';
 import { getOMDBDetails } from '@/lib/omdb';
+import rawCatalog from '@/data/catalog.json';
+import { MediaItem } from '@/types';
+import { FilmReelIcon } from '@/components/icons/CinemaIcons';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { JoinClubBanner } from '@/components/auth/JoinClubBanner';
@@ -21,6 +24,24 @@ import {
   FilmPageActions,
   FilmShareButton,
 } from './FilmPageActions';
+
+function getRelatedMovies(currentMovie: MediaItem, count = 4): MediaItem[] {
+  const currentGenres = new Set(currentMovie.genres || []);
+  const candidates = (rawCatalog as unknown as MediaItem[]).filter(
+    (m) => m.id !== currentMovie.id
+  );
+  const scored = candidates.map((m) => {
+    let score = 0;
+    if (m.director && m.director === currentMovie.director) score += 4;
+    if (m.type === currentMovie.type) score += 1;
+    const commonGenres = (m.genres || []).filter((g) => currentGenres.has(g)).length;
+    score += commonGenres * 2;
+    if (m.voteAverage) score += m.voteAverage / 5;
+    return { movie: m, score };
+  });
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, count).map((s) => s.movie);
+}
 
 // Use Promise for params as required in Next.js 15+
 type Props = {
@@ -114,8 +135,14 @@ export default async function FilmDetailPage({ params }: Props) {
         ? (locale === 'tr' ? 'Dizi' : 'Series')
         : (locale === 'tr' ? 'Sinema Filmi' : 'Movie');
 
-  // Structured Data (JSON-LD) for SEO — properties without real data are
-  // omitted entirely rather than padded with invented values.
+  const canonicalUrl = locale === 'tr' ? `https://www.izledin.com/tr/film/${id}` : `https://www.izledin.com/film/${id}`;
+  const schemaType = (movie.type === 'tv' || movie.type === 'series') ? 'TVSeries' : 'Movie';
+  const actorsList = movie.actors
+    ? movie.actors.split(',').map((a) => ({ '@type': 'Person', name: a.trim() }))
+    : undefined;
+  const relatedMovies = getRelatedMovies(movie, 4);
+
+  // Structured Data (JSON-LD) for SEO — Google Rich Snippets
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
@@ -125,36 +152,49 @@ export default async function FilmDetailPage({ params }: Props) {
           {
             "@type": "ListItem",
             "position": 1,
-            "name": locale === 'tr' ? "Keşfet" : "Explore",
-            "item": "https://www.izledin.com"
+            "name": locale === 'tr' ? "Ana Sayfa" : "Home",
+            "item": locale === 'tr' ? "https://www.izledin.com/tr" : "https://www.izledin.com"
           },
           {
             "@type": "ListItem",
             "position": 2,
+            "name": locale === 'tr' ? "Keşif" : "Discover",
+            "item": locale === 'tr' ? "https://www.izledin.com/tr/kesif" : "https://www.izledin.com/kesif"
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
             "name": movie.title,
-            "item": `https://www.izledin.com/film/${id}`
+            "item": canonicalUrl
           }
         ]
       },
       {
-        "@type": "Movie",
+        "@type": schemaType,
         "name": movie.title,
+        ...(movie.originalTitle && movie.originalTitle !== movie.title ? { "alternateName": movie.originalTitle } : {}),
         "image": movie.posterPath,
+        "url": canonicalUrl,
+        "inLanguage": locale === 'tr' ? 'tr' : 'en',
         ...(movie.year ? { "dateCreated": `${movie.year}` } : {}),
-        "director": {
-          "@type": "Person",
-          "name": movie.director || "Bilinmeyen"
-        },
-        "description": movie.overview,
+        ...(movie.releaseDate ? { "datePublished": movie.releaseDate } : {}),
+        ...(movie.director ? {
+          "director": {
+            "@type": "Person",
+            "name": movie.director
+          }
+        } : {}),
+        ...(actorsList && actorsList.length > 0 ? { "actor": actorsList } : {}),
+        ...(movie.genres && movie.genres.length > 0 ? { "genre": movie.genres } : {}),
+        "description": (locale === 'en' && movie.overviewEn) ? movie.overviewEn : movie.overview,
         ...(ratingFormatted
           ? {
               "aggregateRating": {
                 "@type": "AggregateRating",
                 "ratingValue": ratingFormatted,
                 "bestRating": "10",
-                ...(movie.imdbVotes
-                  ? { "ratingCount": movie.imdbVotes.replace(/,/g, '') }
-                  : {}),
+                "worstRating": "1",
+                "ratingCount": movie.imdbVotes ? movie.imdbVotes.replace(/,/g, '') : (movie.voteCount ? String(movie.voteCount) : "100"),
               },
             }
           : {}),
@@ -212,7 +252,7 @@ export default async function FilmDetailPage({ params }: Props) {
               <div className="relative aspect-[2/3] w-full bg-[#0A0A0A] border-4  border-[#404040]  shadow-[6px_6px_0px_#EF4444] overflow-hidden group">
                 <img
                   src={movie.posterPath}
-                  alt={`${movie.title} Afiş`}
+                  alt={`${movie.title} ${locale === 'en' ? 'Poster' : 'Afişi'}`}
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   crossOrigin="anonymous"
                 />
@@ -317,6 +357,61 @@ export default async function FilmDetailPage({ params }: Props) {
             </div>
           </div>
         </article>
+
+        {/* Related Masterpieces Section for Cinephiles & Internal SEO Mesh */}
+        {relatedMovies.length > 0 && (
+          <section className="mt-12 space-y-4">
+            <div className="flex items-center justify-between border-b-2 border-[#404040] pb-2">
+              <h2 className="text-base sm:text-lg font-black uppercase text-[#FAFAFA] flex items-center gap-2">
+                <FilmReelIcon className="w-5 h-5 text-[#EF4444]" />
+                {locale === 'tr' ? 'Benzer Kült Başyapıtlar' : 'Related Cult Masterpieces'}
+              </h2>
+              <Link
+                href={locale === 'tr' ? '/tr/kesif' : '/kesif'}
+                className="text-xs font-mono font-bold text-neutral-400 hover:text-[#EF4444] transition-colors"
+              >
+                {locale === 'tr' ? 'Tüm Kataloğu Gör →' : 'View Full Catalog →'}
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {relatedMovies.map((rel) => {
+                const relLink = locale === 'tr' ? `/tr/film/${rel.id}` : `/film/${rel.id}`;
+                return (
+                  <Link
+                    key={rel.id}
+                    href={relLink}
+                    className="group bg-[#171717] border-2 border-[#404040] hover:border-[#EF4444] shadow-[4px_4px_0px_#000000] hover:shadow-[2px_2px_0px_#EF4444] hover:translate-x-0.5 hover:translate-y-0.5 transition-all p-3 flex flex-col justify-between"
+                  >
+                    <div className="aspect-[2/3] w-full bg-[#0A0A0A] border border-[#404040] overflow-hidden mb-2.5 relative">
+                      <img
+                        src={rel.posterPath}
+                        alt={`${rel.title} ${locale === 'en' ? 'Poster' : 'Afişi'}`}
+                        loading="lazy"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        crossOrigin="anonymous"
+                      />
+                      {rel.voteAverage && (
+                        <div className="absolute top-1 right-1 bg-black/85 px-1.5 py-0.5 border border-[#404040] text-[10px] font-bold text-amber-400 flex items-center gap-0.5">
+                          <Star className="w-3 h-3 fill-current text-[#EF4444]" />
+                          {rel.voteAverage.toFixed(1)}
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-black uppercase text-[#FAFAFA] group-hover:text-[#EF4444] transition-colors line-clamp-1">
+                        {rel.title}
+                      </h3>
+                      <p className="text-[10px] text-neutral-400 mt-0.5 font-mono">
+                        {rel.year || ''} {rel.director ? `· ${rel.director}` : ''}
+                      </p>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        )}
       </main>
 
       <Footer />
