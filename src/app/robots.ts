@@ -6,9 +6,15 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/admin', '/api/'],
+        disallow: ['/admin', '/tr/admin', '/api/'],
+      },
+      {
+        userAgent: ['Googlebot', 'Bingbot'],
+        allow: '/',
+        disallow: ['/admin', '/tr/admin', '/api/'],
       },
     ],
     sitemap: 'https://www.izledin.com/sitemap.xml',
+    host: 'https://www.izledin.com',
   };
 }

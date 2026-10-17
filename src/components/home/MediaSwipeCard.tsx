@@ -5,6 +5,7 @@ import { X, Heart, Info } from "lucide-react";
 import { ClapperboardIcon } from "@/components/icons/CinemaIcons";
 import type { MediaItem } from "@/types";
 import { useTranslation } from "@/lib/i18n/context";
+import { translateGenre } from "@/lib/i18n/genres";
 
 interface MediaSwipeCardProps {
   item: MediaItem;
@@ -270,7 +271,7 @@ export function MediaSwipeCard({
                   key={g}
                   className="px-1.5 py-0.5 bg-[#DC2626]/15 text-[#EF4444] border border-[#DC2626]/30 uppercase"
                 >
-                  {g}
+                  {translateGenre(g, locale)}
                 </span>
               ))}
             </div>

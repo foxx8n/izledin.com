@@ -7,28 +7,33 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const currentDate = new Date();
 
   const paths: Array<{
-    path: string;
+    enPath: string;
+    trPath: string;
     priority: number;
     changeFrequency: 'daily' | 'weekly' | 'monthly' | 'hourly';
   }> = [
-    { path: '', priority: 1.0, changeFrequency: 'daily' },
-    { path: '/upcoming', priority: 0.9, changeFrequency: 'daily' },
-    { path: '/topluluk', priority: 0.9, changeFrequency: 'hourly' },
-    { path: '/matches', priority: 0.85, changeFrequency: 'daily' },
-    { path: '/kesif', priority: 0.9, changeFrequency: 'daily' },
-    { path: '/diary', priority: 0.85, changeFrequency: 'daily' },
-    { path: '/premium', priority: 0.8, changeFrequency: 'weekly' },
-    { path: '/iletisim', priority: 0.5, changeFrequency: 'monthly' },
-    { path: '/gizlilik', priority: 0.4, changeFrequency: 'monthly' },
-    { path: '/kullanim', priority: 0.4, changeFrequency: 'monthly' },
-    { path: '/acik-riza', priority: 0.4, changeFrequency: 'monthly' },
+    { enPath: '', trPath: '', priority: 1.0, changeFrequency: 'daily' },
+    { enPath: '/upcoming', trPath: '/upcoming', priority: 0.9, changeFrequency: 'daily' },
+    { enPath: '/community', trPath: '/topluluk', priority: 0.9, changeFrequency: 'daily' },
+    { enPath: '/topluluk', trPath: '/topluluk', priority: 0.8, changeFrequency: 'daily' },
+    { enPath: '/matches', trPath: '/matches', priority: 0.85, changeFrequency: 'daily' },
+    { enPath: '/kesif', trPath: '/kesif', priority: 0.9, changeFrequency: 'daily' },
+    { enPath: '/diary', trPath: '/diary', priority: 0.85, changeFrequency: 'daily' },
+    { enPath: '/premium', trPath: '/premium', priority: 0.8, changeFrequency: 'weekly' },
+    { enPath: '/contact', trPath: '/iletisim', priority: 0.6, changeFrequency: 'monthly' },
+    { enPath: '/iletisim', trPath: '/iletisim', priority: 0.5, changeFrequency: 'monthly' },
+    { enPath: '/privacy', trPath: '/gizlilik', priority: 0.5, changeFrequency: 'monthly' },
+    { enPath: '/gizlilik', trPath: '/gizlilik', priority: 0.4, changeFrequency: 'monthly' },
+    { enPath: '/terms', trPath: '/kullanim', priority: 0.5, changeFrequency: 'monthly' },
+    { enPath: '/kullanim', trPath: '/kullanim', priority: 0.4, changeFrequency: 'monthly' },
+    { enPath: '/acik-riza', trPath: '/acik-riza', priority: 0.4, changeFrequency: 'monthly' },
   ];
 
   const staticRoutes: MetadataRoute.Sitemap = [];
 
   for (const item of paths) {
-    const enUrl = item.path ? `${baseUrl}${item.path}` : baseUrl;
-    const trUrl = item.path ? `${baseUrl}/tr${item.path}` : `${baseUrl}/tr`;
+    const enUrl = item.enPath ? `${baseUrl}${item.enPath}` : baseUrl;
+    const trUrl = item.trPath ? `${baseUrl}/tr${item.trPath}` : `${baseUrl}/tr`;
 
     // English primary entry
     staticRoutes.push({
@@ -40,6 +45,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
         languages: {
           en: enUrl,
           tr: trUrl,
+          'x-default': enUrl,
         },
       },
     });
@@ -54,6 +60,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
         languages: {
           en: enUrl,
           tr: trUrl,
+          'x-default': enUrl,
         },
       },
     });
@@ -61,9 +68,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   // Dynamic Movie Catalog Pages
   const catalogRoutes: MetadataRoute.Sitemap = [];
+  const seenCatalogIds = new Set<string>();
+
   for (const movie of rawCatalog) {
+    if (seenCatalogIds.has(movie.id)) continue;
+    seenCatalogIds.add(movie.id);
+
     const enUrl = `${baseUrl}/film/${movie.id}`;
     const trUrl = `${baseUrl}/tr/film/${movie.id}`;
+
     catalogRoutes.push({
       url: enUrl,
       lastModified: currentDate,
@@ -73,6 +86,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
         languages: {
           en: enUrl,
           tr: trUrl,
+          'x-default': enUrl,
         },
       },
     });
@@ -85,6 +99,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
         languages: {
           en: enUrl,
           tr: trUrl,
+          'x-default': enUrl,
         },
       },
     });
@@ -93,8 +108,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // Upcoming Movies
   const upcomingRoutes: MetadataRoute.Sitemap = [];
   for (const movie of rawUpcoming) {
+    if (seenCatalogIds.has(movie.id)) continue;
+    seenCatalogIds.add(movie.id);
+
     const enUrl = `${baseUrl}/film/${movie.id}`;
     const trUrl = `${baseUrl}/tr/film/${movie.id}`;
+
     upcomingRoutes.push({
       url: enUrl,
       lastModified: currentDate,
@@ -104,6 +123,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
         languages: {
           en: enUrl,
           tr: trUrl,
+          'x-default': enUrl,
         },
       },
     });
@@ -116,6 +136,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
         languages: {
           en: enUrl,
           tr: trUrl,
+          'x-default': enUrl,
         },
       },
     });

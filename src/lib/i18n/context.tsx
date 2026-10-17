@@ -45,6 +45,9 @@ export function LanguageProvider({
 
   useEffect(() => {
     setLocaleState(detectedLocale);
+    if (typeof document !== 'undefined') {
+      document.documentElement.lang = detectedLocale;
+    }
   }, [detectedLocale]);
 
   const setLocale = (newLocale: Locale) => {

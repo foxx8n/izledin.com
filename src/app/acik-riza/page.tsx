@@ -14,16 +14,43 @@ import { DigestConsentButton } from '@/components/common/DigestConsentButton';
 import { 
   CinemaVerifiedSeal 
 } from '@/components/icons/CinemaIcons';
+import { getServerTranslation } from '@/lib/i18n/server';
 
-export const metadata: Metadata = {
-  title: 'Açık Rıza Metni — izledin.com',
-  description: 'izledin.com Kişisel Verilerin İşlenmesine İlişkin Açık Rıza Metni.',
-  alternates: {
-    canonical: 'https://www.izledin.com/acik-riza',
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { locale } = await getServerTranslation();
 
-export default function AcikRizaPage() {
+  if (locale === 'en') {
+    return {
+      title: 'Explicit Consent Declaration — izledin.com',
+      description: 'izledin.com Explicit Consent Declaration regarding the processing of personal data and matching vectors.',
+      alternates: {
+        canonical: 'https://www.izledin.com/acik-riza',
+        languages: {
+          en: 'https://www.izledin.com/acik-riza',
+          tr: 'https://www.izledin.com/tr/acik-riza',
+          'x-default': 'https://www.izledin.com/acik-riza',
+        },
+      },
+    };
+  }
+
+  return {
+    title: 'Açık Rıza Metni — izledin.com',
+    description: 'izledin.com Kişisel Verilerin İşlenmesine İlişkin Açık Rıza Metni.',
+    alternates: {
+      canonical: 'https://www.izledin.com/tr/acik-riza',
+      languages: {
+        en: 'https://www.izledin.com/acik-riza',
+        tr: 'https://www.izledin.com/tr/acik-riza',
+        'x-default': 'https://www.izledin.com/acik-riza',
+      },
+    },
+  };
+}
+
+export default async function AcikRizaPage() {
+  const { locale } = await getServerTranslation();
+  const prefix = locale === 'tr' ? '/tr' : '';
   const sections = [
     { id: 'riza-01', title: '1. Yurt Dışına Aktarım' },
     { id: 'riza-02', title: '2. Profilleme & İzdaş' },
@@ -39,15 +66,15 @@ export default function AcikRizaPage() {
         {/* Breadcrumb Navigation */}
         <nav aria-label="Sayfa yolu" className="flex items-center gap-2 text-xs  text-neutral-400">
           <Link 
-            href="/" 
-            className="min-h-[44px] inline-flex items-center gap-1.5  hover:text-white transition-colors cursor-pointer"
+            href={`${prefix}/`} 
+            className="min-h-[44px] inline-flex items-center gap-1.5 hover:text-white transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" aria-hidden="true" />
-            <span>KEŞFET (ANA SAYFA)</span>
+            <span>{locale === 'en' ? 'DISCOVER (HOME)' : 'KEŞFET (ANA SAYFA)'}</span>
           </Link>
           <span aria-hidden="true">/</span>
-          <span className=" text-[#FAFAFA] font-black" aria-current="page">
-            AÇIK RIZA METNİ
+          <span className="text-[#FAFAFA] font-black" aria-current="page">
+            {locale === 'en' ? 'EXPLICIT CONSENT DECLARATION' : 'AÇIK RIZA METNİ'}
           </span>
         </nav>
 

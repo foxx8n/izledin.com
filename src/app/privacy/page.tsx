@@ -1,1 +1,1 @@
-﻿export { default, metadata } from '@/app/gizlilik/page';
+export { default, generateMetadata } from '@/app/gizlilik/page';

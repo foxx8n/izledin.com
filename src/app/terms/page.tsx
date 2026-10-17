@@ -1,1 +1,1 @@
-﻿export { default, metadata } from '@/app/kullanim/page';
+export { default, generateMetadata } from '@/app/kullanim/page';

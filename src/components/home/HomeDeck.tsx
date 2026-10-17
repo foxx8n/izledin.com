@@ -470,7 +470,7 @@ export function HomeDeck() {
               </h3>
               <p className="text-xs text-neutral-400 max-w-sm mx-auto">
                 {locale === "en"
-                  ? "Join with Google; your recorded likes will build your Cinema DNA and connect you with film mates on the same frequency."
+                  ? "Join with Google; your recorded likes will build your Cinema DNA and connect you with movie mates on the same frequency."
                   : "Google ile katıl; kaydettiğin beğeniler Sinema DNA'nı oluştursun ve seni aynı frekanstaki İzdaşlarla eşleştirsin."}
               </p>
             </div>
@@ -542,7 +542,7 @@ export function HomeDeck() {
         <span className="text-[#EF4444] flex items-center gap-2">
           <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
           {decision.mode === "people_dominant"
-            ? (locale === "en" ? "FILM MATES ACTIVE" : "İZDAŞ MODU AKTİF")
+            ? (locale === "en" ? "MOVIE MATES ACTIVE" : "İZDAŞ MODU AKTİF")
             : (locale === "en" ? "SCREEN MODE — SOLO PLAY" : "PERDE MODU — TEK BAŞINA DA OYUN")}
         </span>
         <span className="text-neutral-500">

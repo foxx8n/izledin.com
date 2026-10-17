@@ -193,7 +193,7 @@ export function Footer() {
                     href={href("/matches")}
                     className="hover:text-white transition-colors py-1 min-h-[32px] sm:min-h-[28px] flex items-center"
                   >
-                    {locale === "en" ? "Film Mates Radar" : "İzdaş Radarı"}
+                    {locale === "en" ? "Movie Mates Radar" : "İzdaş Radarı"}
                   </Link>
                 </li>
               </ul>
@@ -207,7 +207,7 @@ export function Footer() {
               <ul className="space-y-0.5 text-xs text-[#D4D4D4]">
                 <li>
                   <Link
-                    href={href("/gizlilik")}
+                    href={href(locale === 'en' ? '/privacy' : '/gizlilik')}
                     className="hover:text-white transition-colors py-1 min-h-[32px] sm:min-h-[28px] flex items-center truncate"
                   >
                     {t.footer.privacy}
@@ -215,7 +215,7 @@ export function Footer() {
                 </li>
                 <li>
                   <Link
-                    href={href("/kullanim")}
+                    href={href(locale === 'en' ? '/terms' : '/kullanim')}
                     className="hover:text-white transition-colors py-1 min-h-[32px] sm:min-h-[28px] flex items-center truncate"
                   >
                     {t.footer.terms}
@@ -223,7 +223,7 @@ export function Footer() {
                 </li>
                 <li>
                   <Link
-                    href={href("/topluluk")}
+                    href={href(locale === 'en' ? '/community' : '/topluluk')}
                     className="hover:text-white transition-colors py-1 min-h-[32px] sm:min-h-[28px] flex items-center truncate"
                   >
                     {t.footer.communityRules}
@@ -231,7 +231,7 @@ export function Footer() {
                 </li>
                 <li>
                   <Link
-                    href={href("/iletisim")}
+                    href={href(locale === 'en' ? '/contact' : '/iletisim')}
                     className="hover:text-white transition-colors py-1 min-h-[32px] sm:min-h-[28px] flex items-center truncate"
                   >
                     {t.footer.contact}

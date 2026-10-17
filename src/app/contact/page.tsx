@@ -1,1 +1,1 @@
-﻿export { default, metadata } from '@/app/iletisim/page';
+export { default, generateMetadata } from '@/app/iletisim/page';

@@ -33,9 +33,9 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 
   return {
-    title: "İzledin — Find Your Film Mates Who Cry at the Same Scenes",
+    title: "Izledin — Find Your Movie Mates Who Cry at the Same Scenes",
     description:
-      "Brutalist cinephile matching club based on movies, series, and anime. Discover your cinema DNA and connect with true film lovers.",
+      "Brutalist cinephile matching club based on movies, series, and anime. Discover your cinema DNA and connect with true movie lovers.",
     alternates: {
       canonical: "https://izledin.com",
       languages: {
@@ -77,7 +77,7 @@ export default async function HomePage() {
           <h1 className="text-lg sm:text-2xl md:text-3xl font-black uppercase tracking-tight text-[#FAFAFA] font-sans leading-tight max-w-3xl mx-auto">
             {locale === "en" ? (
               <>
-                Find the <span className="text-[#EF4444]">film mates</span> who cry
+                Find the <span className="text-[#EF4444]">movie mates</span> who cry
                 and get goosebumps at the exact same scenes — start swiping.
               </>
             ) : (
@@ -126,7 +126,7 @@ export default async function HomePage() {
             </h3>
             <p className="text-xs text-neutral-400 mt-1.5 leading-relaxed">
               {locale === "en"
-                ? "Masterpiece of the week and a 2000+ film catalog curated by the club."
+                ? "Masterpiece of the week and a 2000+ movie catalog curated by the club."
                 : "Haftanın başyapıtı ve kulübün puanladığı 2000+ başyapıtlık katalog."}
             </p>
           </Link>
@@ -135,7 +135,7 @@ export default async function HomePage() {
             className="group p-5 bg-[#171717] border-2 border-[#404040] hover:border-[#EF4444] shadow-[4px_4px_0px_#000000] hover:shadow-[2px_2px_0px_#EF4444] hover:translate-x-0.5 hover:translate-y-0.5 transition-all"
           >
             <h3 className="text-sm font-black uppercase text-[#FAFAFA] group-hover:text-[#EF4444] transition-colors">
-              {locale === "en" ? "FILM MATES RADAR →" : "İZDAŞ RADARI →"}
+              {locale === "en" ? "MOVIE MATES RADAR →" : "İZDAŞ RADARI →"}
             </h3>
             <p className="text-xs text-neutral-400 mt-1.5 leading-relaxed">
               {locale === "en"
