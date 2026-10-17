@@ -15,18 +15,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { enPath: '', trPath: '', priority: 1.0, changeFrequency: 'daily' },
     { enPath: '/upcoming', trPath: '/upcoming', priority: 0.9, changeFrequency: 'daily' },
     { enPath: '/community', trPath: '/topluluk', priority: 0.9, changeFrequency: 'daily' },
-    { enPath: '/topluluk', trPath: '/topluluk', priority: 0.8, changeFrequency: 'daily' },
     { enPath: '/matches', trPath: '/matches', priority: 0.85, changeFrequency: 'daily' },
     { enPath: '/kesif', trPath: '/kesif', priority: 0.9, changeFrequency: 'daily' },
     { enPath: '/diary', trPath: '/diary', priority: 0.85, changeFrequency: 'daily' },
     { enPath: '/premium', trPath: '/premium', priority: 0.8, changeFrequency: 'weekly' },
     { enPath: '/contact', trPath: '/iletisim', priority: 0.6, changeFrequency: 'monthly' },
-    { enPath: '/iletisim', trPath: '/iletisim', priority: 0.5, changeFrequency: 'monthly' },
     { enPath: '/privacy', trPath: '/gizlilik', priority: 0.5, changeFrequency: 'monthly' },
-    { enPath: '/gizlilik', trPath: '/gizlilik', priority: 0.4, changeFrequency: 'monthly' },
     { enPath: '/terms', trPath: '/kullanim', priority: 0.5, changeFrequency: 'monthly' },
-    { enPath: '/kullanim', trPath: '/kullanim', priority: 0.4, changeFrequency: 'monthly' },
     { enPath: '/acik-riza', trPath: '/acik-riza', priority: 0.4, changeFrequency: 'monthly' },
+    { enPath: '/auth', trPath: '/auth', priority: 0.7, changeFrequency: 'monthly' },
   ];
 
   const staticRoutes: MetadataRoute.Sitemap = [];

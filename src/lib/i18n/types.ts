@@ -108,12 +108,19 @@ export interface TranslationDictionary {
   auth: {
     modalTitle: string;
     modalSubtitle: string;
+    modalBadge: string;
+    closeModal: string;
     googleCta: string;
     consentNotice: string;
     securityBadge: string;
     termsLink: string;
     privacyLink: string;
     redirecting: string;
+    breadcrumbHome: string;
+    breadcrumbAuth: string;
+    pagePassportBadge: string;
+    pageTitle: string;
+    pageSubtitle: string;
   };
   mediaModal: {
     archivePrefix: string;

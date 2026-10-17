@@ -39,7 +39,7 @@ export async function generateMetadata(
 
   if (!movie) {
     return {
-      title: locale === 'tr' ? 'Film Bulunamadı — izledin.com' : 'Film Not Found — izledin.com',
+      title: locale === 'tr' ? 'Film Bulunamadı — izledin.com' : 'Movie Not Found — izledin.com',
     };
   }
 
@@ -59,13 +59,20 @@ export async function generateMetadata(
   if (movie.director) ogParams.set('director', movie.director);
   if (hasRating) ogParams.set('rating', movie.voteAverage!.toFixed(1));
 
+  const canonicalUrl = locale === 'tr' ? `https://www.izledin.com/tr/film/${id}` : `https://www.izledin.com/film/${id}`;
+
   return {
     title: locale === 'tr'
       ? `${movie.title}${yearSuffix} İnceleme ve Puanlar — izledin.com`
-      : `${movie.title}${yearSuffix} Review and Ratings — izledin.com`,
+      : `${movie.title}${yearSuffix} Movie Review & Ratings — izledin.com`,
     description: movie.overview.slice(0, 150) + '...',
     alternates: {
-      canonical: `https://www.izledin.com/film/${id}`,
+      canonical: canonicalUrl,
+      languages: {
+        en: `https://www.izledin.com/film/${id}`,
+        tr: `https://www.izledin.com/tr/film/${id}`,
+        'x-default': `https://www.izledin.com/film/${id}`,
+      },
     },
     openGraph: {
       title: `${movie.title}${yearSuffix} — izledin.com`,

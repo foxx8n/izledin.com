@@ -22,11 +22,11 @@ export async function generateMetadata(): Promise<Metadata> {
       description:
         "Film, dizi ve anime zevkine göre eşleşen Türkçe sinema kulübü. Sinema DNA'nı çıkar, aynı sahnelerde ürperdiğin İzdaşınla eşleş.",
       alternates: {
-        canonical: "https://izledin.com/tr",
+        canonical: "https://www.izledin.com/tr",
         languages: {
-          en: "https://izledin.com",
-          tr: "https://izledin.com/tr",
-          "x-default": "https://izledin.com",
+          en: "https://www.izledin.com",
+          tr: "https://www.izledin.com/tr",
+          "x-default": "https://www.izledin.com",
         },
       },
     };
@@ -37,11 +37,11 @@ export async function generateMetadata(): Promise<Metadata> {
     description:
       "Brutalist cinephile matching club based on movies, series, and anime. Discover your cinema DNA and connect with true movie lovers.",
     alternates: {
-      canonical: "https://izledin.com",
+      canonical: "https://www.izledin.com",
       languages: {
-        en: "https://izledin.com",
-        tr: "https://izledin.com/tr",
-        "x-default": "https://izledin.com",
+        en: "https://www.izledin.com",
+        tr: "https://www.izledin.com/tr",
+        "x-default": "https://www.izledin.com",
       },
     },
   };

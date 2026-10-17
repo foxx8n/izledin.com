@@ -7,6 +7,7 @@ import {
   ShieldCheck
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { useTranslation } from '@/lib/i18n';
 
 interface AuthViewProps {
   defaultMode?: 'login' | 'register';
@@ -23,6 +24,7 @@ export function AuthView({
 }: AuthViewProps) {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const { t, locale, href } = useTranslation();
   
   const { signInWithOAuth } = useAuth();
 
@@ -37,7 +39,7 @@ export function AuthView({
       }
       // If successful, the page will redirect to OAuth provider
     } catch (err: any) {
-      setErrorMsg(err.message || 'Bir hata oluştu.');
+      setErrorMsg(err.message || (locale === 'en' ? 'An error occurred.' : 'Bir hata oluştu.'));
       setLoading(false);
     }
   };
@@ -80,25 +82,25 @@ export function AuthView({
             />
           </svg>
         )}
-        <span>{loading ? 'YÖNLENDİRİLİYOR...' : 'GOOGLE İLE GİRİŞ YAP'}</span>
+        <span>{loading ? t.auth.redirecting : t.auth.googleCta}</span>
       </button>
 
       {/* Security & Terms Footnote */}
       <div className="pt-4 text-center text-[11px] text-neutral-500 font-mono space-y-1.5">
         <p className="flex items-center justify-center gap-1">
           <ShieldCheck className="w-4 h-4 text-emerald-600" />
-          <span>256-Bit SSL Güvenli Sinefil Doğrulaması</span>
+          <span>{t.auth.securityBadge}</span>
         </p>
         <p className="leading-relaxed px-4">
-          Devam ederek{' '}
-          <Link href="/kullanim" className=" text-[#EF4444] underline font-bold">
-            Kullanım Şartları
-          </Link>{' '}
-          ve{' '}
-          <Link href="/gizlilik" className=" text-[#EF4444] underline font-bold">
-            Gizlilik İlkeleri
+          {locale === 'en' ? 'By continuing, you agree to our ' : 'Devam ederek '}
+          <Link href={href(locale === 'en' ? '/terms' : '/kullanim')} className=" text-[#EF4444] underline font-bold">
+            {t.auth.termsLink}
           </Link>
-          &apos;ni kabul etmiş olursunuz.
+          {locale === 'en' ? ' and ' : ' ve '}
+          <Link href={href(locale === 'en' ? '/privacy' : '/gizlilik')} className=" text-[#EF4444] underline font-bold">
+            {t.auth.privacyLink}
+          </Link>
+          {locale === 'en' ? '.' : '\'ni kabul etmiş olursunuz.'}
         </p>
       </div>
     </div>

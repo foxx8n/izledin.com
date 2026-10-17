@@ -22,11 +22,25 @@ export async function getServerLocale(): Promise<Locale> {
   return defaultLocale;
 }
 
+export function getLocalizedHref(path: string, locale: Locale): string {
+  if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('#') || path.startsWith('mailto:')) {
+    return path;
+  }
+  const stripped = path.replace(/^\/tr(\/|$)/, '/');
+  const normalized = stripped.startsWith('/') ? stripped : `/${stripped}`;
+  if (locale === 'tr') {
+    return normalized === '/' ? '/tr' : `/tr${normalized}`;
+  }
+  return normalized;
+}
+
 export async function getServerTranslation(): Promise<{
   locale: Locale;
   t: TranslationDictionary;
+  href: (path: string) => string;
 }> {
   const locale = await getServerLocale();
   const t = getDictionary(locale);
-  return { locale, t };
+  const href = (path: string) => getLocalizedHref(path, locale);
+  return { locale, t, href };
 }

@@ -77,11 +77,20 @@ export async function generateMetadata(
     ? `Movies, series, and reviews logged by ${profile.fullName}.`
     : `${profile.fullName} kullanıcısının izlediği filmler, diziler ve sinema değerlendirmeleri.`);
 
+  const canonicalUrl = locale === 'tr'
+    ? `https://www.izledin.com/tr/u/${profile.username}`
+    : `https://www.izledin.com/u/${profile.username}`;
+
   return {
     title,
     description,
     alternates: {
-      canonical: `https://www.izledin.com/u/${profile.username}`,
+      canonical: canonicalUrl,
+      languages: {
+        en: `https://www.izledin.com/u/${profile.username}`,
+        tr: `https://www.izledin.com/tr/u/${profile.username}`,
+        'x-default': `https://www.izledin.com/u/${profile.username}`,
+      },
     },
     openGraph: {
       title,

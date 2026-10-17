@@ -5,6 +5,8 @@ import { X } from 'lucide-react';
 import { MasterpieceLaurelIcon } from '@/components/icons/CinemaIcons';
 import { AuthView } from '@/components/auth/AuthView';
 
+import { useTranslation } from '@/lib/i18n';
+
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -18,6 +20,8 @@ export function AuthModal({
   defaultMode = 'login',
   onOpenTasteProfiler,
 }: AuthModalProps) {
+  const { t } = useTranslation();
+
   // Handle ESC key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -48,7 +52,7 @@ export function AuthModal({
           <div className="flex items-center gap-2">
             <span className="px-2.5 py-0.5 bg-[#DC2626] text-white text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-[2px_2px_0px_#000000]">
               <MasterpieceLaurelIcon size={14} className="text-white" />
-              <span>35MM SİNEFİL KULÜP GİRİŞİ</span>
+              <span>{t.auth.modalBadge}</span>
             </span>
           </div>
 
@@ -56,7 +60,7 @@ export function AuthModal({
             type="button"
             onClick={onClose}
             className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center  bg-[#171717]   hover:bg-[#EF4444] hover:text-[#0A0A0A] border  border-[#404040] cursor-pointer transition-colors"
-            aria-label="Modalı Kapat"
+            aria-label={t.auth.closeModal}
           >
             <X className="w-4 h-4 stroke-[2.5]" />
           </button>
@@ -64,10 +68,10 @@ export function AuthModal({
 
         <div className="space-y-1 text-center">
           <h2 id="auth-modal-title" className="text-2xl font-black uppercase  text-[#FAFAFA] font-sans tracking-tight">
-            SİNEMA SALONUNA GİRİŞ
+            {t.auth.modalTitle}
           </h2>
           <p className="text-xs  text-neutral-400 font-sans leading-relaxed">
-            35mm daktilo günlüğünüzü tutun ve zevkinize uyan İzdaşlar ile eşleşin.
+            {t.auth.modalSubtitle}
           </p>
         </div>
 
