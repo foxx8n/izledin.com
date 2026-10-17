@@ -488,4 +488,71 @@ export const tr: TranslationDictionary = {
     detailNotFound: 'Detay bulunamadı.',
     authPromptButton: 'GİRİŞ YAP / HESAP OLUŞTUR',
   },
+  premiumPage: {
+    heroBadge: 'BAĞIMSIZ SİNEFİL KULÜBÜ',
+    title: 'izledin+',
+    subtitle: 'Kulüp üyeliği: altın mühür, radarda ve akışta öncelik, bağımsız sinemaya destek. Çekirdek platform zaten herkese ücretsiz ve reklamsızdır.',
+    activeMemberStamp: 'Aktif kulüp üyesisin — mührün profilde görünüyor',
+    invitationOnlyStamp: 'Üyelik davetiye & katkı usulüyle atanır — satış yok',
+    contactCta: 'KULÜP HAKKINDA BİLGİ AL',
+    freeFeaturesNotice: 'Günlük • Puanlama • Radar • Mesajlaşma — herkese ücretsiz',
+    cardHeading: '35MM SİNEFİL KULÜP KARTIN',
+    cardDynamicNotice: '(giriş yapınca senin verinle dolar)',
+    cardOfficialCanon: 'EST. \'26 • RESMİ KANON',
+    cardPassportTitle: '35MM CELLULOID PASSPORT',
+    cardMemberSince: 'ÜYE',
+    cardAwaitingRegistration: 'ÜYE KAYDI BEKLİYOR',
+    cardClubMember: '★ KULÜP (İZLEDİN+) ÜYESİ',
+    cardStandardMember: 'STANDART ÜYE',
+    cardFreeFeatures: 'Ücretsiz Günlük & Radar',
+    cardSealActive: 'Mühür Aktif',
+    cardUpgradeByInvite: 'Kulüp: Davetiyle Yükselir',
+    perksHeading: 'KULÜP AYRICALIKLARI',
+    perksBadge: 'SADECE GERÇEK OLANLAR',
+    perks: [
+      {
+        title: 'Altın Kulüp Mührü',
+        desc: 'Profilinde ve günlük notlarında görünen İzledin+ VIP rozeti. Kulüp üyesi olduğunu herkes sayfanda görür.',
+      },
+      {
+        title: 'Radarda Öncelikli Sıralama',
+        desc: 'İzdaş keşif radarında kulüp üyeleri eşleşme sırasında öne alınır — senin profilin de başkalarına ilk sen görünsün.',
+      },
+      {
+        title: 'Akışta Görünürlük Önceliği',
+        desc: 'Topluluk akışının algoritmik sıralamasında kulüp üyelerinin günlük notlarına ölçülü bir görünürlük önceliği tanınır.',
+      },
+      {
+        title: 'Bağımsız Sinemaya Destek',
+        desc: 'Kulüp katkıları bağımsız kısa film fonunu ve yerel sinefil gösterimlerini desteklemeyi hedefler.',
+      },
+      {
+        title: 'Yeni Modüllere Erken Erişim',
+        desc: 'Platforma eklenecek yeni modüller kulüp üyelerine herkesten önce açılır.',
+      },
+      {
+        title: 'Zaten Herkeste Olanlar',
+        desc: 'Reklamsız arayüz, sınırsız günlük, puanlama, İzdaş radarı ve mesajlaşma izledin.com\'da herkese ücretsizdir — kulüplük değildir.',
+      },
+    ],
+    faqHeading: 'SIKÇA SORULAN SORULAR & ŞEFFAFLIK',
+    faqs: [
+      {
+        q: 'İzledin+ kulüp üyeliğine nasıl katılabilirim?',
+        a: 'Üyelik şu anda satışa açık değil; davetiye ve platforma katkı usulüyle yönetim tarafından atanır. İletişim sayfasından bize yazarak kendini tanıtabilirsin.',
+      },
+      {
+        q: 'Çekirdek platform ücretsiz mi kalıyor?',
+        a: 'Evet. Daktilo günlüğün, puanlama sistemin, İzdaş keşif radarı ve mesajlaşma dahil çekirdek deneyim herkese ücretsiz ve reklamsızdır. Kulüp üyeliği bunun üstüne statü ve öncelik ekler.',
+      },
+      {
+        q: 'Verilerim nasıl korunuyor?',
+        a: 'Doğum tarihin asla diğer üyelere gösterilmez — yalnızca hesaplanan yaşın paylaşılır. Ban gerekçeleri gibi yönetimsel alanlara da normal üyeler erişemez. Mesajların yalnızca eşleştiğin kişilerle arasında kalır.',
+      },
+      {
+        q: 'Kulüp kartı ne zaman geliyor?',
+        a: 'Sayfadaki 35mm kimlik kartı konsepti, paylaşılabilir dijital karta dönüşmek üzere geliştirme listemizde. Kart üzerindeki bilgiler gerçek profil verinden üretilir — hiçbir alan uydurma göstermez.',
+      },
+    ],
+  },
 };

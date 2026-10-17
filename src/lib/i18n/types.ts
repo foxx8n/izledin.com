@@ -425,4 +425,35 @@ export interface TranslationDictionary {
     detailNotFound: string;
     authPromptButton: string;
   };
+  premiumPage: {
+    heroBadge: string;
+    title: string;
+    subtitle: string;
+    activeMemberStamp: string;
+    invitationOnlyStamp: string;
+    contactCta: string;
+    freeFeaturesNotice: string;
+    cardHeading: string;
+    cardDynamicNotice: string;
+    cardOfficialCanon: string;
+    cardPassportTitle: string;
+    cardMemberSince: string;
+    cardAwaitingRegistration: string;
+    cardClubMember: string;
+    cardStandardMember: string;
+    cardFreeFeatures: string;
+    cardSealActive: string;
+    cardUpgradeByInvite: string;
+    perksHeading: string;
+    perksBadge: string;
+    perks: Array<{
+      title: string;
+      desc: string;
+    }>;
+    faqHeading: string;
+    faqs: Array<{
+      q: string;
+      a: string;
+    }>;
+  };
 }

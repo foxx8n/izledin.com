@@ -25,69 +25,23 @@ import { Footer } from '@/components/layout/Footer';
 import { SearchModal } from '@/components/media/SearchModal';
 import { AuthModal } from '@/components/auth/AuthModal';
 import { useAuth } from '@/context/AuthContext';
+import { useTranslation } from '@/lib/i18n';
 
 export default function PremiumPage() {
   const { user, profile } = useAuth();
+  const { t, locale, href } = useTranslation();
   const router = useRouter();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
 
-  // Yalnızca gerçekten kodda var olan ayrıcalıklar sıralanır:
-  // - is_premium rozeti profilde/günlüklerde görünür
-  // - calculate_cinephile_matches kulüp üyelerini radar sırasında öne alır
-  // - calculateCommunityFeedScore akışta üyelere ölçülü görünürlük önceliği verir
-  const perks = [
-    {
-      icon: Award,
-      title: 'Altın Kulüp Mührü',
-      desc: 'Profilinde ve günlük notlarında görünen İzledin+ VIP rozeti. Kulüp üyesi olduğunu herkes sayfanda görür.',
-    },
-    {
-      icon: Users,
-      title: 'Radarda Öncelikli Sıralama',
-      desc: 'İzdaş keşif radarında kulüp üyeleri eşleşme sırasında öne alınır — senin profilin de başkalarına ilk sen görünsün.',
-    },
-    {
-      icon: Zap,
-      title: 'Akışta Görünürlük Önceliği',
-      desc: 'Topluluk akışının algoritmik sıralamasında kulüp üyelerinin günlük notlarına ölçülü bir görünürlük önceliği tanınır.',
-    },
-    {
-      icon: HeartHandshake,
-      title: 'Bağımsız Sinemaya Destek',
-      desc: 'Kulüp katkıları bağımsız kısa film fonunu ve yerel sinefil gösterimlerini desteklemeyi hedefler.',
-    },
-    {
-      icon: Ticket,
-      title: 'Yeni Modüllere Erken Erişim',
-      desc: 'Platforma eklenecek yeni modüller kulüp üyelerine herkesten önce açılır.',
-    },
-    {
-      icon: Check,
-      title: 'Zaten Herkeste Olanlar',
-      desc: 'Reklamsız arayüz, sınırsız günlük, puanlama, İzdaş radarı ve mesajlaşma izledin.com\'da herkese ücretsizdir — kulüplük değildir.',
-    },
-  ];
+  const perkIcons = [Award, Users, Zap, HeartHandshake, Ticket, Check];
+  const perks = t.premiumPage.perks.map((perk, idx) => ({
+    ...perk,
+    icon: perkIcons[idx] || Award,
+  }));
 
-  const faqs = [
-    {
-      q: 'İzledin+ kulüp üyeliğine nasıl katılabilirim?',
-      a: 'Üyelik şu anda satışa açık değil; davetiye ve platforma katkı usulüyle yönetim tarafından atanır. iletişim sayfasından bize yazarak kendini tanıtabilirsin.',
-    },
-    {
-      q: 'Çekirdek platform ücretsiz mi kalıyor?',
-      a: 'Evet. Daktilo günlüğün, puanlama sistemin, İzdaş keşif radarı ve mesajlaşma dahil çekirdek deneyim herkese ücretsiz ve reklamsızdır. Kulüp üyeliği bunun üstüne statü ve öncelik ekler.',
-    },
-    {
-      q: 'Verilerim nasıl korunuyor?',
-      a: 'Doğum tarihin asla diğer üyelere gösterilmez — yalnızca hesaplanan yaşın paylaşılır. Ban gerekçeleri gibi yönetimsel alanlara da normal üyeler erişemez. Mesajların yalnızca eşleştiğin kişilerle arasında kalır.',
-    },
-    {
-      q: 'Kulüp kartı ne zaman geliyor?',
-      a: 'Sayfadaki 35mm kimlik kartı konsepti, paylaşılabilir dijital karta dönüşmek üzere geliştirme listemizde. Kart üzerindeki bilgiler gerçek profil verinden üretilir — hiçbir alan uydurma göstermez.',
-    },
-  ];
+  const faqs = t.premiumPage.faqs;
 
   const toggleFaq = (idx: number) => {
     setOpenFaqIndex(openFaqIndex === idx ? null : idx);
@@ -108,12 +62,12 @@ export default function PremiumPage() {
       <main className="flex-1 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full space-y-12">
 
         {/* VIP Pass Masthead Ticket */}
-        <header className="relative overflow-hidden bg-[#0A0A0A] text-[#FAFAFA] border-2 sm:border-4  border-[#404040]  shadow-[8px_8px_0px_#000000] p-8 sm:p-12 text-center space-y-6">
+        <header className="relative overflow-hidden bg-[#0A0A0A] text-[#FAFAFA] border-2 sm:border-4  border-[#404040]  shadow-[8px_8px_0px_#000000] p-6 sm:p-12 text-center space-y-6">
 
           <div className="relative z-10 flex items-center justify-center gap-2">
             <span className="px-3 py-1 bg-[#DC2626] text-white text-xs font-black uppercase tracking-wider font-mono inline-flex items-center gap-1.5 shadow-[2px_2px_0px_#000000]">
               <MasterpieceLaurelIcon size={14} className="text-white" />
-              <span>BAĞIMSIZ SİNEFİL KULÜBÜ</span>
+              <span>{t.premiumPage.heroBadge}</span>
             </span>
           </div>
 
@@ -122,8 +76,7 @@ export default function PremiumPage() {
               izledin<span className=" text-[#EF4444]">+</span>
             </h1>
             <p className="text-xs sm:text-base text-[#D4D4D4] leading-relaxed max-w-xl mx-auto font-sans font-medium">
-              Kulüp üyeliği: altın mühür, radarda ve akışta öncelik, bağımsız sinemaya destek.
-              Çekirdek platform zaten herkese ücretsiz ve reklamsızdır.
+              {t.premiumPage.subtitle}
             </p>
           </div>
 
@@ -132,11 +85,11 @@ export default function PremiumPage() {
             {profile?.isPremium ? (
               <span className="inline-flex items-center gap-2 px-4 py-2 bg-[#F59E0B] text-[#0A0A0A] text-xs font-black uppercase tracking-wider shadow-[2px_2px_0px_#000000]">
                 <CinemaVerifiedSeal size={14} />
-                <span>Aktif kulüp üyesisin — mührün profilde görünüyor</span>
+                <span>{t.premiumPage.activeMemberStamp}</span>
               </span>
             ) : (
               <span className="inline-flex items-center gap-2 px-4 py-2 border-2 border-[#404040] bg-[#171717] text-neutral-300 text-xs font-black uppercase tracking-wider">
-                Üyelik davetiye &amp; katkı usulüyle atanır — satış yok
+                {t.premiumPage.invitationOnlyStamp}
               </span>
             )}
           </div>
@@ -144,36 +97,36 @@ export default function PremiumPage() {
           {/* CTA Action */}
           <div className="relative z-10 pt-2">
             <Link
-              href="/iletisim"
-              className="px-8 py-4 min-h-[52px] inline-flex bg-[#DC2626] hover:bg-[#B91C1C] text-white font-black text-xs sm:text-sm uppercase tracking-wider font-mono border-2 border-white shadow-[4px_4px_0px_#ffffff] cursor-pointer items-center gap-2.5 transition-transform active:translate-x-0.5 active:translate-y-0.5"
+              href={href(locale === 'en' ? '/contact' : '/iletisim')}
+              className="px-6 sm:px-8 py-3.5 sm:py-4 min-h-[48px] sm:min-h-[52px] inline-flex bg-[#DC2626] hover:bg-[#B91C1C] text-white font-black text-xs sm:text-sm uppercase tracking-wider font-mono border-2 border-white shadow-[4px_4px_0px_#ffffff] cursor-pointer items-center gap-2.5 transition-transform active:translate-x-0.5 active:translate-y-0.5"
             >
               <CinemaTicketIcon size={18} className="text-white" />
-              <span>KULÜP HAKKINDA BİLGİ AL</span>
+              <span>{t.premiumPage.contactCta}</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
             <p className="text-xs text-neutral-400 font-mono mt-3 flex items-center justify-center gap-1.5 flex-wrap">
               <CinemaCheckIcon size={14} className=" text-[#EF4444]" />
-              <span>Günlük • Puanlama • Radar • Mesajlaşma — herkese ücretsiz</span>
+              <span>{t.premiumPage.freeFeaturesNotice}</span>
             </p>
           </div>
         </header>
 
         {/* 35mm Physical Fanzine Member Card Preview */}
-        <section aria-labelledby="card-preview-heading" className="bg-[#0A0A0A] text-[#FAFAFA] border-2 sm:border-4  border-[#404040] p-6 sm:p-8 shadow-[8px_8px_0px_#DC2626] space-y-6">
-          <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
+        <section aria-labelledby="card-preview-heading" className="bg-[#0A0A0A] text-[#FAFAFA] border-2 sm:border-4  border-[#404040] p-5 sm:p-8 shadow-[8px_8px_0px_#DC2626] space-y-6">
+          <div className="flex items-center justify-between border-b border-neutral-800 pb-3 flex-wrap gap-2">
             <div className="flex items-center gap-2">
               <CinemaVerifiedSeal size={20} className="text-[#F59E0B]" />
               <h2 id="card-preview-heading" className="text-base sm:text-lg font-black uppercase text-white font-sans">
-                35MM SİNEFİL KULÜP KARTIN
+                {t.premiumPage.cardHeading}
                 {!profile && (
                   <span className="ml-2 text-[11px] text-neutral-500 font-mono normal-case">
-                    (giriş yapınca senin verinle dolar)
+                    {t.premiumPage.cardDynamicNotice}
                   </span>
                 )}
               </h2>
             </div>
             <span className="text-xs text-[#F59E0B] font-black uppercase tracking-wider font-mono">
-              EST. &apos;26 • RESMİ KANON
+              {t.premiumPage.cardOfficialCanon}
             </span>
           </div>
 
@@ -184,16 +137,16 @@ export default function PremiumPage() {
               <div className="flex items-center gap-1">
                 <span className="w-2 h-1 bg-[#DC2626] inline-block" />
                 <span className="w-2 h-1 bg-[#DC2626] inline-block" />
-                <span>35MM CELLULOID PASSPORT</span>
+                <span>{t.premiumPage.cardPassportTitle}</span>
               </div>
-              <span>{joinYear ? `ÜYE ${joinYear}` : 'ÜYE KAYDI BEKLİYOR'}</span>
+              <span>{joinYear ? `${t.premiumPage.cardMemberSince} ${joinYear}` : t.premiumPage.cardAwaitingRegistration}</span>
             </div>
 
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 bg-black border-2 border-[#DC2626] overflow-hidden shrink-0 shadow-[2px_2px_0px_#000000]">
                 <img
                   src={profile?.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(profile?.fullName || user?.email || 'Sinefil')}&backgroundColor=0a0a0a&textColor=ef4444&fontWeight=900`}
-                  alt="Üye Kartı"
+                  alt="Member Passport"
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -201,25 +154,25 @@ export default function PremiumPage() {
               <div className="min-w-0 space-y-1">
                 <div className="flex items-center gap-1.5">
                   <span className="text-sm font-black uppercase text-white font-sans truncate">
-                    {profile?.fullName || user?.email?.split('@')[0] || 'SİNEFİL'}
+                    {profile?.fullName || user?.email?.split('@')[0] || (locale === 'en' ? 'CINEPHILE' : 'SİNEFİL')}
                   </span>
                   {profile?.isPremium && (
                     <CinemaVerifiedSeal size={14} className="text-[#F59E0B] shrink-0" />
                   )}
                 </div>
                 <p className={`text-xs font-black uppercase font-mono ${profile?.isPremium ? 'text-[#F59E0B]' : 'text-neutral-400'}`}>
-                  {profile?.isPremium ? '★ KULÜP (İZLEDİN+) ÜYESİ' : 'STANDART ÜYE'}
+                  {profile?.isPremium ? t.premiumPage.cardClubMember : t.premiumPage.cardStandardMember}
                 </p>
                 <p className="text-[11px] text-neutral-400 font-mono truncate">
-                  @{profile?.username || user?.email?.split('@')[0] || 'sinefil'}{profile?.location ? ` • ${profile.location}` : ''}
+                  @{profile?.username || user?.email?.split('@')[0] || 'cinephile'}{profile?.location ? ` • ${profile.location}` : ''}
                 </p>
               </div>
             </div>
 
             <div className="flex items-center justify-between pt-2 border-t border-neutral-800 text-[11px] text-neutral-400 font-mono">
-              <span>Ücretsiz Günlük &amp; Radar</span>
+              <span>{t.premiumPage.cardFreeFeatures}</span>
               <span className={profile?.isPremium ? 'text-[#F59E0B] font-bold' : 'font-bold'}>
-                {profile?.isPremium ? 'Mühür Aktif' : 'Kulüp: Davetiyle Yükselir'}
+                {profile?.isPremium ? t.premiumPage.cardSealActive : t.premiumPage.cardUpgradeByInvite}
               </span>
             </div>
           </div>
@@ -229,11 +182,11 @@ export default function PremiumPage() {
         <section aria-labelledby="perks-heading" className="space-y-6">
           <div className="flex items-center justify-between border-b-2  border-[#404040] pb-3">
             <h2 id="perks-heading" className="text-xl sm:text-2xl font-black uppercase  text-[#FAFAFA] font-sans">
-              KULÜP AYRICALIKLARI
+              {t.premiumPage.perksHeading}
             </h2>
             <span className="text-xs font-mono font-bold  text-[#EF4444] uppercase flex items-center gap-1">
               <MasterpieceLaurelIcon size={14} className=" text-[#EF4444]" />
-              <span>SADECE GERÇEK OLANLAR</span>
+              <span>{t.premiumPage.perksBadge}</span>
             </span>
           </div>
 
@@ -265,7 +218,7 @@ export default function PremiumPage() {
           <div className="flex items-center gap-2 border-b-2  border-[#404040] pb-3">
             <HelpCircle className="w-4 h-4  text-[#EF4444]" />
             <h2 id="faq-heading" className="text-base sm:text-lg font-black uppercase  text-[#FAFAFA] font-sans">
-              SIKÇA SORULAN SORULAR & ŞEFFAFLIK
+              {t.premiumPage.faqHeading}
             </h2>
           </div>
 

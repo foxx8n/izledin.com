@@ -424,43 +424,43 @@ export function Navbar({
           MOBILE / TABLET LAYOUT  (< lg / < 1024px)
           Sticky top header — inner content hidden on desktop via lg:hidden
       ════════════════════════════════════════════════════════════════════════ */}
-      <header className="sticky top-0 z-50 w-full  bg-[#0A0A0A]  text-[#FAFAFA] border-b-4  border-[#262626]  shadow-[0px_4px_0px_#000000] transition-colors duration-150">
+      <header className="sticky top-0 z-50 w-full max-w-full overflow-x-clip bg-[#0A0A0A] text-[#FAFAFA] border-b-4 border-[#262626] shadow-[0px_4px_0px_#000000] transition-colors duration-150">
         {/* Announcement banners — always visible on ALL breakpoints */}
         <AnnouncementBanners />
 
         {/* Top bar inner — hidden on desktop; sidebar takes over */}
-        <div className="lg:hidden max-w-7xl mx-auto px-2 sm:px-6 h-20 flex items-center justify-between gap-1 sm:gap-4">
+        <div className="lg:hidden max-w-7xl mx-auto px-2 sm:px-4 h-16 sm:h-20 flex items-center justify-between gap-1 sm:gap-3">
           {/* 1. Left Zone: Retro Masthead Brand */}
-          <div className="flex items-center justify-start shrink-0">
+          <div className="flex items-center justify-start min-w-0 shrink">
             <Link
-              href="/"
-              className="flex items-center gap-1.5 sm:gap-3 group"
+              href={href("/")}
+              className="flex items-center gap-1.5 sm:gap-2.5 group"
             >
               <CinemaLogoMark
-                size={24}
-                className="transition-transform group-hover:rotate-6 group-hover:scale-105 shrink-0 sm:w-[32px] sm:h-[32px]"
+                size={22}
+                className="transition-transform group-hover:rotate-6 group-hover:scale-105 shrink-0 sm:w-[28px] sm:h-[28px]"
               />
-              <div className="flex flex-col">
+              <div className="flex flex-col min-w-0">
                 <span
-                  className="text-[16px] sm:text-[22px] md:text-3xl font-black tracking-tight  text-[#FAFAFA] group-hover:text-[#DC2626] transition-colors leading-none uppercase font-sans"
+                  className="text-[17px] sm:text-[22px] md:text-3xl font-black tracking-tight text-[#FAFAFA] group-hover:text-[#DC2626] transition-colors leading-none uppercase font-sans truncate"
                   style={{ letterSpacing: "-0.04em" }}
                 >
                   IZLEDIN
-                  <span className=" text-[#FF5555] drop-shadow-[0_0_8px_rgba(220,38,38,0.7)]">
+                  <span className="text-[#FF5555] drop-shadow-[0_0_8px_rgba(220,38,38,0.7)]">
                     .COM
                   </span>
                 </span>
-                <span className="text-[8px] sm:text-[10px] uppercase font-mono tracking-widest  text-[#A3A3A3] -mt-0.5">
-                  Sosyal Sinema Kulübü
+                <span className="text-[8px] sm:text-[10px] uppercase font-mono tracking-widest text-[#A3A3A3] -mt-0.5 truncate">
+                  {locale === "en" ? "Social Cinema Club" : "Sosyal Sinema Kulübü"}
                 </span>
               </div>
             </Link>
           </div>
 
           {/* 2. Right Zone: Compact Action Tools */}
-          <div className="flex items-center justify-end gap-1 sm:gap-2.5 shrink-0">
+          <div className="flex items-center justify-end gap-1 sm:gap-2 shrink-0">
             {/* Language Switcher (TR | EN) */}
-            <div className="flex items-center border-2 border-[#262626] bg-[#171717] p-0.5 text-[10px] font-mono font-black shrink-0 min-h-[36px] sm:min-h-[38px]">
+            <div className="flex items-center border border-[#262626] bg-[#171717] p-0.5 text-[10px] font-mono font-black shrink-0 min-h-[34px] sm:min-h-[38px]">
               <button
                 type="button"
                 onClick={() => setLocale("tr")}
@@ -490,7 +490,7 @@ export function Navbar({
             {/* Quick Search Trigger */}
             <button
               onClick={handleOpenSearch}
-              className="flex items-center gap-2 px-2 sm:px-3 py-2 text-xs font-mono  text-[#A3A3A3]  bg-[#171717]  hover:bg-[#262626] border-2  border-[#262626]  hover:border-[#DC2626] transition-all cursor-pointer  shadow-[2px_2px_0px_#000000] min-h-[36px] sm:min-h-[38px]"
+              className="flex items-center justify-center p-2 text-xs font-mono text-[#A3A3A3] bg-[#171717] hover:bg-[#262626] border-2 border-[#262626] hover:border-[#DC2626] transition-all cursor-pointer shadow-[2px_2px_0px_#000000] min-w-[34px] sm:min-w-[38px] min-h-[34px] sm:min-h-[38px]"
               title={t.common.search}
               aria-label={t.common.search}
             >
@@ -498,25 +498,22 @@ export function Navbar({
                 size={14}
                 className="text-[#DC2626] shrink-0"
               />
-              <span className="hidden xl:inline truncate max-w-[70px]">
-                {t.common.search}...
-              </span>
             </button>
 
             {/* izledin+ Membership Badge Trigger */}
             <button
               onClick={handleOpenPremium}
-              className="hidden md:flex items-center gap-1.5 px-2.5 py-2  bg-[#171717]  hover:bg-[#262626] text-[#DC2626]  hover:text-[#EF4444] text-xs font-black uppercase font-mono tracking-wider border-2  border-[#DC2626]/50 hover:border-[#DC2626]  shadow-[2px_2px_0px_#000000] transition-all cursor-pointer min-h-[36px] sm:min-h-[38px]"
+              className="hidden md:flex items-center gap-1.5 px-2.5 py-2 bg-[#171717] hover:bg-[#262626] text-[#DC2626] hover:text-[#EF4444] text-xs font-black uppercase font-mono tracking-wider border-2 border-[#DC2626]/50 hover:border-[#DC2626] shadow-[2px_2px_0px_#000000] transition-all cursor-pointer min-h-[36px] sm:min-h-[38px]"
               aria-label="izledin+ Kulüp Üyeliği"
             >
               <CinemaPlusPassIcon size={14} className="text-[#DC2626]" />
               <span>izledin+</span>
             </button>
 
-            {/* Stamped Action Button (İzledim / QuickLog) */}
+            {/* Stamped Action Button (İzledim / QuickLog) - hidden on small mobile because bottom bar has floating QuickLog */}
             <button
               onClick={handleOpenQuickLog}
-              className="flex items-center gap-1.5 px-2 sm:px-3 py-2 bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-black tracking-wider uppercase font-mono border-2 border-[#0A0A0A]  shadow-[2px_2px_0px_#000000]  hover:shadow-[1px_1px_0px_#000000] hover:translate-x-[1px] hover:translate-y-[1px] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer min-h-[36px] sm:min-h-[38px]"
+              className="hidden sm:flex items-center gap-1.5 px-2 sm:px-3 py-2 bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-black tracking-wider uppercase font-mono border-2 border-[#0A0A0A] shadow-[2px_2px_0px_#000000] hover:shadow-[1px_1px_0px_#000000] hover:translate-x-[1px] hover:translate-y-[1px] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer min-h-[36px] sm:min-h-[38px]"
               aria-label={t.nav.quickLog}
               title={t.nav.quickLog}
             >
@@ -530,7 +527,7 @@ export function Navbar({
                 {/* Inbox / Gelen Kutusu Trigger */}
                 <button
                   onClick={handleOpenInbox}
-                  className="relative p-1.5 sm:p-2  bg-[#171717]  hover:bg-[#262626]  text-[#FAFAFA] border-2  border-[#262626] hover:border-[#DC2626] transition-all cursor-pointer flex items-center justify-center min-w-[34px] sm:min-w-[38px] min-h-[34px] sm:min-h-[38px]  shadow-[2px_2px_0px_#000000]"
+                  className="relative p-1.5 sm:p-2 bg-[#171717] hover:bg-[#262626] text-[#FAFAFA] border-2 border-[#262626] hover:border-[#DC2626] transition-all cursor-pointer flex items-center justify-center min-w-[34px] sm:min-w-[38px] min-h-[34px] sm:min-h-[38px] shadow-[2px_2px_0px_#000000]"
                   title="Gelen Kutusu & Eşleşme İstekleri"
                   aria-label="Gelen Kutusu & Eşleşme İstekleri"
                 >
@@ -545,7 +542,7 @@ export function Navbar({
                 <div className="relative" ref={userMenuRef}>
                   <button
                     onClick={() => setUserMenuOpen(!userMenuOpen)}
-                    className="flex items-center gap-1 p-0.5 sm:p-1  bg-[#171717]  hover:bg-[#262626] border-2  border-[#262626] hover:border-[#DC2626] transition-all cursor-pointer min-h-[36px] sm:min-h-[38px]  shadow-[2px_2px_0px_#000000]"
+                    className="flex items-center gap-1 p-0.5 sm:p-1 bg-[#171717] hover:bg-[#262626] border-2 border-[#262626] hover:border-[#DC2626] transition-all cursor-pointer min-h-[34px] sm:min-h-[38px] shadow-[2px_2px_0px_#000000]"
                     aria-label="Kullanıcı Profil Menüsü"
                   >
                     <img
@@ -557,22 +554,22 @@ export function Navbar({
                       decoding="async"
                       className="w-7 h-7 object-cover border border-[#0A0A0A] bg-black shrink-0"
                     />
-                    <span className="hidden xl:inline text-xs font-black  text-[#FAFAFA] uppercase font-mono max-w-[80px] truncate">
+                    <span className="hidden xl:inline text-xs font-black text-[#FAFAFA] uppercase font-mono max-w-[80px] truncate">
                       {displayName.split(" ")[0]}
                     </span>
                     <ChevronDown
-                      className={`w-3 h-3  text-[#A3A3A3] transition-transform ${userMenuOpen ? "rotate-180" : ""}`}
+                      className={`w-3 h-3 text-[#A3A3A3] transition-transform ${userMenuOpen ? "rotate-180" : ""}`}
                     />
                   </button>
 
                   {/* Pinned User Dropdown Menu */}
                   {userMenuOpen && (
-                    <div className="absolute right-0 mt-3 w-64  bg-[#171717]  text-[#FAFAFA] border-2  border-[#404040] p-3  shadow-[6px_6px_0px_#000000] z-50 animate-in fade-in zoom-in-95 duration-150">
-                      <div className="p-2 border-b-2  border-[#404040] mb-2 font-mono">
+                    <div className="absolute right-0 mt-3 w-64 bg-[#171717] text-[#FAFAFA] border-2 border-[#404040] p-3 shadow-[6px_6px_0px_#000000] z-50 animate-in fade-in zoom-in-95 duration-150">
+                      <div className="p-2 border-b-2 border-[#404040] mb-2 font-mono">
                         <p className="text-xs font-black uppercase truncate">
                           {displayName}
                         </p>
-                        <p className="text-[11px]  text-[#A3A3A3] truncate">
+                        <p className="text-[11px] text-[#A3A3A3] truncate">
                           @{username}
                         </p>
                       </div>
@@ -586,31 +583,30 @@ export function Navbar({
               </div>
             ) : isLoading ? (
               <div className="flex items-center gap-1.5">
-                <div className="w-[38px] h-[38px]  bg-[#171717] border-2  border-[#262626]  shadow-[2px_2px_0px_#000000] shrink-0 animate-pulse" />
-                <div className="w-[38px] h-[38px]  bg-[#171717] border-2  border-[#262626]  shadow-[2px_2px_0px_#000000] shrink-0 animate-pulse" />
+                <div className="w-[34px] sm:w-[38px] h-[34px] sm:h-[38px] bg-[#171717] border-2 border-[#262626] shadow-[2px_2px_0px_#000000] shrink-0 animate-pulse" />
               </div>
             ) : (
               <button
                 onClick={handleOpenAuth}
-                className="flex items-center gap-1.5 px-3.5 py-2  bg-[#FAFAFA]  hover:bg-[#F4F4F5]  text-[#0A0A0A] text-xs font-black uppercase font-mono border-2 border-[#0A0A0A]  shadow-[2px_2px_0px_#000000] cursor-pointer transition-all min-h-[40px]"
+                className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-[#FAFAFA] hover:bg-[#F4F4F5] text-[#0A0A0A] text-xs font-black uppercase font-mono border-2 border-[#0A0A0A] shadow-[2px_2px_0px_#000000] cursor-pointer transition-all min-h-[34px] sm:min-h-[40px]"
               >
                 <LogIn className="w-3.5 h-3.5 text-[#DC2626] stroke-[3]" />
-                <span className="hidden sm:inline">GİRİŞ YAP</span>
-                <span className="sm:hidden">GİRİŞ</span>
+                <span className="hidden sm:inline">{locale === 'en' ? 'SIGN IN' : 'GİRİŞ YAP'}</span>
+                <span className="sm:hidden">{locale === 'en' ? 'LOGIN' : 'GİRİŞ'}</span>
               </button>
             )}
           </div>
         </div>
 
         {/* Tactile Mobile Bottom Bar (Thumb-Zone Ergonomics with 48px+ Touch Targets) */}
-        <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40  bg-[#0A0A0A]  text-[#FAFAFA] border-t-4  border-[#262626] px-1 py-1 flex items-center justify-around  shadow-[0px_-4px_0px_#000000] font-mono pb-safe transition-colors duration-150">
+        <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-[#0A0A0A] text-[#FAFAFA] border-t-4 border-[#262626] px-0.5 py-1 flex items-center justify-around shadow-[0px_-4px_0px_#000000] font-mono pb-safe transition-colors duration-150">
           {/* Perde — front door deck */}
           <Link
             href={href("/")}
-            className={`flex-1 min-h-[48px] min-w-[48px] flex flex-col items-center justify-center gap-1 px-1 text-[10px] font-black uppercase transition-all ${
+            className={`flex-1 min-h-[48px] min-w-0 max-w-[70px] flex flex-col items-center justify-center gap-0.5 sm:gap-1 px-0.5 text-[9px] sm:text-[10px] font-black uppercase transition-all ${
               pathname === href("/")
-                ? " text-[#FF5555]  bg-[#171717] border  border-[#404040]"
-                : " text-[#D4D4D4]  hover:text-[#FAFAFA]"
+                ? " text-[#FF5555] bg-[#171717] border border-[#404040]"
+                : " text-[#D4D4D4] hover:text-[#FAFAFA]"
             }`}
           >
             <FilmReelIcon
@@ -621,16 +617,16 @@ export function Navbar({
                   : " text-[#D4D4D4]"
               }
             />
-            <span>{t.home.deckTitle}</span>
+            <span className="truncate max-w-full">{t.home.deckTitle}</span>
           </Link>
 
           {/* İzdaşlar */}
           <Link
             href={href("/matches")}
-            className={`flex-1 min-h-[48px] min-w-[48px] relative flex flex-col items-center justify-center gap-1 px-1 text-[10px] font-black uppercase transition-all ${
+            className={`flex-1 min-h-[48px] min-w-0 max-w-[70px] relative flex flex-col items-center justify-center gap-0.5 sm:gap-1 px-0.5 text-[9px] sm:text-[10px] font-black uppercase transition-all ${
               pathname === href("/matches")
-                ? " text-[#FF5555]  bg-[#171717] border  border-[#404040]"
-                : " text-[#D4D4D4]  hover:text-[#FAFAFA]"
+                ? " text-[#FF5555] bg-[#171717] border border-[#404040]"
+                : " text-[#D4D4D4] hover:text-[#FAFAFA]"
             }`}
           >
             <CinemaFrequencyIcon
@@ -641,14 +637,14 @@ export function Navbar({
                   : " text-[#D4D4D4]"
               }
             />
-            <span>{locale === 'tr' ? "İZDAŞ" : "RADAR"}</span>
+            <span className="truncate max-w-full">{locale === 'tr' ? "İZDAŞ" : "RADAR"}</span>
           </Link>
 
           {/* Center Floating Quick Log Action Button */}
-          <div className="flex-1 flex items-center justify-center">
+          <div className="flex-1 min-w-0 max-w-[56px] flex items-center justify-center">
             <button
               onClick={handleOpenQuickLog}
-              className="flex items-center justify-center -mt-6 w-12 h-12 bg-[#DC2626] hover:bg-[#B91C1C] text-white border-2 border-[#0A0A0A]  shadow-[2px_2px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer rounded-none"
+              className="flex items-center justify-center -mt-6 w-12 h-12 bg-[#DC2626] hover:bg-[#B91C1C] text-white border-2 border-[#0A0A0A] shadow-[2px_2px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer rounded-none"
               title={t.nav.quickLog}
               aria-label={t.nav.quickLog}
             >
@@ -659,10 +655,10 @@ export function Navbar({
           {/* Keşif — catalog showcase */}
           <Link
             href={href("/kesif")}
-            className={`flex-1 min-h-[48px] min-w-[48px] flex flex-col items-center justify-center gap-1 px-1 text-[10px] font-black uppercase transition-all ${
+            className={`flex-1 min-h-[48px] min-w-0 max-w-[70px] flex flex-col items-center justify-center gap-0.5 sm:gap-1 px-0.5 text-[9px] sm:text-[10px] font-black uppercase transition-all ${
               pathname === href("/kesif")
-                ? " text-[#FF5555]  bg-[#171717] border  border-[#404040]"
-                : " text-[#D4D4D4]  hover:text-[#FAFAFA]"
+                ? " text-[#FF5555] bg-[#171717] border border-[#404040]"
+                : " text-[#D4D4D4] hover:text-[#FAFAFA]"
             }`}
           >
             <CinemaSearchLensIcon
@@ -673,16 +669,16 @@ export function Navbar({
                   : " text-[#D4D4D4]"
               }
             />
-            <span>{locale === 'tr' ? "KEŞİF" : "DISCOVER"}</span>
+            <span className="truncate max-w-full">{locale === 'tr' ? "KEŞİF" : "DISCOVER"}</span>
           </Link>
 
           {/* Günlük */}
           <Link
             href={href("/diary")}
-            className={`flex-1 min-h-[48px] min-w-[48px] flex flex-col items-center justify-center gap-1 px-1 text-[10px] font-black uppercase transition-all ${
+            className={`flex-1 min-h-[48px] min-w-0 max-w-[70px] flex flex-col items-center justify-center gap-0.5 sm:gap-1 px-0.5 text-[9px] sm:text-[10px] font-black uppercase transition-all ${
               pathname === href("/diary")
-                ? " text-[#FF5555]  bg-[#171717] border  border-[#404040]"
-                : " text-[#D4D4D4]  hover:text-[#FAFAFA]"
+                ? " text-[#FF5555] bg-[#171717] border border-[#404040]"
+                : " text-[#D4D4D4] hover:text-[#FAFAFA]"
             }`}
           >
             <FilmStripIcon
@@ -693,7 +689,7 @@ export function Navbar({
                   : " text-[#D4D4D4]"
               }
             />
-            <span>{locale === 'tr' ? "GÜNLÜK" : "DIARY"}</span>
+            <span className="truncate max-w-full">{locale === 'tr' ? "GÜNLÜK" : "DIARY"}</span>
           </Link>
 
           {/* Profil / Giriş */}
@@ -705,10 +701,10 @@ export function Navbar({
                 handleOpenAuth();
               }
             }}
-            className={`flex-1 min-h-[48px] min-w-[48px] relative flex flex-col items-center justify-center gap-1 px-1 text-[10px] font-black uppercase transition-all ${
+            className={`flex-1 min-h-[48px] min-w-0 max-w-[70px] relative flex flex-col items-center justify-center gap-0.5 sm:gap-1 px-0.5 text-[9px] sm:text-[10px] font-black uppercase transition-all ${
               pathname === href("/profile")
-                ? " text-[#FF5555]  bg-[#171717] border  border-[#404040]"
-                : " text-[#D4D4D4]  hover:text-[#FAFAFA]"
+                ? " text-[#FF5555] bg-[#171717] border border-[#404040]"
+                : " text-[#D4D4D4] hover:text-[#FAFAFA]"
             }`}
           >
             <CinemaUserIcon
@@ -719,7 +715,7 @@ export function Navbar({
                   : " text-[#A3A3A3]"
               }
             />
-            <span>{user ? (locale === 'tr' ? "PROFİL" : "PROFILE") : (locale === 'tr' ? "GİRİŞ" : "LOGIN")}</span>
+            <span className="truncate max-w-full">{user ? (locale === 'tr' ? "PROFİL" : "PROFILE") : (locale === 'tr' ? "GİRİŞ" : "LOGIN")}</span>
             {user && unreadCount > 0 && (
               <span className="absolute top-1 right-2 w-2 h-2 rounded-full bg-[#DC2626]" />
             )}

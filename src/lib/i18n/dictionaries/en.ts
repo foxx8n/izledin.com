@@ -488,4 +488,71 @@ export const en: TranslationDictionary = {
     detailNotFound: 'Details not found.',
     authPromptButton: 'SIGN IN / CREATE ACCOUNT',
   },
+  premiumPage: {
+    heroBadge: 'INDEPENDENT CINEPHILE CLUB',
+    title: 'izledin+',
+    subtitle: 'Club membership: gold seal, radar & feed priority, patronage for indie cinema. Core platform is 100% free and ad-free for everyone.',
+    activeMemberStamp: 'Active club member — your seal shines on your profile',
+    invitationOnlyStamp: 'Membership granted by invitation & merit — not for sale',
+    contactCta: 'LEARN ABOUT THE CLUB',
+    freeFeaturesNotice: 'Diary • Ratings • Radar • Chat — free for all',
+    cardHeading: '35MM CINEPHILE CLUB CARD',
+    cardDynamicNotice: '(populates with your data once signed in)',
+    cardOfficialCanon: 'EST. \'26 • OFFICIAL CANON',
+    cardPassportTitle: '35MM CELLULOID PASSPORT',
+    cardMemberSince: 'MEMBER SINCE',
+    cardAwaitingRegistration: 'AWAITING REGISTRATION',
+    cardClubMember: '★ CLUB (IZLEDIN+) MEMBER',
+    cardStandardMember: 'STANDARD MEMBER',
+    cardFreeFeatures: 'Free Diary & Radar',
+    cardSealActive: 'Seal Active',
+    cardUpgradeByInvite: 'Club: Upgrades by Invite',
+    perksHeading: 'CLUB PERKS & BENEFITS',
+    perksBadge: 'AUTHENTIC PRIVILEGES ONLY',
+    perks: [
+      {
+        title: 'Gold Club Seal',
+        desc: 'The İzledin+ VIP badge visible on your profile and typewriter diary logs. Everyone visiting your page sees your club membership.',
+      },
+      {
+        title: 'Radar Priority Ranking',
+        desc: 'Club members get priority placement in the Film Mates discovery radar — your profile is spotted first by potential mates.',
+      },
+      {
+        title: 'Feed Visibility Priority',
+        desc: 'A measured boost in community feed algorithmic ranking gives your diary reviews and logs greater spotlight.',
+      },
+      {
+        title: 'Supporting Independent Cinema',
+        desc: 'Club patronage directly aids independent short film funds and local arthouse cinephile screenings.',
+      },
+      {
+        title: 'Early Access to New Features',
+        desc: 'Experimental modules and cutting-edge cinema features are unlocked for club members before general release.',
+      },
+      {
+        title: 'Free for Everyone Anyway',
+        desc: 'Ad-free experience, unlimited logs, ratings, Film Mates radar, and messaging are 100% free for everyone — never paywalled.',
+      },
+    ],
+    faqHeading: 'FREQUENTLY ASKED QUESTIONS & TRANSPARENCY',
+    faqs: [
+      {
+        q: 'How can I join the İzledin+ club membership?',
+        a: 'Membership is currently not for sale; it is granted via invitation and platform contributions by administration. Reach out through our contact page to introduce yourself.',
+      },
+      {
+        q: 'Does the core platform remain free?',
+        a: 'Yes. The typewriter diary, rating system, Film Mates radar, and messaging remain free and ad-free for all cinephiles. Club membership adds status and priority on top.',
+      },
+      {
+        q: 'How is my privacy protected?',
+        a: 'Your exact birth date is never shown to other members — only your calculated age. Administrative records are strictly protected. Messages remain strictly between you and your confirmed matches.',
+      },
+      {
+        q: 'When does the official club card arrive?',
+        a: 'The 35mm physical pass concept displayed here is in our pipeline as a shareable digital cinephile passport, dynamically generated from your authentic profile stats.',
+      },
+    ],
+  },
 };

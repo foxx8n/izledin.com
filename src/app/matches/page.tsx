@@ -93,6 +93,29 @@ export default function MatchesPage() {
   // Stale-response guard for rapid profile changes / refetches
   const matchesFetchSeqRef = React.useRef(0);
 
+  const cacheKey = user ? `izledin_matches_${user.id}_all_v2` : null;
+
+  const removeMatchFromCache = React.useCallback((matchId: string) => {
+    if (!cacheKey) return;
+    try {
+      const cached = JSON.parse(localStorage.getItem(cacheKey) || '[]');
+      if (Array.isArray(cached)) {
+        const next = cached.filter((m: any) => m.id !== matchId);
+        localStorage.setItem(cacheKey, JSON.stringify(next));
+      }
+    } catch {}
+  }, [cacheKey]);
+
+  const restoreMatchToCache = React.useCallback((match: MovieMateMatch) => {
+    if (!cacheKey) return;
+    try {
+      const cached = JSON.parse(localStorage.getItem(cacheKey) || '[]');
+      if (Array.isArray(cached) && !cached.some((m: any) => m.id === match.id)) {
+        localStorage.setItem(cacheKey, JSON.stringify([match, ...cached]));
+      }
+    } catch {}
+  }, [cacheKey]);
+
   // S8: if the viewer loses dating visibility (intent change), fall back out
   // of the hidden Flört tab.
   useEffect(() => {
@@ -108,7 +131,6 @@ export default function MatchesPage() {
       // wrong outside their own tab. The client-side filter handles tabs.
       // _v2: S12 scoring changed (taste-vector term + resurface rows) — old
       // cached payloads must never paint over fresh-shape results.
-      const cacheKey = user ? `izledin_matches_${user.id}_all_v2` : null;
 
       // Stale-while-revalidate: paint the cached radar instantly so there is no
       // spinner flash, but ALWAYS recompute below so taste changes propagate
@@ -251,13 +273,19 @@ export default function MatchesPage() {
     );
 
     if (!result.ok || !result.matchId) {
-      // Sticky rejection / S8 daily cap: calm Turkish feedback, no dead-end chat.
+      // Sticky rejection / S8 daily cap: calm feedback, no dead-end chat.
       showDeckNotice(
         result.rejected
-          ? `@${match.user.username} bu eşleşmeye daha önce pas geçmiş. Yeni bir istek gönderilemedi.`
+          ? (locale === 'en'
+            ? `@${match.user.username} passed on this match earlier. Cannot send request.`
+            : `@${match.user.username} bu eşleşmeye daha önce pas geçmiş. Yeni bir istek gönderilemedi.`)
           : result.limitReached
-            ? 'Günlük izdaş isteği sınırına ulaştın. Yarın tekrar dene.'
-            : 'İstek gönderilemedi. Tekrar dene.'
+            ? (locale === 'en'
+              ? 'Reached daily Film Mates request limit (25). Try again tomorrow.'
+              : 'Günlük izdaş isteği sınırına ulaştın. Yarın tekrar dene.')
+            : (locale === 'en'
+              ? 'Request could not be sent. Please try again.'
+              : 'İstek gönderilemedi. Tekrar dene.')
       );
       return;
     }
@@ -265,6 +293,10 @@ export default function MatchesPage() {
     match.id = result.matchId;
     match.status = 'pending';
     match.initiatorId = user.id;
+
+    // Remove from radar pool and local cache once requested
+    setMatches((prev) => prev.filter((m) => m.id !== match.id));
+    removeMatchFromCache(match.id);
 
     setActiveChatMatch(match);
     setIsChatOpen(true);
@@ -291,15 +323,29 @@ export default function MatchesPage() {
     if (!result.ok || !result.matchId) {
       showDeckNotice(
         result.rejected
-          ? `@${match.user.username} bu eşleşmeye daha önce pas geçmiş. BİLET gönderilemedi.`
+          ? (locale === 'en'
+            ? `@${match.user.username} passed on this match earlier. Ticket could not be sent.`
+            : `@${match.user.username} bu eşleşmeye daha önce pas geçmiş. BİLET gönderilemedi.`)
           : result.limitReached
-            ? 'Günlük BİLET sınırına ulaştın (1). Kulüp üyeliği ile sınırsız.'
-            : 'BİLET gönderilemedi. Tekrar dene.'
+            ? (locale === 'en'
+              ? 'Reached daily TICKET limit (1). Unlimited with Club membership.'
+              : 'Günlük BİLET sınırına ulaştın (1). Kulüp üyeliği ile sınırsız.')
+            : (locale === 'en'
+              ? 'Ticket could not be sent. Please try again.'
+              : 'BİLET gönderilemedi. Tekrar dene.')
       );
       return;
     }
 
-    showDeckNotice(`BİLET gönderildi — @${match.user.username} onayladığında sohbet açılır.`);
+    // Remove from radar pool and local cache once bilet sent
+    setMatches((prev) => prev.filter((m) => m.id !== match.id));
+    removeMatchFromCache(match.id);
+
+    showDeckNotice(
+      locale === 'en'
+        ? `TICKET sent — chat will unlock when @${match.user.username} approves.`
+        : `BİLET gönderildi — @${match.user.username} onayladığında sohbet açılır.`
+    );
   };
 
   // ── Mobile swipe stack (< lg): the directory rendered as a single-card
@@ -308,6 +354,7 @@ export default function MatchesPage() {
   // pointer lives. Same S3 delayed-commit machinery as the home deck.
   const stackCommitPass = async (match: MovieMateMatch) => {
     if (!user || !match.user?.id) return;
+    removeMatchFromCache(match.id);
     await createOrUpdateMatch(
       user.id,
       match.user.id,
@@ -322,13 +369,16 @@ export default function MatchesPage() {
       if (prev.some((m) => m.id === entry.match.id)) return prev;
       const next = [...prev];
       next.splice(Math.min(entry.index, next.length), 0, entry.match);
+      restoreMatchToCache(entry.match);
       return next;
     });
   };
   const stackDeck = useSwipeDeck({
     onLikeCommit: (m) => handleLikeMatch(m),
-    onPassGesture: (m) =>
-      setMatches((prev) => prev.filter((x) => x.id !== m.id)),
+    onPassGesture: (m) => {
+      setMatches((prev) => prev.filter((x) => x.id !== m.id));
+      removeMatchFromCache(m.id);
+    },
     onPassCommit: (m) => stackCommitPass(m),
     onPassUndo: reinsertStackCard,
   });
@@ -362,51 +412,86 @@ export default function MatchesPage() {
             r.originalTitle?.toLocaleLowerCase('tr-TR') === normalized,
         ) || null;
       if (!realItem) {
-        showDeckNotice(`"${title}" için detay bulunamadı.`);
+        showDeckNotice(
+          locale === 'en'
+            ? `Details not found for "${title}".`
+            : `"${title}" için detay bulunamadı.`
+        );
         return;
       }
       setDetailMediaItem(realItem);
       setIsMediaDetailOpen(true);
     } catch (err) {
       console.warn('handleMovieClick failed:', err);
-      showDeckNotice(`"${title}" için detay bulunamadı.`);
+      showDeckNotice(
+        locale === 'en'
+          ? `Details not found for "${title}".`
+          : `"${title}" için detay bulunamadı.`
+      );
     }
   };
 
-  // Per-match undo timers — a single shared ref silently dropped every pass
-  // except the most recent one when users passed several cards in a row.
+  // Per-match undo timers and pending matches for reliable persistence
   const gridUndoTimersRef = React.useRef<Map<string, NodeJS.Timeout>>(new Map());
+  const pendingPassMatchesRef = React.useRef<Map<string, MovieMateMatch>>(new Map());
+
+  const commitPassDirect = React.useCallback(async (match: MovieMateMatch) => {
+    if (!user || !match.user?.id) return;
+    await createOrUpdateMatch(
+      user.id,
+      match.user.id,
+      'passed',
+      match.compatibilityScore,
+      match.sharedGenres,
+      match.sharedTitles
+    );
+  }, [user]);
+
+  // Flush any pending passes on unmount or beforeunload so choices always reach backend
+  useEffect(() => {
+    const flushPasses = () => {
+      pendingPassMatchesRef.current.forEach((match) => {
+        commitPassDirect(match);
+      });
+      pendingPassMatchesRef.current.clear();
+      gridUndoTimersRef.current.forEach((t) => clearTimeout(t));
+      gridUndoTimersRef.current.clear();
+    };
+    window.addEventListener('beforeunload', flushPasses);
+    return () => {
+      window.removeEventListener('beforeunload', flushPasses);
+      flushPasses();
+    };
+  }, [commitPassDirect]);
 
   const handleGridPass = (match: MovieMateMatch) => {
     setMatches((prev) => prev.filter((m) => m.id !== match.id));
+    removeMatchFromCache(match.id);
     setGridUndoToast(match);
+    pendingPassMatchesRef.current.set(match.id, match);
+
     const existingTimer = gridUndoTimersRef.current.get(match.id);
     if (existingTimer) clearTimeout(existingTimer);
     const timer = setTimeout(() => {
       gridUndoTimersRef.current.delete(match.id);
+      pendingPassMatchesRef.current.delete(match.id);
       setGridUndoToast((current) => (current?.id === match.id ? null : current));
-      if (user && !match.id.startsWith('prospective_')) {
-        createOrUpdateMatch(
-          user.id,
-          match.user.id,
-          'passed',
-          match.compatibilityScore,
-          match.sharedGenres,
-          match.sharedTitles
-        );
-      }
-    }, 4000);
+      commitPassDirect(match);
+    }, 2500);
     gridUndoTimersRef.current.set(match.id, timer);
   };
 
   const handleGridUndo = () => {
     if (!gridUndoToast) return;
-    const timer = gridUndoTimersRef.current.get(gridUndoToast.id);
+    const match = gridUndoToast;
+    const timer = gridUndoTimersRef.current.get(match.id);
     if (timer) {
       clearTimeout(timer);
-      gridUndoTimersRef.current.delete(gridUndoToast.id);
+      gridUndoTimersRef.current.delete(match.id);
     }
-    setMatches((prev) => [gridUndoToast, ...prev]);
+    pendingPassMatchesRef.current.delete(match.id);
+    setMatches((prev) => [match, ...prev]);
+    restoreMatchToCache(match);
     setGridUndoToast(null);
   };
 

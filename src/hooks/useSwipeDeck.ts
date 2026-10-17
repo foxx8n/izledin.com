@@ -36,6 +36,8 @@ export interface DeckHistoryEntry {
 interface PendingSwipe {
   timer: ReturnType<typeof setTimeout>;
   fired: boolean;
+  type: DeckSwipeType;
+  match: MovieMateMatch;
 }
 
 interface UseSwipeDeckParams {
@@ -70,12 +72,12 @@ export function useSwipeDeck({
   onPassGesture,
   onPassCommit,
   onPassUndo,
-  undoWindowMs = 4000,
+  undoWindowMs = 2500,
 }: UseSwipeDeckParams) {
   const [index, setIndex] = useState(0);
   const [history, setHistory] = useState<DeckHistoryEntry[]>([]);
 
-  const pendingRef = useRef(new Map<string, PendingSwipe>());
+  const pendingRef = useRef<Map<string, PendingSwipe>>(new Map());
 
   // Latest-callback refs: callers pass inline closures; timers must never
   // fire a stale one.
@@ -88,14 +90,33 @@ export function useSwipeDeck({
   passCommitRef.current = onPassCommit;
   passUndoRef.current = onPassUndo;
 
-  // Unmount hygiene: no stray timers outlive the deck.
-  useEffect(() => {
-    const pending = pendingRef.current;
-    return () => {
-      pending.forEach((p) => clearTimeout(p.timer));
-      pending.clear();
-    };
+  // Flush any pending swipe commits immediately (e.g. on unmount or beforeunload)
+  const flushPending = useCallback(() => {
+    pendingRef.current.forEach((pending) => {
+      if (!pending.fired) {
+        clearTimeout(pending.timer);
+        pending.fired = true;
+        if (pending.type === "like") {
+          likeRef.current(pending.match);
+        } else {
+          passCommitRef.current(pending.match);
+        }
+      }
+    });
+    pendingRef.current.clear();
   }, []);
+
+  // Flush on unmount and before page reload/navigation
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      flushPending();
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      flushPending();
+    };
+  }, [flushPending]);
 
   const registerSwipe = useCallback(
     (type: DeckSwipeType, match: MovieMateMatch, atIndex: number) => {
@@ -105,6 +126,8 @@ export function useSwipeDeck({
 
       const pending: PendingSwipe = {
         fired: false,
+        type,
+        match,
         timer: setTimeout(() => {
           pendingRef.current.delete(key);
           pending.fired = true;

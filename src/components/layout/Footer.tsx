@@ -33,12 +33,12 @@ export function Footer() {
   };
 
   return (
-    <footer className="w-full bg-[#0A0A0A] text-[#FAFAFA] border-t-2 border-[#262626] mt-12 font-mono transition-colors duration-150">
+    <footer className="w-full max-w-full overflow-hidden bg-[#0A0A0A] text-[#FAFAFA] border-t-2 border-[#262626] mt-12 font-mono transition-colors duration-150 pb-28 lg:pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-5">
         {/* Main Compact Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
           {/* Left Pane (Span 6): Brand + Quote Ticker Combined */}
-          <div className="lg:col-span-6 space-y-3">
+          <div className="lg:col-span-6 space-y-3 min-w-0">
             <div className="flex items-center gap-2.5">
               <Link
                 href={href("/")}
@@ -46,9 +46,9 @@ export function Footer() {
               >
                 <CinemaLogoMark
                   size={24}
-                  className="transition-transform group-hover:rotate-6 group-hover:scale-105"
+                  className="transition-transform group-hover:rotate-6 group-hover:scale-105 shrink-0"
                 />
-                <div className="flex items-baseline gap-1.5">
+                <div className="flex items-baseline gap-1.5 flex-wrap">
                   <span className="text-xl sm:text-2xl font-black tracking-tight text-[#FAFAFA] group-hover:text-[#DC2626] transition-colors leading-none uppercase font-sans">
                     IZLEDIN<span className="text-[#DC2626]">.COM</span>
                   </span>
@@ -59,12 +59,12 @@ export function Footer() {
               </Link>
             </div>
             {/* Compact Cinephile Quote Strip */}
-            <div className="bg-[#171717] border border-[#333333] p-3 shadow-[2px_2px_0px_#000000]">
+            <div className="bg-[#171717] border border-[#333333] p-3 shadow-[2px_2px_0px_#000000] overflow-hidden">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   {easterQuote && currentQuoteText ? (
                     <div className="space-y-2">
-                      <blockquote className="text-xs sm:text-sm text-[#FAFAFA] italic font-sans leading-snug border-l-2 border-[#DC2626] pl-2.5">
+                      <blockquote className="text-xs sm:text-sm text-[#FAFAFA] italic font-sans leading-snug border-l-2 border-[#DC2626] pl-2.5 break-words">
                         &ldquo;{currentQuoteText}&rdquo;
                       </blockquote>
                       <div className="flex items-center gap-1.5 text-[11px] text-[#A3A3A3] font-mono flex-wrap">
@@ -123,18 +123,18 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Right Pane (Span 6): 3 Tight Compact Link Columns */}
-          <div className="lg:col-span-6 grid grid-cols-3 gap-3 sm:gap-4 pt-1 lg:pt-0">
+          {/* Right Pane (Span 6): Responsive Link Columns */}
+          <div className="lg:col-span-6 grid grid-cols-2 sm:grid-cols-3 gap-4 lg:gap-4 pt-2 lg:pt-0">
             {/* Col 1: Keşif */}
-            <div className="space-y-1.5">
-              <span className="text-[10px] sm:text-[11px] font-black uppercase text-[#FAFAFA] tracking-wider block border-b border-[#333333] pb-1">
+            <div className="space-y-1.5 min-w-0">
+              <span className="text-[10px] sm:text-[11px] font-black uppercase text-[#FAFAFA] tracking-wider block border-b border-[#333333] pb-1 truncate">
                 {t.footer.discovery}
               </span>
               <ul className="space-y-0.5 text-xs text-[#D4D4D4]">
                 <li>
                   <Link
                     href={href("/")}
-                    className="hover:text-white transition-colors py-1 min-h-[32px] sm:min-h-[28px] flex items-center"
+                    className="hover:text-white transition-colors py-1 min-h-[32px] sm:min-h-[28px] flex items-center truncate"
                   >
                     {t.nav.discover}
                   </Link>
