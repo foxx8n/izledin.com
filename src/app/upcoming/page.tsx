@@ -45,16 +45,33 @@ import { AuthModal } from '@/components/auth/AuthModal';
 import { InboxModal } from '@/components/inbox/InboxModal';
 import { ChatModal } from '@/components/matches/ChatModal';
 import { useAuth } from '@/context/AuthContext';
+import { useTranslation, translateGenre, Locale } from '@/lib/i18n';
 
 import { getUpcomingReleases, formatTurkishReleaseDate, trDateToISO, STATIC_UPCOMING_CATALOG } from '@/lib/omdb';
 import { MediaItem, MovieMateMatch } from '@/types';
+
+function formatReleaseDate(dateStr?: string, year?: number, locale: Locale = 'tr'): string {
+  const iso = trDateToISO(dateStr);
+  if (iso) {
+    const [y, m, d] = iso.split('-').map(Number);
+    const dateObj = new Date(y, m - 1, d);
+    if (!isNaN(dateObj.getTime())) {
+      return dateObj.toLocaleDateString(locale === 'en' ? 'en-US' : 'tr-TR', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
+    }
+  }
+  return formatTurkishReleaseDate(dateStr, year);
+}
 
 // Helper to compute countdown & release status badge. A countdown is only
 // ever computed from a REAL full date (ISO or Turkish-formatted). Entries
 // whose date is genuinely unknown get an honest "Tarih belirsiz" state — no
 // mid-year approximation, no invented June-15 defaults feeding badges or
 // calendar exports.
-function getReleaseStatusBadge(dateStr?: string, year?: number): {
+function getReleaseStatusBadge(dateStr?: string, year?: number, locale: Locale = 'tr'): {
   label: string;
   badgeClass: string;
   iconType: 'now' | 'flame' | 'calendar' | 'star' | 'unknown';
@@ -80,7 +97,14 @@ function getReleaseStatusBadge(dateStr?: string, year?: number): {
   if (!targetDate) {
     if (year) {
       return {
-        label: year === 2026 ? '2026 VİZYONU' : `${year} PRÖMİYERİ`,
+        label:
+          locale === 'tr'
+            ? year === 2026
+              ? '2026 VİZYONU'
+              : `${year} PRÖMİYERİ`
+            : year === 2026
+              ? '2026 IN THEATERS'
+              : `${year} PREMIERE`,
         badgeClass: ' bg-[#262626] text-[#A3A3A3]  border-[#404040]',
         iconType: 'star',
         isUrgent: false,
@@ -89,7 +113,7 @@ function getReleaseStatusBadge(dateStr?: string, year?: number): {
       };
     }
     return {
-      label: 'TARİH BELİRSİZ',
+      label: locale === 'tr' ? 'TARİH BELİRSİZ' : 'DATE TBA',
       badgeClass: ' bg-[#262626] text-[#A3A3A3]  border-[#404040]',
       iconType: 'unknown',
       isUrgent: false,
@@ -103,7 +127,7 @@ function getReleaseStatusBadge(dateStr?: string, year?: number): {
 
   if (diffDays <= 0) {
     return {
-      label: 'ŞİMDİ VİZYONDA',
+      label: locale === 'tr' ? 'ŞİMDİ VİZYONDA' : 'NOW IN THEATERS',
       badgeClass: 'bg-[#DC2626] text-white border-[#DC2626]',
       iconType: 'now',
       isUrgent: true,
@@ -114,7 +138,7 @@ function getReleaseStatusBadge(dateStr?: string, year?: number): {
 
   if (diffDays <= 60) {
     return {
-      label: `${diffDays} GÜN KALDI`,
+      label: locale === 'tr' ? `${diffDays} GÜN KALDI` : `${diffDays} DAYS LEFT`,
       badgeClass: ' bg-[#EF4444] text-white  border-[#EF4444]',
       iconType: 'flame',
       isUrgent: true,
@@ -126,7 +150,7 @@ function getReleaseStatusBadge(dateStr?: string, year?: number): {
   if (diffDays <= 180) {
     const months = Math.ceil(diffDays / 30);
     return {
-      label: `~${months} AY KALDI`,
+      label: locale === 'tr' ? `~${months} AY KALDI` : `~${months} MONTHS LEFT`,
       badgeClass: 'bg-[#F59E0B] text-[#0A0A0A] border-[#F59E0B]',
       iconType: 'calendar',
       isUrgent: false,
@@ -137,7 +161,7 @@ function getReleaseStatusBadge(dateStr?: string, year?: number): {
 
   if (year === 2026) {
     return {
-      label: `2026 VİZYONU`,
+      label: locale === 'tr' ? '2026 VİZYONU' : '2026 IN THEATERS',
       badgeClass: ' bg-[#262626] text-[#FAFAFA]  border-[#404040]',
       iconType: 'star',
       isUrgent: false,
@@ -147,7 +171,14 @@ function getReleaseStatusBadge(dateStr?: string, year?: number): {
   }
 
   return {
-    label: year ? `${year} PRÖMİYERİ` : 'VİZYON TAKVİMİNDE',
+    label:
+      locale === 'tr'
+        ? year
+          ? `${year} PRÖMİYERİ`
+          : 'VİZYON TAKVİMİNDE'
+        : year
+          ? `${year} PREMIERE`
+          : 'ON CALENDAR',
     badgeClass: ' bg-[#262626] text-[#A3A3A3]  border-[#404040]',
     iconType: 'star',
     isUrgent: false,
@@ -209,6 +240,7 @@ function downloadICS(item: MediaItem) {
 }
 
 export default function UpcomingPage() {
+  const { t, locale } = useTranslation();
   const { user } = useAuth();
   const [upcomingItems, setUpcomingItems] = useState<MediaItem[]>(STATIC_UPCOMING_CATALOG);
   const [reminders, setReminders] = useState<string[]>([]);
@@ -255,13 +287,19 @@ export default function UpcomingPage() {
     let updated: string[];
     if (reminders.includes(id)) {
       updated = reminders.filter((r) => r !== id);
-      showToast(`"${title}" hatırlatıcısı kaldırıldı.`);
+      showToast(
+        locale === 'tr'
+          ? `"${title}" hatırlatıcısı kaldırıldı.`
+          : `"${title}" reminder removed.`,
+      );
     } else {
       updated = [...reminders, id];
       // Honest scope: reminders live in this browser's localStorage only —
       // no notification is ever delivered.
       showToast(
-        `"${title}" hatırlatıcısı bu cihaza kaydedildi (bildirim gönderilmez).`,
+        locale === 'tr'
+          ? `"${title}" hatırlatıcısı bu cihaza kaydedildi (bildirim gönderilmez).`
+          : `"${title}" reminder saved to this browser (no notification delivered).`,
       );
     }
     setReminders(updated);
@@ -275,13 +313,20 @@ export default function UpcomingPage() {
   const handleAddToCalendar = (item: MediaItem) => {
     const isoDate = trDateToISO(item.releaseDate);
     if (!isoDate) {
-      showToast(`"${item.title}" için vizyon tarihi henüz açıklanmadı.`);
+      showToast(
+        locale === 'tr'
+          ? `"${item.title}" için vizyon tarihi henüz açıklanmadı.`
+          : `Release date for "${item.title}" has not been announced yet.`,
+      );
       return;
     }
 
     const title = item.title;
-    const description = `${title} filminin Türkiye prömiyeri ve vizyon tarihi. izledin.com 35mm Sinema Takvimi.`;
-    const location = 'Sinema Salonu';
+    const description =
+      locale === 'tr'
+        ? `${title} filminin Türkiye prömiyeri ve vizyon tarihi. izledin.com 35mm Sinema Takvimi.`
+        : `Theatrical premiere and release date for ${title}. izledin.com 35mm Cinema Calendar.`;
+    const location = locale === 'tr' ? 'Sinema Salonu' : 'Movie Theater';
 
     const [year, month, day] = isoDate.split('-');
 
@@ -294,16 +339,28 @@ export default function UpcomingPage() {
     const isAndroid = typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent);
 
     if (isAndroid) {
-      const gCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title + ' Vizyon Prömiyeri')}&dates=${startDate}/${endDate}&details=${encodeURIComponent(description)}&location=${encodeURIComponent(location)}`;
+      const gCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title + (locale === 'tr' ? ' Vizyon Prömiyeri' : ' Theatrical Premiere'))}&dates=${startDate}/${endDate}&details=${encodeURIComponent(description)}&location=${encodeURIComponent(location)}`;
       window.open(gCalUrl, '_blank', 'noopener');
-      showToast(`"${item.title}" Android takviminize aktarılıyor...`);
+      showToast(
+        locale === 'tr'
+          ? `"${item.title}" Android takviminize aktarılıyor...`
+          : `Syncing "${item.title}" to Android calendar...`,
+      );
     } else if (isIOS) {
       downloadICS(item);
-      showToast(`"${item.title}" Apple Takvim'e aktarıldı!`);
+      showToast(
+        locale === 'tr'
+          ? `"${item.title}" Apple Takvim'e aktarıldı!`
+          : `"${item.title}" exported to Apple Calendar!`,
+      );
     } else {
-      const gCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title + ' Vizyon Prömiyeri')}&dates=${startDate}/${endDate}&details=${encodeURIComponent(description)}&location=${encodeURIComponent(location)}`;
+      const gCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title + (locale === 'tr' ? ' Vizyon Prömiyeri' : ' Theatrical Premiere'))}&dates=${startDate}/${endDate}&details=${encodeURIComponent(description)}&location=${encodeURIComponent(location)}`;
       window.open(gCalUrl, '_blank', 'noopener');
-      showToast(`"${item.title}" takviminize aktarılıyor...`);
+      showToast(
+        locale === 'tr'
+          ? `"${item.title}" takviminize aktarılıyor...`
+          : `Syncing "${item.title}" to calendar...`,
+      );
     }
   };
 
@@ -335,37 +392,37 @@ export default function UpcomingPage() {
     const groups = [
       {
         id: 'near',
-        title: 'ŞU AN VİZYONDA & ÖNÜMÜZDEKİ 60 GÜN',
-        subtitle: 'En Yakın Beyaz Perde Prömiyerleri',
-        badge: 'YAKIN VİZYON',
+        title: t.upcoming.sectionSoonTitle,
+        subtitle: t.upcoming.sectionSoonSubtitle,
+        badge: t.upcoming.sectionSoonBadge,
         items: [] as MediaItem[],
       },
       {
         id: 'summer',
-        title: '2026 YAZ & BLOCKBUSTER SEZONU',
-        subtitle: 'Haziran — Ağustos 2026 Prömiyerleri',
-        badge: 'YAZ SEZONU',
+        title: t.upcoming.sectionMidTitle,
+        subtitle: t.upcoming.sectionMidSubtitle,
+        badge: t.upcoming.sectionMidBadge,
         items: [] as MediaItem[],
       },
       {
         id: 'autumn',
-        title: '2026 SONBAHAR & KIŞ FESTİVALLERİ',
-        subtitle: 'Eylül — Aralık 2026 Festival ve Ödül Sezonu',
-        badge: 'FESTİVAL SEZONU',
+        title: t.upcoming.sectionLateTitle,
+        subtitle: t.upcoming.sectionLateSubtitle,
+        badge: t.upcoming.sectionLateBadge,
         items: [] as MediaItem[],
       },
       {
         id: 'horizon',
-        title: '2027 VE GELECEK SİNEMA UFUKLARI',
-        subtitle: 'Uzun Vadeli Beklenen Kült Projeler',
-        badge: '2027+',
+        title: t.upcoming.sectionFutureTitle,
+        subtitle: t.upcoming.sectionFutureSubtitle,
+        badge: t.upcoming.sectionFutureBadge,
         items: [] as MediaItem[],
       },
       {
         id: 'undated',
-        title: 'VİZYON TARİHİ BEKLENEN YAPIMLAR',
-        subtitle: 'Tarihi henüz açıklanmamış yapımlar — kesin gün açıklandığında takvime eklenebilir',
-        badge: 'TARİH BELİRSİZ',
+        title: t.upcoming.sectionUndatedTitle,
+        subtitle: t.upcoming.sectionUndatedSubtitle,
+        badge: t.upcoming.sectionUndatedBadge,
         items: [] as MediaItem[],
       },
     ];
@@ -373,7 +430,7 @@ export default function UpcomingPage() {
     filteredItems.forEach((item) => {
       // Dateless entries are grouped honestly instead of being dropped into a
       // season bucket derived from an invented mid-year date.
-      const status = getReleaseStatusBadge(item.releaseDate, item.year);
+      const status = getReleaseStatusBadge(item.releaseDate, item.year, locale);
       if (status.dateUnknown) {
         groups[4].items.push(item);
         return;
@@ -391,7 +448,7 @@ export default function UpcomingPage() {
     });
 
     return groups.filter((g) => g.items.length > 0);
-  }, [filteredItems]);
+  }, [filteredItems, t, locale]);
 
   return (
     <div className="min-h-screen with-sidebar flex flex-col bg-[#0A0A0A] text-[#FAFAFA] selection:bg-[#DC2626] selection:text-white font-mono">
@@ -426,28 +483,28 @@ export default function UpcomingPage() {
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full space-y-10">
         
         {/* Header Marquee Masthead */}
-        <header className="bg-[#0A0A0A] text-[#FAFAFA] border-2 sm:border-4  border-[#404040]  shadow-[8px_8px_0px_#000000] p-6 sm:p-10 space-y-6">
+        <header className="bg-[#0A0A0A] text-[#FAFAFA] border-2 sm:border-4 border-[#404040] shadow-[8px_8px_0px_#000000] p-6 sm:p-10 space-y-6">
           <div className="flex flex-wrap items-center gap-2.5">
             <span className="px-2.5 py-0.5 bg-[#DC2626] text-white text-[10px] sm:text-xs font-black uppercase tracking-wider font-mono inline-block">
-              CANLI VİZYON TAKVİMİ
+              {t.upcoming.liveCalendarBadge}
             </span>
             <span className="text-[10px] sm:text-xs text-[#F59E0B] font-black uppercase font-mono tracking-wider flex items-center gap-1.5">
               <FilmReelIcon size={13} className="text-[#F59E0B]" />
-              <span>2026 — 2027 SİNEMA SEZONU AJANDASI</span>
+              <span>{t.upcoming.seasonAgenda}</span>
             </span>
             {reminders.length > 0 && (
               <span className="ml-auto px-2.5 py-1 bg-[#171717] border border-[#404040] text-xs font-mono text-[#F59E0B] font-bold">
-                {reminders.length} Hatırlatıcı Aktif
+                {reminders.length} {t.upcoming.activeReminders}
               </span>
             )}
           </div>
 
           <div className="space-y-2">
             <h1 className="text-3xl sm:text-5xl font-black uppercase font-sans tracking-tight leading-[0.95] text-[#FAFAFA]">
-              GELECEK YAPIMLAR <span className=" text-[#EF4444]">RADARI</span>
+              {t.upcoming.titlePrefix} <span className="text-[#EF4444]">{t.upcoming.titleHighlight}</span>
             </h1>
             <p className="text-xs sm:text-sm text-[#D4D4D4] leading-relaxed max-w-2xl font-sans font-medium">
-              Beyaz perdeye ve dijital platformlara gelecek en çok beklenen kült yapımlar, salon filmleri ve anime prömiyerleri. 1-tıkla takviminize kaydedin ve izdaşlarınızın heyecanını takip edin.
+              {t.upcoming.subtitle}
             </p>
           </div>
 
@@ -457,10 +514,10 @@ export default function UpcomingPage() {
             {/* Filter Tabs */}
             <div className="flex items-center gap-2 flex-wrap" role="tablist" aria-label="Takvim Filtreleri">
               {[
-                { id: 'all', label: 'TÜMÜ (2026-2027)', icon: Clapperboard },
-                { id: 'movies', label: 'SİNEMA FİLMLERİ', icon: Film },
-                { id: 'anime', label: 'ANİME & DİZİLER', icon: Tv },
-                { id: 'reminders', label: `HATIRLATICILARIM (${reminders.length})`, icon: Bell },
+                { id: 'all', label: t.upcoming.all, icon: Clapperboard },
+                { id: 'movies', label: locale === 'tr' ? 'SİNEMA FİLMLERİ' : 'MOVIES', icon: Film },
+                { id: 'anime', label: locale === 'tr' ? 'ANİME & DİZİLER' : 'ANIME & SERIES', icon: Tv },
+                { id: 'reminders', label: `${locale === 'tr' ? 'HATIRLATICILARIM' : 'MY REMINDERS'} (${reminders.length})`, icon: Bell },
               ].map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeFilter === tab.id;
@@ -486,13 +543,13 @@ export default function UpcomingPage() {
 
             {/* Live Search Input */}
             <div className="relative min-w-[220px] sm:min-w-[280px]">
-              <Search className="w-4 h-4  text-[#EF4444] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
+              <Search className="w-4 h-4 text-[#EF4444] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Film, yönetmen veya tür ara..."
-                aria-label="Vizyon filmleri arama"
+                placeholder={t.upcoming.searchPlaceholder}
+                aria-label={t.upcoming.searchPlaceholder}
                 className="w-full pl-9 pr-10 py-2.5 min-h-[44px] bg-[#171717] text-[#FAFAFA] placeholder-[#737373] text-xs font-mono border border-[#262626] focus:border-[#DC2626] focus:outline-none transition-colors"
               />
               {searchQuery && (
@@ -500,7 +557,7 @@ export default function UpcomingPage() {
                   type="button"
                   onClick={() => setSearchQuery('')}
                   className="absolute right-1.5 top-1/2 -translate-y-1/2 min-h-[40px] min-w-[40px] flex items-center justify-center text-[#A3A3A3] hover:text-white cursor-pointer"
-                  aria-label="Aramayı temizle"
+                  aria-label={locale === 'tr' ? "Aramayı temizle" : "Clear search"}
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -511,11 +568,13 @@ export default function UpcomingPage() {
         </header>
 
         {/* Results Counter & Reset Controls */}
-        <div className="flex items-center justify-between px-1 text-xs font-mono font-bold  text-neutral-400">
+        <div className="flex items-center justify-between px-1 text-xs font-mono font-bold text-neutral-400">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[#DC2626]" />
             <span>
-              {loading ? 'TAKVİM YÜKLENİYOR...' : `${filteredItems.length} GELECEK YAPIM LİSTELENDİ`}
+              {loading
+                ? (locale === 'tr' ? 'TAKVİM YÜKLENİYOR...' : 'LOADING CALENDAR...')
+                : `${filteredItems.length} ${locale === 'tr' ? 'GELECEK YAPIM LİSTELENDİ' : 'UPCOMING TITLES LISTED'}`}
             </span>
           </div>
 
@@ -526,41 +585,45 @@ export default function UpcomingPage() {
                 setActiveFilter('all');
                 setSearchQuery('');
               }}
-              className=" text-[#EF4444] hover:underline flex items-center gap-1 cursor-pointer min-h-[44px]"
+              className="text-[#EF4444] hover:underline flex items-center gap-1 cursor-pointer min-h-[44px]"
             >
               <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
-              <span>Filtreleri Sıfırla</span>
+              <span>{locale === 'tr' ? 'Filtreleri Sıfırla' : 'Reset Filters'}</span>
             </button>
           )}
         </div>
 
         {/* Releases Timeline / Seasonal Groups */}
         {loading ? (
-          <div className="py-24 flex flex-col items-center justify-center gap-4  bg-[#171717] border-2  border-[#404040]  shadow-[6px_6px_0px_#000000]">
-            <Loader2 className="w-10 h-10  text-[#EF4444] animate-spin" />
+          <div className="py-24 flex flex-col items-center justify-center gap-4 bg-[#171717] border-2 border-[#404040] shadow-[6px_6px_0px_#000000]">
+            <Loader2 className="w-10 h-10 text-[#EF4444] animate-spin" />
             <div className="text-center space-y-1 font-mono">
-              <p className="text-xs font-black uppercase  text-[#FAFAFA]">
-                VİZYON TAKVİMİ ARŞİVDEN YÜKLENİYOR...
+              <p className="text-xs font-black uppercase text-[#FAFAFA]">
+                {locale === 'tr' ? 'VİZYON TAKVİMİ ARŞİVDEN YÜKLENİYOR...' : 'LOADING RELEASE CALENDAR FROM ARCHIVE...'}
               </p>
               <p className="text-xs text-[#A3A3A3]">
-                2026 - 2027 vizyon prömiyerleri taranıyor.
+                {locale === 'tr' ? '2026 - 2027 vizyon prömiyerleri taranıyor.' : 'Scanning 2026 - 2027 theatrical premieres.'}
               </p>
             </div>
           </div>
         ) : filteredItems.length === 0 ? (
           /* Graceful Empty State */
-          <div className="py-16 px-6 text-center  bg-[#171717] border-2  border-[#404040]  shadow-[6px_6px_0px_#000000] space-y-4 font-mono">
-            <div className="w-14 h-14 bg-[#0A0A0A]  text-[#EF4444] border-2  border-[#404040] mx-auto flex items-center justify-center shadow-[3px_3px_0px_#000000]">
+          <div className="py-16 px-6 text-center bg-[#171717] border-2 border-[#404040] shadow-[6px_6px_0px_#000000] space-y-4 font-mono">
+            <div className="w-14 h-14 bg-[#0A0A0A] text-[#EF4444] border-2 border-[#404040] mx-auto flex items-center justify-center shadow-[3px_3px_0px_#000000]">
               <Film className="w-7 h-7" />
             </div>
             <div className="space-y-1">
-              <h2 className="text-base font-black uppercase  text-[#FAFAFA]">
-                ARADIĞINIZ KRİTERDE VİZYON YAPIMI BULUNAMADI
+              <h2 className="text-base font-black uppercase text-[#FAFAFA]">
+                {locale === 'tr' ? 'ARADIĞINIZ KRİTERDE VİZYON YAPIMI BULUNAMADI' : 'NO UPCOMING RELEASES FOUND'}
               </h2>
-              <p className="text-xs  text-neutral-400 max-w-md mx-auto leading-relaxed">
+              <p className="text-xs text-neutral-400 max-w-md mx-auto leading-relaxed">
                 {activeFilter === 'reminders'
-                  ? 'Henüz hiçbir yapım için vizyon hatırlatıcısı kurmadınız. Kartların üzerindeki "Hatırlatıcı Kur" butonuna tıklayarak listenizi oluşturabilirsiniz.'
-                  : `"${searchQuery}" araması ile eşleşen bir vizyon filmi veya anime bulunamadı.`}
+                  ? (locale === 'tr'
+                      ? 'Henüz hiçbir yapım için vizyon hatırlatıcısı kurmadınız. Kartların üzerindeki "Hatırlatıcı Kur" butonuna tıklayarak listenizi oluşturabilirsiniz.'
+                      : 'You have not set any release reminders yet. Click "Remind Me" on any movie card to build your list.')
+                  : (locale === 'tr'
+                      ? `"${searchQuery}" araması ile eşleşen bir vizyon filmi veya anime bulunamadı.`
+                      : `No upcoming titles found matching "${searchQuery}".`)}
               </p>
             </div>
             <div className="pt-2">
@@ -573,7 +636,7 @@ export default function UpcomingPage() {
                 className="px-5 py-3 min-h-[44px] bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-black uppercase font-mono border-2 border-[#0A0A0A] shadow-[3px_3px_0px_#000000] cursor-pointer inline-flex items-center gap-2"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
-                <span>Tüm Vizyon Takvimini Göster</span>
+                <span>{locale === 'tr' ? 'Tüm Vizyon Takvimini Göster' : 'Show Full Release Calendar'}</span>
               </button>
             </div>
           </div>
@@ -583,17 +646,17 @@ export default function UpcomingPage() {
               <section key={group.id} className="space-y-5" aria-labelledby={`season-${group.id}`}>
                 
                 {/* Season Section Header */}
-                <div className="flex items-center justify-between border-b-2  border-[#404040] pb-2">
+                <div className="flex items-center justify-between border-b-2 border-[#404040] pb-2">
                   <div className="space-y-0.5">
-                    <span className="text-[10px] font-black  text-[#EF4444] uppercase tracking-wider block">
+                    <span className="text-[10px] font-black text-[#EF4444] uppercase tracking-wider block">
                       {group.badge}
                     </span>
-                    <h2 id={`season-${group.id}`} className="text-base sm:text-lg font-black uppercase  text-[#FAFAFA] font-sans">
+                    <h2 id={`season-${group.id}`} className="text-base sm:text-lg font-black uppercase text-[#FAFAFA] font-sans">
                       {group.title}
                     </h2>
                   </div>
                   <span className="text-xs font-mono text-[#A3A3A3] font-bold">
-                    {group.items.length} Yapım
+                    {group.items.length} {locale === 'tr' ? 'Yapım' : 'Titles'}
                   </span>
                 </div>
 
@@ -601,21 +664,21 @@ export default function UpcomingPage() {
                 <ul role="list" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 list-none p-0 m-0">
                   {group.items.map((item, idx) => {
                     const hasReminder = reminders.includes(item.id);
-                    const countdown = getReleaseStatusBadge(item.releaseDate, item.year);
+                    const countdown = getReleaseStatusBadge(item.releaseDate, item.year, locale);
 
                     return (
                       <li key={item.id} className="flex">
                         <article
-                          className="w-full  bg-[#171717]  text-[#FAFAFA] border-2  border-[#404040] p-5 flex flex-col justify-between space-y-4  shadow-[6px_6px_0px_#000000]  hover:shadow-[8px_8px_0px_#EF4444] hover:-translate-y-0.5 transition-all duration-150 group"
+                          className="w-full bg-[#171717] text-[#FAFAFA] border-2 border-[#404040] p-5 flex flex-col justify-between space-y-4 shadow-[6px_6px_0px_#000000] hover:shadow-[8px_8px_0px_#EF4444] hover:-translate-y-0.5 transition-all duration-150 group"
                         >
                           <div className="space-y-4">
                             
                             {/* Header Strip: Release Date & Countdown Badge */}
-                            <div className="flex items-center justify-between gap-2 border-b-2  border-[#404040] pb-3">
+                            <div className="flex items-center justify-between gap-2 border-b-2 border-[#404040] pb-3">
                               <div className="flex items-center gap-1.5 min-w-0">
-                                <Calendar className="w-3.5 h-3.5  text-[#EF4444] flex-shrink-0" aria-hidden="true" />
+                                <Calendar className="w-3.5 h-3.5 text-[#EF4444] flex-shrink-0" aria-hidden="true" />
                                 <span className="text-xs font-black font-mono truncate">
-                                  {formatTurkishReleaseDate(item.releaseDate, item.year)}
+                                  {formatReleaseDate(item.releaseDate, item.year, locale)}
                                 </span>
                               </div>
 
@@ -625,7 +688,7 @@ export default function UpcomingPage() {
                                 {countdown.iconType === 'calendar' && <CinemaCalendarIcon size={12} className="text-[#0A0A0A]" />}
                                 {countdown.iconType === 'star' && <CinemaStarIcon size={11} className="text-[#F59E0B]" />}
                                 {countdown.iconType === 'now' && <FilmReelIcon size={11} className="text-white" />}
-                                {countdown.iconType === 'unknown' && <Calendar className="w-3 h-3  text-[#A3A3A3]" aria-hidden="true" />}
+                                {countdown.iconType === 'unknown' && <Calendar className="w-3 h-3 text-[#A3A3A3]" aria-hidden="true" />}
                                 <span>{countdown.label}</span>
                               </span>
                             </div>
@@ -638,8 +701,8 @@ export default function UpcomingPage() {
                                   setSelectedMedia(item);
                                   setIsMediaDetailOpen(true);
                                 }}
-                                className="relative w-24 h-36 flex-shrink-0 overflow-hidden border-2  border-[#404040] bg-black  shadow-[2px_2px_0px_#000000] cursor-pointer text-left focus:outline-none focus:ring-2 focus:ring-[#DC2626]"
-                                aria-label={`${item.title} detaylarını aç`}
+                                className="relative w-24 h-36 flex-shrink-0 overflow-hidden border-2 border-[#404040] bg-black shadow-[2px_2px_0px_#000000] cursor-pointer text-left focus:outline-none focus:ring-2 focus:ring-[#DC2626]"
+                                aria-label={`${item.title} details`}
                               >
                                 <img
                                   src={item.posterPath}
@@ -649,7 +712,7 @@ export default function UpcomingPage() {
                                 />
                                 <div className="absolute top-1 left-1">
                                   <span className="px-1 py-0.2 bg-[#0A0A0A] text-white text-[10px] font-mono font-black uppercase border border-[#404040]">
-                                    {item.type === 'anime' ? 'ANİME' : item.type === 'tv' ? 'DİZİ' : 'SİNEMA'}
+                                    {item.type === 'anime' ? (locale === 'tr' ? 'ANİME' : 'ANIME') : item.type === 'tv' ? (locale === 'tr' ? 'DİZİ' : 'SERIES') : (locale === 'tr' ? 'SİNEMA' : 'CINEMA')}
                                   </span>
                                 </div>
                               </button>
@@ -660,29 +723,25 @@ export default function UpcomingPage() {
                                     setSelectedMedia(item);
                                     setIsMediaDetailOpen(true);
                                   }}
-                                  className="text-sm font-black uppercase  text-[#FAFAFA] font-sans tracking-tight line-clamp-2 leading-snug  hover:text-[#EF4444] cursor-pointer"
+                                  className="text-sm font-black uppercase text-[#FAFAFA] font-sans tracking-tight line-clamp-2 leading-snug hover:text-[#EF4444] cursor-pointer"
                                 >
                                   {item.title}
                                 </h3>
 
                                 {item.genres && item.genres.length > 0 && (
-                                  <p className="text-[10px] font-mono font-black  text-[#EF4444] uppercase truncate">
-                                    #{item.genres.slice(0, 2).join(' • ')}
+                                  <p className="text-[10px] font-mono font-black text-[#EF4444] uppercase truncate">
+                                    #{item.genres.slice(0, 2).map((g) => translateGenre(g, locale)).join(' • ')}
                                   </p>
                                 )}
                                 
                                 {item.director && (
-                                  <p className="text-[11px]  text-[#A3A3A3] font-mono font-bold truncate">
-                                    YÖN: <span className=" text-[#FAFAFA]">{item.director}</span>
+                                  <p className="text-[11px] text-[#A3A3A3] font-mono font-bold truncate">
+                                    {locale === 'tr' ? 'YÖN:' : 'DIR:'} <span className="text-[#FAFAFA]">{item.director}</span>
                                   </p>
                                 )}
 
-                                {/* Social İzdaş Counter Badge — removed: the
-                                    count was a deterministic fake presented
-                                    as real community data. */}
-
-                                <p className="text-xs  text-neutral-300 line-clamp-2 leading-relaxed font-sans pt-0.5">
-                                  {item.overview || 'Yakında sinemalarda ve dijital platformlarda prömiyer yapacak.'}
+                                <p className="text-xs text-neutral-300 line-clamp-2 leading-relaxed font-sans pt-0.5">
+                                  {item.overview || (locale === 'tr' ? 'Yakında sinemalarda ve dijital platformlarda prömiyer yapacak.' : 'Premieres soon in movie theaters and streaming platforms.')}
                                 </p>
                               </div>
                             </div>
@@ -690,27 +749,27 @@ export default function UpcomingPage() {
                           </div>
 
                           {/* Actions Bottom Strip */}
-                          <div className="pt-3 border-t-2  border-[#404040] space-y-2 font-mono">
+                          <div className="pt-3 border-t-2 border-[#404040] space-y-2 font-mono">
                             <div className="flex items-center gap-2">
                               <button
                                 type="button"
                                 onClick={() => toggleReminder(item.id, item.title)}
                                 aria-pressed={hasReminder}
-                                className={`flex-1 min-h-[44px] py-2.5 px-3 text-xs font-black uppercase border-2  border-[#404040] transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                                className={`flex-1 min-h-[44px] py-2.5 px-3 text-xs font-black uppercase border-2 border-[#404040] transition-all flex items-center justify-center gap-2 cursor-pointer ${
                                   hasReminder
-                                    ? ' text-[#F59E0B] shadow-[2px_2px_0px_#000000] bg-[#262626]'
+                                    ? 'text-[#F59E0B] shadow-[2px_2px_0px_#000000] bg-[#262626]'
                                     : 'bg-[#DC2626] hover:bg-[#B91C1C] text-white shadow-[3px_3px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5'
                                 }`}
                               >
                                 {hasReminder ? (
                                   <>
                                     <Check className="w-4 h-4 stroke-[3] text-[#F59E0B]" aria-hidden="true" />
-                                    <span>HATIRLATICI AKTİF</span>
+                                    <span>{t.upcoming.reminderActive}</span>
                                   </>
                                 ) : (
                                   <>
                                     <Bell className="w-4 h-4" aria-hidden="true" />
-                                    <span>HATIRLATICI KUR</span>
+                                    <span>{t.upcoming.remindMe}</span>
                                   </>
                                 )}
                               </button>
@@ -719,12 +778,12 @@ export default function UpcomingPage() {
                                 type="button"
                                 onClick={() => handleAddToCalendar(item)}
                                 disabled={countdown.dateUnknown}
-                                className="min-h-[44px] px-3  bg-[#262626]   text-[#FAFAFA] border-2  border-[#404040] shadow-[2px_2px_0px_#000000] text-xs font-black uppercase flex items-center justify-center gap-1.5 cursor-pointer active:translate-x-0.5 active:translate-y-0.5 enabled:hover:bg-[#404040] disabled:opacity-50 disabled:cursor-not-allowed"
-                                title={countdown.dateUnknown ? 'Vizyon tarihi henüz açıklanmadı' : 'Telefon Takvimine Ekle (Apple / Google Calendar)'}
-                                aria-label={countdown.dateUnknown ? `${item.title} için vizyon tarihi henüz açıklanmadı` : `${item.title} vizyon tarihini telefon takvimine ekle`}
+                                className="min-h-[44px] px-3 bg-[#262626] text-[#FAFAFA] border-2 border-[#404040] shadow-[2px_2px_0px_#000000] text-xs font-black uppercase flex items-center justify-center gap-1.5 cursor-pointer active:translate-x-0.5 active:translate-y-0.5 enabled:hover:bg-[#404040] disabled:opacity-50 disabled:cursor-not-allowed"
+                                title={countdown.dateUnknown ? (locale === 'tr' ? 'Vizyon tarihi henüz açıklanmadı' : 'Release date not announced yet') : (locale === 'tr' ? 'Telefon Takvimine Ekle (Apple / Google Calendar)' : 'Add to Calendar (Apple / Google Calendar)')}
+                                aria-label={countdown.dateUnknown ? (locale === 'tr' ? `${item.title} için vizyon tarihi henüz açıklanmadı` : `Release date for ${item.title} not announced yet`) : `${item.title} ${t.upcoming.exportCalendar}`}
                               >
-                                <Calendar className={`w-3.5 h-3.5 ${countdown.dateUnknown ? 'text-neutral-500' : ' text-[#EF4444]'}`} aria-hidden="true" />
-                                <span>TAKVİME EKLE</span>
+                                <Calendar className={`w-3.5 h-3.5 ${countdown.dateUnknown ? 'text-neutral-500' : 'text-[#EF4444]'}`} aria-hidden="true" />
+                                <span>{t.upcoming.exportCalendar}</span>
                               </button>
 
                               <button
@@ -733,9 +792,9 @@ export default function UpcomingPage() {
                                   setSelectedMedia(item);
                                   setIsQuickLogOpen(true);
                                 }}
-                                className="min-h-[44px] min-w-[44px] p-2.5  bg-[#262626]  hover:bg-[#404040]  text-[#FAFAFA] border-2  border-[#404040] shadow-[2px_2px_0px_#000000] transition-all cursor-pointer font-black flex items-center justify-center active:translate-x-0.5 active:translate-y-0.5"
-                                title="Günlüğe Ekle / Bekleme Listesi"
-                                aria-label={`${item.title} günlüğe ekle`}
+                                className="min-h-[44px] min-w-[44px] p-2.5 bg-[#262626] hover:bg-[#404040] text-[#FAFAFA] border-2 border-[#404040] shadow-[2px_2px_0px_#000000] transition-all cursor-pointer font-black flex items-center justify-center active:translate-x-0.5 active:translate-y-0.5"
+                                title={locale === 'tr' ? "Günlüğe Ekle / Bekleme Listesi" : "Add to Diary / Watchlist"}
+                                aria-label={locale === 'tr' ? `${item.title} günlüğe ekle` : `Log ${item.title}`}
                               >
                                 <Plus className="w-4 h-4 stroke-[3]" aria-hidden="true" />
                               </button>

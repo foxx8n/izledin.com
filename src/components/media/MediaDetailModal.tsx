@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import { MediaItem } from "@/types";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslation } from "@/lib/i18n";
+import { translateGenre } from "@/lib/i18n/genres";
 import {
   toggleWatchlistItem,
   getMyMediaStatus,
@@ -39,11 +41,12 @@ export function MediaDetailModal({
   onOpenLog,
   onOpenTasteProfiler,
 }: MediaDetailModalProps) {
+  const { t, locale } = useTranslation();
   const [isWatchlist, setIsWatchlist] = useState(false);
   const [isWatched, setIsWatched] = useState(false);
   const [imgError, setImgError] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [synopsisLang, setSynopsisLang] = useState<"tr" | "en">("tr");
+  const [synopsisLang, setSynopsisLang] = useState<"tr" | "en">(locale);
   const [statusLoading, setStatusLoading] = useState(false);
   const [statusError, setStatusError] = useState(false);
   const [togglingWatchlist, setTogglingWatchlist] = useState(false);
@@ -69,7 +72,7 @@ export function MediaDetailModal({
   useEffect(() => {
     setImgError(false);
     setCopied(false);
-    setSynopsisLang("tr");
+    setSynopsisLang(locale);
     setActionHint(null);
     setIsWatchlist(false);
     setIsWatched(false);
@@ -98,7 +101,7 @@ export function MediaDetailModal({
     return () => {
       stale = true;
     };
-  }, [isOpen, item, userId]);
+  }, [isOpen, item, userId, locale]);
 
   if (!isOpen || !item) return null;
 
@@ -109,10 +112,10 @@ export function MediaDetailModal({
 
   const typeLabel =
     item.type === "anime"
-      ? "Anime"
+      ? t.mediaModal.anime
       : item.type === "tv"
-        ? "Dizi"
-        : "Sinema Filmi";
+        ? t.mediaModal.tv
+        : t.mediaModal.movie;
 
   const handleShare = async () => {
     const shareUrl = `${window.location.origin}/film/${item.id}`;
@@ -121,8 +124,8 @@ export function MediaDetailModal({
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `${item.title} - İzledin`,
-          text: `${item.title} filmini Sinefil Kulübü'nde incele!`,
+          title: `${item.title} - ${t.common.siteName}`,
+          text: `${item.title} ${t.mediaModal.shareText}`,
           url: shareUrl,
         });
       } catch (err) {
@@ -153,7 +156,7 @@ export function MediaDetailModal({
   const handleToggleWatchlist = async () => {
     if (!item || togglingWatchlist) return;
     if (!userId) {
-      setActionHint("LİSTEYE EKLEMEK İÇİN GİRİŞ YAPMALISINIZ.");
+      setActionHint(t.mediaModal.authRequiredWatchlist);
       return;
     }
     setActionHint(null);
@@ -163,9 +166,7 @@ export function MediaDetailModal({
       setIsWatchlist(res.added);
     } catch (err) {
       console.warn("Watchlist toggle failed:", err);
-      setActionHint(
-        "LİSTE GÜNCELLENİRKEN BİR HATA OLUŞTU. LÜTFEN TEKRAR DENEYİN.",
-      );
+      setActionHint(t.common.error);
     } finally {
       setTogglingWatchlist(false);
     }
@@ -187,7 +188,7 @@ export function MediaDetailModal({
               {typeLabel.toUpperCase()}
             </span>
             <span className="font-mono text-xs font-bold  text-neutral-400">
-              #ARŞİV-{(item.id || "").slice(-4).toUpperCase()}
+              {t.mediaModal.archivePrefix}{(item.id || "").slice(-4).toUpperCase()}
             </span>
           </div>
 
@@ -195,12 +196,12 @@ export function MediaDetailModal({
             <button
               type="button"
               onClick={handleShare}
-              title="Paylaş"
+              title={t.mediaModal.share}
               className="p-1.5   bg-neutral-800 hover:bg-neutral-700 border-2  border-[#404040] transition-colors cursor-pointer text-xs font-mono font-bold flex items-center gap-1"
             >
               <Share2 className="w-4 h-4 stroke-[2.5]" />
               <span className="hidden sm:inline">
-                {copied ? "KOPYALANDI" : "PAYLAŞ"}
+                {copied ? t.mediaModal.copied : t.mediaModal.share}
               </span>
             </button>
 
@@ -241,7 +242,6 @@ export function MediaDetailModal({
               <button
                 type="button"
                 onClick={handleMarkWatched}
-                title="Günlüğe kaydetmek için puanlama ekranını açar"
                 className={`py-2 px-2 border-2  border-[#404040] font-black uppercase flex items-center justify-center gap-1.5 transition-all cursor-pointer active:translate-x-0.5 active:translate-y-0.5 ${
                   isWatched
                     ? "  bg-[#FAFAFA] text-[#0A0A0A]"
@@ -253,7 +253,7 @@ export function MediaDetailModal({
                 ) : (
                   <Check className="w-3.5 h-3.5 stroke-[3]" />
                 )}
-                <span>{isWatched ? "İZLENDİ" : "İZLEDİM"}</span>
+                <span>{isWatched ? t.mediaModal.watched : t.mediaModal.markWatched}</span>
               </button>
 
               <button
@@ -261,11 +261,6 @@ export function MediaDetailModal({
                 onClick={handleToggleWatchlist}
                 disabled={
                   statusLoading || togglingWatchlist || statusError
-                }
-                title={
-                  statusError
-                    ? "Durum bilgisi yüklenemediği için liste güncellenemiyor"
-                    : undefined
                 }
                 className={`py-2 px-2 border-2  border-[#404040] font-black uppercase flex items-center justify-center gap-1.5 transition-all active:translate-x-0.5 active:translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed ${
                   isWatchlist
@@ -278,13 +273,13 @@ export function MediaDetailModal({
                 ) : (
                   <Bookmark className="w-3.5 h-3.5 fill-current" />
                 )}
-                <span>{isWatchlist ? "LİSTEDE" : "LİSTEYE EKLE"}</span>
+                <span>{isWatchlist ? t.mediaModal.inWatchlist : t.mediaModal.addWatchlist}</span>
               </button>
 
               {(statusError || actionHint) && (
                 <p className="col-span-2 mt-0.5 text-[10px] leading-snug font-bold uppercase tracking-wide text-[#FBBF24]">
                   {statusError
-                    ? "DURUM BİLGİSİ YÜKLENEMEDİ — LİSTE DURUMU DOĞRULANAMAZ"
+                    ? t.mediaModal.statusError
                     : actionHint}
                 </p>
               )}
@@ -329,7 +324,7 @@ export function MediaDetailModal({
               </h2>
               {item.originalTitle && item.originalTitle !== item.title && (
                 <p className="text-xs  text-neutral-400 font-mono italic mt-0.5">
-                  Orijinal: {item.originalTitle}
+                  {t.mediaModal.originalTitle} {item.originalTitle}
                 </p>
               )}
             </div>
@@ -342,7 +337,7 @@ export function MediaDetailModal({
                     key={g}
                     className="stamp-badge px-2 py-0.5 text-[10px] font-black  border-[#404040]"
                   >
-                    {g}
+                    {translateGenre(g, locale)}
                   </span>
                 ))}
               </div>
@@ -361,7 +356,7 @@ export function MediaDetailModal({
               {item.director && (
                 <p className=" text-neutral-300 font-bold">
                   <span className=" text-[#EF4444] font-black">
-                    YÖNETMEN:{" "}
+                    {t.media.director.toUpperCase()}:{" "}
                   </span>
                   {item.director}
                 </p>
@@ -369,7 +364,7 @@ export function MediaDetailModal({
               {item.actors && (
                 <p className=" text-neutral-300 font-bold">
                   <span className=" text-[#EF4444] font-black">
-                    OYUNCULAR:{" "}
+                    {t.media.actors.toUpperCase()}:{" "}
                   </span>
                   {item.actors}
                 </p>
@@ -379,7 +374,7 @@ export function MediaDetailModal({
             {/* Synopsis with Language Switcher */}
             <div className="space-y-1.5 font-mono">
               <div className="flex items-center justify-between text-[11px] font-black  text-neutral-400 uppercase">
-                <span>ÖZET</span>
+                <span>{t.media.overview.toUpperCase()}</span>
                 {item.overviewEn && item.overviewEn !== item.overview && (
                   <div className="flex items-center border  border-[#404040] overflow-hidden">
                     <button
@@ -412,8 +407,7 @@ export function MediaDetailModal({
                   &ldquo;
                   {synopsisLang === "en"
                     ? item.overviewEn
-                    : item.overview ||
-                      "Bu yapım hakkında henüz ayrıntılı özet eklenmedi."}
+                    : item.overview || t.media.noOverview}
                   &rdquo;
                 </p>
               </div>
@@ -423,7 +417,7 @@ export function MediaDetailModal({
             {item.streamingOn && item.streamingOn.length > 0 && (
               <div className="flex items-center gap-2 flex-wrap text-xs">
                 <span className="font-black  text-neutral-400">
-                  YAYINLANDIĞI PLATFORM:
+                  {t.mediaModal.streamingOn}
                 </span>
                 {item.streamingOn.map((platform) => (
                   <span
@@ -447,7 +441,7 @@ export function MediaDetailModal({
                 className="px-5 py-3   bg-[#EF4444] hover:bg-[#DC2626] text-white text-xs font-black uppercase tracking-wider border-2  border-[#404040]  shadow-[3px_3px_0px_#000000] hover:shadow-[1px_1px_0px_#0A0A0A] hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-1 active:translate-y-1 transition-all flex items-center gap-2 cursor-pointer"
               >
                 <Plus className="w-4 h-4 stroke-[3]" />
-                <span>İzledim & Günlüğe Yaz</span>
+                <span>{t.mediaModal.logToDiary}</span>
               </button>
 
               {onOpenTasteProfiler && (
@@ -460,7 +454,7 @@ export function MediaDetailModal({
                   className="px-4 py-3 bg-[#F59E0B] hover:bg-[#D97706] text-[#0A0A0A] text-xs font-black uppercase tracking-wider border-2  border-[#404040]  shadow-[3px_3px_0px_#000000] hover:shadow-[1px_1px_0px_#0A0A0A] transition-all flex items-center gap-1.5 cursor-pointer"
                 >
                   <Users className="w-4 h-4 stroke-[2.5]" />
-                  <span>Sinema Eşi Bul</span>
+                  <span>{t.mediaModal.findMatch}</span>
                 </button>
               )}
             </div>

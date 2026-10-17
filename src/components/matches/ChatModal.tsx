@@ -28,6 +28,8 @@ import {
 } from "@/components/icons/CinemaIcons";
 import { MovieMateMatch, ChatMessage } from "@/types";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslation } from "@/lib/i18n";
+import { translateGenre } from "@/lib/i18n/genres";
 import {
   getMatchMessages,
   sendDirectMessage,
@@ -61,20 +63,11 @@ interface ChatModalProps {
   onRequestSent?: (match: MovieMateMatch) => void;
 }
 
-const CINEMA_ICEBREAKERS = [
-  {
-    icon: ClapperboardIcon,
-    text: "En son hangi filmi izledin ve ne puan verirsin?",
-  },
-  { icon: CinemaPopcornIcon, text: "En sevdiğin kült başyapıt hangisi?" },
-  {
-    icon: CinemaProjectorIcon,
-    text: "Tüm zamanların en iyi yönetmeni sence kim?",
-  },
-  {
-    icon: CinemaTrophyIcon,
-    text: "Birlikte bir film izleme listesi yapalım mı?",
-  },
+const ICEBREAKER_ICONS = [
+  ClapperboardIcon,
+  CinemaPopcornIcon,
+  CinemaProjectorIcon,
+  CinemaTrophyIcon,
 ];
 
 export function ChatModal({
@@ -84,6 +77,7 @@ export function ChatModal({
   onOpenAuth,
   onRequestSent,
 }: ChatModalProps) {
+  const { t, locale } = useTranslation();
   const { user, profile } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -409,16 +403,16 @@ export function ChatModal({
                 <span className="truncate">@{match.user.username}</span>
                 <span>•</span>
                 <span className=" text-[#EF4444] font-black flex-shrink-0">
-                  %{match.compatibilityScore} UYUM
+                  %{match.compatibilityScore} {t.matches.compatScore}
                 </span>
                 {match.isBilet && initiatorId !== user?.id && (
                   <>
                     <span>•</span>
                     <span
                       className=" text-[#F59E0B] font-black flex-shrink-0"
-                      title="Bu istek BİLET ile öne çıkarılmış"
+                      title={t.matches.ticketBadge}
                     >
-                      BİLETLE GELDİ
+                      {t.matches.ticketBadge}
                     </span>
                   </>
                 )}
@@ -429,8 +423,8 @@ export function ChatModal({
           <button
             onClick={onClose}
             className="w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center  bg-[#171717]   hover:bg-[#EF4444] hover:text-[#0A0A0A]  text-[#FAFAFA] border-2  border-[#404040]  shadow-[2px_2px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer flex-shrink-0"
-            title="Kapat"
-            aria-label="Kapat"
+            title={t.common.close}
+            aria-label={t.common.close}
           >
             <X className="w-5 h-5 stroke-[3]" />
           </button>
@@ -445,18 +439,17 @@ export function ChatModal({
                 className=" text-emerald-400 shrink-0"
               />
               <span className="truncate">
-                <strong>Film Arkadaşlığı:</strong> Bu üye platonik sinema
-                sohbeti ve ortak izleme hedeflemektedir.
+                <strong>{t.matches.friendIntent}:</strong> {t.chat.friendBanner}
               </span>
             </div>
             <button
               type="button"
               onClick={() => setIsReportOpen(true)}
               className="text-[10px] font-black uppercase  text-amber-400 hover:underline shrink-0 flex items-center gap-1 cursor-pointer min-h-[32px]"
-              title="Niyet ihlali veya rahatsız edici durum bildir"
+              title={t.chat.reportBreach}
             >
               <ShieldAlert className="w-3 h-3 text-amber-600" />
-              <span>İhlal Bildir</span>
+              <span>{t.chat.reportBreach}</span>
             </button>
           </div>
         )}
@@ -469,18 +462,17 @@ export function ChatModal({
                 className=" text-rose-400 shrink-0"
               />
               <span className="truncate">
-                <strong>Sinematik Flört:</strong> Ortak sinema frekansı
-                üzerinden romantik bağ kurma alanı.
+                <strong>{t.matches.datingIntent}:</strong> {t.chat.datingBanner}
               </span>
             </div>
             <button
               type="button"
               onClick={() => setIsReportOpen(true)}
               className="text-[10px] font-black uppercase  text-amber-400 hover:underline shrink-0 flex items-center gap-1 cursor-pointer min-h-[32px]"
-              title="Niyet ihlali veya rahatsız edici durum bildir"
+              title={t.chat.reportBreach}
             >
               <ShieldAlert className="w-3 h-3 text-amber-600" />
-              <span>İhlal Bildir</span>
+              <span>{t.chat.reportBreach}</span>
             </button>
           </div>
         )}
@@ -493,18 +485,17 @@ export function ChatModal({
                 className=" text-amber-400 shrink-0"
               />
               <span className="truncate">
-                <strong>Tüm Niyetler:</strong> Önce sinema dostluğu, karşılıklı
-                frekansa göre doğal akışında.
+                <strong>{t.matches.bothIntent}:</strong> {t.chat.bothBanner}
               </span>
             </div>
             <button
               type="button"
               onClick={() => setIsReportOpen(true)}
               className="text-[10px] font-black uppercase  text-amber-400 hover:underline shrink-0 flex items-center gap-1 cursor-pointer min-h-[32px]"
-              title="Niyet ihlali veya rahatsız edici durum bildir"
+              title={t.chat.reportBreach}
             >
               <ShieldAlert className="w-3 h-3 text-amber-600" />
-              <span>İhlal Bildir</span>
+              <span>{t.chat.reportBreach}</span>
             </button>
           </div>
         )}
@@ -514,11 +505,10 @@ export function ChatModal({
           <div className="p-3  bg-amber-500/10 border-b-2 border-amber-600 flex items-center justify-between gap-2 flex-wrap">
             <div className="min-w-0 flex-1">
               <span className="text-xs font-black  text-amber-400 uppercase tracking-wide block">
-                GELEN MESAJ İSTEĞİ
+                {t.chat.incomingRequestBanner}
               </span>
               <p className="text-[11px]  text-neutral-300 truncate mt-0.5">
-                @{match.user.username} sizinle eşleşme ve sinema sohbeti
-                başlatmak istiyor.
+                @{match.user.username} {t.chat.incomingRequestDesc}
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
@@ -533,7 +523,7 @@ export function ChatModal({
                 ) : (
                   <Check className="w-3.5 h-3.5 stroke-[3]" />
                 )}
-                <span>Kabul Et</span>
+                <span>{t.chat.accept}</span>
               </button>
               <button
                 type="button"
@@ -541,7 +531,7 @@ export function ChatModal({
                 disabled={actionLoading}
                 className="px-3 py-2 min-h-[40px]   bg-neutral-800 hover:bg-neutral-700  text-neutral-200 text-xs font-black uppercase border border-[#0A0A0A] cursor-pointer"
               >
-                <span>Pas</span>
+                <span>{t.chat.pass}</span>
               </button>
             </div>
           </div>
@@ -555,8 +545,7 @@ export function ChatModal({
               className=" text-amber-400 shrink-0"
             />
             <span>
-              Mesaj isteğiniz iletildi. Karşı taraf onayladığında sohbet
-              aktifleşecektir.
+              {t.chat.requestSentNotice}
             </span>
           </div>
         )}
@@ -726,7 +715,7 @@ export function ChatModal({
           <div
             className="flex border-b-2 border-[#404040] bg-[#262626] shrink-0"
             role="tablist"
-            aria-label="Sohbet sekmeleri"
+            aria-label={t.chat.chatTab}
           >
             <button
               type="button"
@@ -740,7 +729,7 @@ export function ChatModal({
               }`}
             >
               <CinemaChatIcon size={14} />
-              <span>Sohbet</span>
+              <span>{t.chat.chatTab}</span>
             </button>
             <button
               type="button"
@@ -754,7 +743,7 @@ export function ChatModal({
               }`}
             >
               <Clapperboard className="w-3.5 h-3.5" />
-              <span>Ortak Seans</span>
+              <span>{t.chat.watchTogetherTab}</span>
             </button>
           </div>
         )}
@@ -763,74 +752,84 @@ export function ChatModal({
         {(activeTab === "chat" || currentMatchStatus !== "matched") && (
         <div
           ref={scrollContainerRef}
-          className="flex-1 p-4 overflow-y-auto space-y-3  bg-[#171717]"
+          className="flex-1 p-4 overflow-y-auto space-y-3 bg-[#171717]"
         >
           {/* Cinema Match Badge Banner */}
-          <div className="p-2.5  bg-[#262626] border-2  border-[#404040] text-[11px] text-center  text-[#D4D4D4] font-bold  shadow-[2px_2px_0px_#000000] flex items-center justify-center gap-1.5 flex-wrap">
-            <span className=" text-[#EF4444] font-black flex items-center gap-1">
+          <div className="p-2.5 bg-[#262626] border-2 border-[#404040] text-[11px] text-center text-[#D4D4D4] font-bold shadow-[2px_2px_0px_#000000] flex items-center justify-center gap-1.5 flex-wrap">
+            <span className="text-[#EF4444] font-black flex items-center gap-1">
               <CinemaFrequencyIcon
                 size={14}
-                className=" text-[#EF4444]"
+                className="text-[#EF4444]"
               />
-              <span>SİNEMA EŞİ FREKANSI:</span>
+              <span>{t.chat.frequencyLabel}:</span>
             </span>
             <span>
               {match.sharedGenres.length > 0 ? (
-                <>
-                  {match.sharedGenres.slice(0, 2).join(" & ")}{" "}
-                  kategorisinde %{match.compatibilityScore} ortak zevke
-                  sahipsiniz.
-                </>
+                locale === "tr" ? (
+                  <>
+                    {match.sharedGenres.slice(0, 2).map((g) => translateGenre(g, locale)).join(" & ")}{" "}
+                    kategorisinde %{match.compatibilityScore} ortak zevke
+                    sahipsiniz.
+                  </>
+                ) : (
+                  <>
+                    You share {match.compatibilityScore}% cinema taste in{" "}
+                    {match.sharedGenres.slice(0, 2).map((g) => translateGenre(g, locale)).join(" & ")}.
+                  </>
+                )
               ) : (
-                <>%{match.compatibilityScore} ortak sinema frekansına sahipsiniz.</>
+                locale === "tr" ? (
+                  <>%{match.compatibilityScore} ortak sinema frekansına sahipsiniz.</>
+                ) : (
+                  <>You share {match.compatibilityScore}% cine match frequency.</>
+                )
               )}
             </span>
           </div>
 
           {loading ? (
-            <div className="py-16 flex flex-col items-center justify-center gap-2 text-xs font-bold  text-[#A3A3A3]">
-              <Loader2 className="w-6 h-6 animate-spin  text-[#EF4444]" />
-              <span>SİNEMA BAĞLANTISI KURULUYOR...</span>
+            <div className="py-16 flex flex-col items-center justify-center gap-2 text-xs font-bold text-[#A3A3A3]">
+              <Loader2 className="w-6 h-6 animate-spin text-[#EF4444]" />
+              <span>{t.chat.connecting}</span>
             </div>
           ) : messages.length === 0 ? (
             <div className="py-8 text-center space-y-4">
-              <div className="w-12 h-12 rounded-none  bg-[#EF4444]/15 border-2  border-[#EF4444] mx-auto flex items-center justify-center  text-[#EF4444]">
+              <div className="w-12 h-12 rounded-none bg-[#EF4444]/15 border-2 border-[#EF4444] mx-auto flex items-center justify-center text-[#EF4444]">
                 <CinemaChatIcon
                   size={24}
-                  className=" text-[#EF4444]"
+                  className="text-[#EF4444]"
                 />
               </div>
               <div>
-                <p className="text-xs font-black uppercase  text-[#FAFAFA]">
-                  Henüz mesajlaşma başlamadı.
+                <p className="text-xs font-black uppercase text-[#FAFAFA]">
+                  {t.chat.noMessages}
                 </p>
-                <p className="text-[11px]  text-[#A3A3A3] mt-0.5 font-sans font-medium">
-                  İlk mesaj isteğinizi göndermek için aşağıdaki sinema buz
-                  kırıcılarından birini seçebilir veya doğrudan yazabilirsiniz:
+                <p className="text-[11px] text-[#A3A3A3] mt-0.5 font-sans font-medium">
+                  {t.chat.icebreakerPrompt}
                 </p>
               </div>
 
               {/* Quick Cinema Icebreakers */}
               <div className="grid grid-cols-1 gap-2 text-left pt-1">
-                {CINEMA_ICEBREAKERS.map((icebreaker, i) => {
-                  const Icon = icebreaker.icon;
+                {t.chat.icebreakers.map((text, i) => {
+                  const Icon = ICEBREAKER_ICONS[i % ICEBREAKER_ICONS.length];
                   return (
                     <button
                       key={i}
                       type="button"
-                      onClick={() => sendMessageContent(icebreaker.text)}
+                      onClick={() => sendMessageContent(text)}
                       disabled={!canCompose || sending}
-                      aria-label={icebreaker.text}
-                      className="p-3 min-h-[44px]   bg-[#262626] hover:bg-[#333333] border-2  border-[#404040]  shadow-[2px_2px_0px_#000000] text-xs font-bold  text-[#FAFAFA] text-left transition-all active:translate-x-0.5 active:translate-y-0.5 cursor-pointer flex items-center gap-2.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#262626]"
+                      aria-label={text}
+                      className="p-3 min-h-[44px] bg-[#262626] hover:bg-[#333333] border-2 border-[#404040] shadow-[2px_2px_0px_#000000] text-xs font-bold text-[#FAFAFA] text-left transition-all active:translate-x-0.5 active:translate-y-0.5 cursor-pointer flex items-center gap-2.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#262626]"
                     >
                       <Icon
                         size={16}
-                        className=" text-[#EF4444] shrink-0"
+                        className="text-[#EF4444] shrink-0"
                       />
                       <span className="flex-1 leading-snug">
-                        {icebreaker.text}
+                        {text}
                       </span>
-                      <Send className="w-3.5 h-3.5 text-[#737373]  hover:text-[#EF4444] flex-shrink-0" />
+                      <Send className="w-3.5 h-3.5 text-[#737373] hover:text-[#EF4444] flex-shrink-0" />
                     </button>
                   );
                 })}
@@ -897,16 +896,24 @@ export function ChatModal({
         {activeTab === "chat" && (isPendingFromMe && messages.length > 0 ? (
           <div className="p-3.5 pb-safe border-t-4 border-[#404040] bg-[#171717] flex items-center justify-center gap-2 text-xs font-mono font-bold text-[#FAFAFA] text-center">
             <CinemaTrustShieldIcon size={16} className="text-[#EF4444] shrink-0" />
-            <span>Mesaj isteğiniz iletildi. @{match.user.username} onayladığında sohbet aktifleşecektir.</span>
+            <span>
+              {locale === "tr"
+                ? `Mesaj isteğiniz iletildi. @${match.user.username} onayladığında sohbet aktifleşecektir.`
+                : `Message request sent. Chat will activate once @${match.user.username} approves.`}
+            </span>
           </div>
         ) : isPendingForMe ? (
           <div className="p-3.5 pb-safe border-t-4 border-[#404040] bg-[#171717] flex items-center justify-center gap-2 text-xs font-mono font-bold text-[#FAFAFA] text-center">
             <CinemaTrustShieldIcon size={16} className="text-amber-400 shrink-0" />
-            <span>Mesaj yazmak için lütfen yukarıdaki panelden isteği kabul edin.</span>
+            <span>
+              {locale === "tr"
+                ? "Mesaj yazmak için lütfen yukarıdaki panelden isteği kabul edin."
+                : "Please accept the request from the panel above to start messaging."}
+            </span>
           </div>
         ) : conversationClosed ? (
           <div className="p-3.5 pb-safe border-t-4 border-[#404040] bg-[#171717] flex items-center justify-center gap-2 text-xs font-mono font-bold text-[#A3A3A3] text-center">
-            <span>Bu sohbet kapatılmıştır.</span>
+            <span>{t.chat.closedNotice}</span>
           </div>
         ) : (
           <div className="p-3 pb-safe border-t-4 border-[#404040] bg-[#262626] flex items-center gap-2">
@@ -914,14 +921,14 @@ export function ChatModal({
               type="text"
               value={input}
               maxLength={500}
-              aria-label="Mesaj yazın"
+              aria-label={t.chat.inputPlaceholder}
               disabled={!canCompose}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
               placeholder={
                 !user
-                  ? "Mesaj göndermek için giriş yapın"
-                  : "İlk mesaj isteğinizi daktilo edin..."
+                  ? t.chat.loginToMessage
+                  : t.chat.inputPlaceholder
               }
               className="flex-1 h-11 min-h-[44px] bg-[#171717] text-xs font-bold text-[#FAFAFA] placeholder-[#737373] border-2 border-[#404040] px-3 py-2 focus:outline-none focus:border-[#EF4444] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             />
@@ -929,8 +936,8 @@ export function ChatModal({
               onClick={handleSend}
               disabled={sending || !input.trim() || !canCompose}
               className="h-11 min-h-[44px] min-w-[44px] px-3.5 bg-[#EF4444] hover:bg-[#DC2626] text-[#0A0A0A] border-2 border-[#404040] shadow-[2px_2px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center flex-shrink-0"
-              title="Gönder"
-              aria-label="Gönder"
+              title={t.chat.send}
+              aria-label={t.chat.send}
             >
               {sending ? (
                 <Loader2 className="w-4 h-4 animate-spin" />

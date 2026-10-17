@@ -15,6 +15,8 @@ import { getOMDBDetails } from '@/lib/omdb';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { JoinClubBanner } from '@/components/auth/JoinClubBanner';
+import { getServerTranslation, getServerLocale } from '@/lib/i18n/server';
+import { translateGenre } from '@/lib/i18n';
 import {
   FilmPageActions,
   FilmShareButton,
@@ -31,12 +33,13 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const resolvedParams = await params;
   const id = resolvedParams.id;
+  const locale = await getServerLocale();
   
   const movie = await getOMDBDetails(id);
 
   if (!movie) {
     return {
-      title: 'Film Bulunamadı — izledin.com',
+      title: locale === 'tr' ? 'Film Bulunamadı — izledin.com' : 'Film Not Found — izledin.com',
     };
   }
 
@@ -47,9 +50,9 @@ export async function generateMetadata(
   const yearSuffix = movie.year ? ` (${movie.year})` : '';
 
   const ogFacts: string[] = [];
-  if (movie.director) ogFacts.push(`Yönetmen: ${movie.director}`);
+  if (movie.director) ogFacts.push(locale === 'tr' ? `Yönetmen: ${movie.director}` : `Director: ${movie.director}`);
   if (hasRating)
-    ogFacts.push(`Puan: ${movie.voteAverage!.toFixed(1)}/10`);
+    ogFacts.push(locale === 'tr' ? `Puan: ${movie.voteAverage!.toFixed(1)}/10` : `Rating: ${movie.voteAverage!.toFixed(1)}/10`);
 
   const ogParams = new URLSearchParams({ title: movie.title });
   if (movie.year) ogParams.set('year', String(movie.year));
@@ -57,14 +60,18 @@ export async function generateMetadata(
   if (hasRating) ogParams.set('rating', movie.voteAverage!.toFixed(1));
 
   return {
-    title: `${movie.title}${yearSuffix} İnceleme ve Puanlar — izledin.com`,
+    title: locale === 'tr'
+      ? `${movie.title}${yearSuffix} İnceleme ve Puanlar — izledin.com`
+      : `${movie.title}${yearSuffix} Review and Ratings — izledin.com`,
     description: movie.overview.slice(0, 150) + '...',
     alternates: {
       canonical: `https://www.izledin.com/film/${id}`,
     },
     openGraph: {
       title: `${movie.title}${yearSuffix} — izledin.com`,
-      description: `Bu filmi İzdaşlarınla puanla ve sinema günlüğüne ekle.${ogFacts.length > 0 ? ` ${ogFacts.join('. ')}.` : ''}`,
+      description: locale === 'tr'
+        ? `Bu filmi İzdaşlarınla puanla ve sinema günlüğüne ekle.${ogFacts.length > 0 ? ` ${ogFacts.join('. ')}.` : ''}`
+        : `Rate this film with your cine mates and log to your 35mm diary.${ogFacts.length > 0 ? ` ${ogFacts.join('. ')}.` : ''}`,
       images: [
         {
           url: `/api/og/movie?${ogParams.toString()}`,
@@ -79,6 +86,7 @@ export async function generateMetadata(
 export default async function FilmDetailPage({ params }: Props) {
   const resolvedParams = await params;
   const id = resolvedParams.id;
+  const { locale, t } = await getServerTranslation();
   const movie = await getOMDBDetails(id);
 
   if (!movie) {
@@ -92,7 +100,12 @@ export default async function FilmDetailPage({ params }: Props) {
       ? movie.voteAverage.toFixed(1)
       : null;
 
-  const typeLabel = movie.type === 'anime' ? 'Anime' : movie.type === 'tv' ? 'Dizi' : 'Sinema Filmi';
+  const typeLabel =
+    movie.type === 'anime'
+      ? (locale === 'tr' ? 'Anime' : 'Anime')
+      : movie.type === 'tv'
+        ? (locale === 'tr' ? 'Dizi' : 'Series')
+        : (locale === 'tr' ? 'Sinema Filmi' : 'Movie');
 
   // Structured Data (JSON-LD) for SEO — properties without real data are
   // omitted entirely rather than padded with invented values.
@@ -105,7 +118,7 @@ export default async function FilmDetailPage({ params }: Props) {
           {
             "@type": "ListItem",
             "position": 1,
-            "name": "Keşfet",
+            "name": locale === 'tr' ? "Keşfet" : "Explore",
             "item": "https://www.izledin.com"
           },
           {
@@ -154,16 +167,16 @@ export default async function FilmDetailPage({ params }: Props) {
         />
 
         {/* Breadcrumb Navigation */}
-        <nav aria-label="Sayfa yolu" className="mb-8 flex items-center gap-2 text-xs  text-neutral-400">
+        <nav aria-label={locale === 'tr' ? "Sayfa yolu" : "Breadcrumbs"} className="mb-8 flex items-center gap-2 text-xs text-neutral-400">
           <Link 
-            href="/" 
-            className="inline-flex items-center gap-1.5  hover:text-white transition-colors cursor-pointer"
+            href={locale === 'tr' ? '/tr' : '/'} 
+            className="inline-flex items-center gap-1.5 hover:text-white transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>KEŞFET (ANA SAYFA)</span>
+            <span>{locale === 'tr' ? 'KEŞFET (ANA SAYFA)' : 'EXPLORE (HOME)'}</span>
           </Link>
           <span>/</span>
-          <span className=" text-[#FAFAFA] font-black uppercase">
+          <span className="text-[#FAFAFA] font-black uppercase">
             {movie.title}
           </span>
         </nav>
@@ -253,27 +266,29 @@ export default async function FilmDetailPage({ params }: Props) {
                   {movie.genres.map((g) => (
                     <span 
                       key={g}
-                      className="px-2.5 py-1 text-xs font-black uppercase border-2 border-dashed  border-[#404040]  text-neutral-300"
+                      className="px-2.5 py-1 text-xs font-black uppercase border-2 border-dashed border-[#404040] text-neutral-300"
                     >
-                      {g}
+                      {translateGenre(g, locale)}
                     </span>
                   ))}
                 </div>
               )}
 
-              <div className=" prose-invert max-w-none">
-                <h3 className="text-sm font-black uppercase border-b-2  border-[#404040] pb-1 mb-2 inline-block">Özet</h3>
-                <p className="text-sm font-sans leading-relaxed  text-neutral-300">
+              <div className="prose-invert max-w-none">
+                <h3 className="text-sm font-black uppercase border-b-2 border-[#404040] pb-1 mb-2 inline-block">
+                  {locale === 'tr' ? 'Özet' : 'Overview'}
+                </h3>
+                <p className="text-sm font-sans leading-relaxed text-neutral-300">
                   {movie.overview}
                 </p>
               </div>
 
               {/* Credits */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t-2 border-dashed  border-neutral-700">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t-2 border-dashed border-neutral-700">
                 {movie.director && (
                   <div className="space-y-1">
                     <span className="text-[10px] font-black text-neutral-500 uppercase flex items-center gap-1.5">
-                      <Award className="w-3 h-3" /> Yönetmen
+                      <Award className="w-3 h-3" /> {locale === 'tr' ? 'Yönetmen' : 'Director'}
                     </span>
                     <p className="text-sm font-bold">{movie.director}</p>
                   </div>
@@ -281,7 +296,7 @@ export default async function FilmDetailPage({ params }: Props) {
                 {movie.actors && (
                   <div className="space-y-1">
                     <span className="text-[10px] font-black text-neutral-500 uppercase flex items-center gap-1.5">
-                      <Users className="w-3 h-3" /> Oyuncular
+                      <Users className="w-3 h-3" /> {locale === 'tr' ? 'Oyuncular' : 'Cast'}
                     </span>
                     <p className="text-sm font-bold line-clamp-2" title={movie.actors}>
                       {movie.actors}

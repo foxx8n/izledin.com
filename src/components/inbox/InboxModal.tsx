@@ -14,6 +14,8 @@ import { useAuth } from '@/context/AuthContext';
 import { getInboxSummary, acceptMatchRequest, rejectMatchRequest, cancelMatchRequest, markMatchMessagesAsRead, InboxItem } from '@/lib/services/inbox.service';
 import { MovieMateMatch } from '@/types';
 import { createClient } from '@/lib/supabase/client';
+import { useTranslation } from '@/lib/i18n';
+import { translateGenre } from '@/lib/i18n/genres';
 
 interface InboxModalProps {
   isOpen: boolean;
@@ -30,6 +32,7 @@ interface InboxModalProps {
 const INBOX_REFRESH_MIN_INTERVAL_MS = 2500;
 
 export function InboxModal({ isOpen, onClose, onOpenChat, onOpenAuth, initialTab }: InboxModalProps) {
+  const { t, locale } = useTranslation();
   const { user, profile } = useAuth();
   const [items, setItems] = useState<InboxItem[]>([]);
   const [activeTab, setActiveTab] = useState<'messages' | 'requests'>(initialTab ?? 'messages');
@@ -253,18 +256,18 @@ export function InboxModal({ isOpen, onClose, onOpenChat, onOpenAuth, initialTab
         <div className="flex items-center justify-between border-b-4  border-[#404040] pb-3.5">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="stamp-badge-solid px-2.5 py-1 text-xs font-black   bg-[#262626] text-[#EF4444] border-2  border-[#404040]">
-              GELEN KUTUSU
+              {t.inbox.title}
             </span>
             <span className="text-xs font-black  text-[#A3A3A3] uppercase">
-              #İZDAŞ POSTASI
+              {t.inbox.badge}
             </span>
           </div>
 
           <button
             onClick={onClose}
             className="w-10 h-10 min-w-[40px] min-h-[40px] flex items-center justify-center    bg-[#262626] hover:bg-[#EF4444] hover:text-[#0A0A0A]  text-[#FAFAFA] border-2  border-[#404040]  shadow-[2px_2px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer"
-            title="Kapat"
-            aria-label="Kapat"
+            title={t.common.close}
+            aria-label={t.common.close}
           >
             <X className="w-5 h-5 stroke-[3]" />
           </button>
@@ -275,9 +278,9 @@ export function InboxModal({ isOpen, onClose, onOpenChat, onOpenAuth, initialTab
             <div className="w-14 h-14 rounded-none  bg-[#EF4444]/15 border-2  border-[#EF4444] mx-auto flex items-center justify-center  text-[#EF4444]">
               <MessageSquare className="w-7 h-7" />
             </div>
-            <h3 className="text-sm font-black uppercase  text-[#FAFAFA]">GELEN KUTUSUNU GÖRMEK İÇİN GİRİŞ YAPIN</h3>
+            <h3 className="text-sm font-black uppercase  text-[#FAFAFA]">{t.inbox.loginPrompt}</h3>
             <p className="text-xs  text-[#A3A3A3] font-bold max-w-sm mx-auto leading-relaxed font-sans">
-              Diğer sinemaseverlerle mesajlaşmak ve gelen eşleşme bildirimlerini yanıtlamak için oturum açın.
+              {t.inbox.loginDesc}
             </p>
             <button
               onClick={() => {
@@ -287,7 +290,7 @@ export function InboxModal({ isOpen, onClose, onOpenChat, onOpenAuth, initialTab
               className="h-11 min-h-[44px] px-6   bg-[#EF4444] hover:bg-[#DC2626]  text-[#0A0A0A] text-xs font-black uppercase border-2  border-[#404040]  shadow-[3px_3px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer inline-flex items-center gap-2 font-mono"
             >
               <CinemaFriendshipIcon size={16} />
-              <span>GİRİŞ YAP</span>
+              <span>{t.nav.signIn}</span>
             </button>
           </div>
         ) : (
@@ -303,7 +306,7 @@ export function InboxModal({ isOpen, onClose, onOpenChat, onOpenAuth, initialTab
                 }`}
               >
                 <MessageSquare className="w-4 h-4" />
-                <span>Sohbetler ({messageItems.length})</span>
+                <span>{t.inbox.chatsTab} ({messageItems.length})</span>
               </button>
 
               <button
@@ -315,7 +318,7 @@ export function InboxModal({ isOpen, onClose, onOpenChat, onOpenAuth, initialTab
                 }`}
               >
                 <CinemaTrustShieldIcon size={16} className=" text-[#EF4444]" />
-                <span>Mesaj İstekleri ({totalPendingRequests})</span>
+                <span>{t.inbox.requestsTab} ({totalPendingRequests})</span>
                 {incomingRequests.length > 0 && (
                   <span className="w-2.5 h-2.5 rounded-full  bg-[#EF4444] animate-ping absolute top-2 right-2" />
                 )}
@@ -327,7 +330,7 @@ export function InboxModal({ isOpen, onClose, onOpenChat, onOpenAuth, initialTab
               {loading ? (
                 <div className="py-16 flex flex-col items-center justify-center gap-2">
                   <Loader2 className="w-6 h-6  text-[#EF4444] animate-spin" />
-                  <span className="text-xs font-black uppercase  text-[#A3A3A3]">Gelen Kutusu Yükleniyor...</span>
+                  <span className="text-xs font-black uppercase  text-[#A3A3A3]">{t.common.loading}</span>
                 </div>
               ) : loadError ? (
                 /* Fetch failed — never masquerade as an empty inbox */
@@ -335,9 +338,9 @@ export function InboxModal({ isOpen, onClose, onOpenChat, onOpenAuth, initialTab
                   <div className="w-12 h-12 rounded-none  bg-[#EF4444]/15 border-2  border-[#EF4444] mx-auto flex items-center justify-center  text-[#EF4444]">
                     <MessageSquare className="w-6 h-6" />
                   </div>
-                  <p className="text-xs uppercase font-black  text-[#FAFAFA]">GELEN KUTUSU YÜKLENEMEDİ.</p>
+                  <p className="text-xs uppercase font-black  text-[#FAFAFA]">{t.common.error.toUpperCase()}</p>
                   <p className="text-[11px]  text-[#A3A3A3] max-w-xs mx-auto font-sans font-medium">
-                    Bağlantıda bir sorun oluştu. Sohbetleriniz ve istekleriniz güvende — lütfen tekrar deneyin.
+                    {t.common.error}
                   </p>
                   <button
                     type="button"
@@ -345,7 +348,7 @@ export function InboxModal({ isOpen, onClose, onOpenChat, onOpenAuth, initialTab
                     className="h-11 min-h-[44px] px-5   bg-[#EF4444] hover:bg-[#DC2626]  text-[#0A0A0A] text-xs font-black uppercase border-2  border-[#404040]  shadow-[3px_3px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer inline-flex items-center gap-2"
                   >
                     <RefreshCw className="w-4 h-4" />
-                    <span>TEKRAR DENE</span>
+                    <span>{t.common.undo.toUpperCase()}</span>
                   </button>
                 </div>
               ) : activeTab === 'messages' ? (
@@ -354,9 +357,9 @@ export function InboxModal({ isOpen, onClose, onOpenChat, onOpenAuth, initialTab
                     <div className="w-12 h-12 rounded-none  bg-[#262626] border-2  border-[#404040] mx-auto flex items-center justify-center  text-[#A3A3A3]">
                       <Film className="w-6 h-6 opacity-60" />
                     </div>
-                    <p className="text-xs uppercase font-black  text-[#FAFAFA]">HENÜZ AKTİF BİR SOHBETİNİZ YOK.</p>
+                    <p className="text-xs uppercase font-black  text-[#FAFAFA]">{t.inbox.noChats}</p>
                     <p className="text-[11px]  text-[#A3A3A3] max-w-xs mx-auto font-sans font-medium">
-                      İzdaşlar sayfasından sinemaseverleri keşfedip mesaj isteği gönderebilirsiniz.
+                      {t.inbox.noChatsDesc}
                     </p>
                   </div>
                 ) : (
@@ -378,7 +381,7 @@ export function InboxModal({ isOpen, onClose, onOpenChat, onOpenAuth, initialTab
                             <span className="text-[10px]  text-[#A3A3A3] truncate">@{item.partner.username}</span>
                           </div>
                           <p className="text-[11px]  text-[#D4D4D4] font-medium truncate mt-0.5 font-sans">
-                            {item.lastMessage ? `"${item.lastMessage.content}"` : 'Sohbete başla...'}
+                            {item.lastMessage ? `"${item.lastMessage.content}"` : t.inbox.startChat}
                           </p>
                         </div>
                       </div>
@@ -386,7 +389,7 @@ export function InboxModal({ isOpen, onClose, onOpenChat, onOpenAuth, initialTab
                       <div className="flex items-center gap-2 flex-shrink-0">
                         {item.unreadCount > 0 && (
                           <span className="px-2 py-0.5 bg-[#DC2626] text-white text-[10px] font-black shadow-[1px_1px_0px_#0A0A0A]">
-                            {item.unreadCount} YENİ
+                            {item.unreadCount} {t.inbox.newBadge}
                           </span>
                         )}
                         <span className="text-[10px]  text-[#A3A3A3] font-bold">{item.updatedAt}</span>
@@ -409,7 +412,7 @@ export function InboxModal({ isOpen, onClose, onOpenChat, onOpenAuth, initialTab
                       }`}
                     >
                       <Check className="w-3.5 h-3.5 stroke-[3]" />
-                      <span>Gelen ({incomingRequests.length})</span>
+                      <span>{t.inbox.incoming} ({incomingRequests.length})</span>
                     </button>
 
                     <button
@@ -422,7 +425,7 @@ export function InboxModal({ isOpen, onClose, onOpenChat, onOpenAuth, initialTab
                       }`}
                     >
                       <CinemaTrustShieldIcon size={14} />
-                      <span>Giden ({outgoingRequests.length})</span>
+                      <span>{t.inbox.outgoing} ({outgoingRequests.length})</span>
                     </button>
                   </div>
 
@@ -432,9 +435,9 @@ export function InboxModal({ isOpen, onClose, onOpenChat, onOpenAuth, initialTab
                         <div className="w-12 h-12 rounded-none  bg-[#262626] border-2  border-[#404040] mx-auto flex items-center justify-center  text-[#A3A3A3]">
                           <CinemaTrustShieldIcon size={24} className="opacity-50 text-[#DC2626]" />
                         </div>
-                        <p className="text-xs uppercase font-black  text-[#FAFAFA]">BEKLEYEN GELEN MESAJ İSTEĞİNİZ YOK.</p>
+                        <p className="text-xs uppercase font-black  text-[#FAFAFA]">{t.inbox.noIncoming}</p>
                         <p className="text-[11px]  text-[#A3A3A3] max-w-xs mx-auto font-sans font-medium">
-                          Diğer sinemaseverler sizinle eşleşmek ve sohbet başlatmak istediğinde istekleri burada listelenecektir.
+                          {t.inbox.noIncomingDesc}
                         </p>
                       </div>
                     ) : (
@@ -453,7 +456,7 @@ export function InboxModal({ isOpen, onClose, onOpenChat, onOpenAuth, initialTab
                               <div className="min-w-0">
                                 <h4 className="text-xs font-black uppercase  text-[#FAFAFA] truncate font-sans">{item.partner.fullName}</h4>
                                 <p className="text-[10px]  text-[#A3A3A3] font-bold truncate">
-                                  @{item.partner.username} • {(item.partner.favoriteGenres || []).slice(0, 2).join(', ')}
+                                  @{item.partner.username} • {(item.partner.favoriteGenres || []).slice(0, 2).map((g) => translateGenre(g, locale)).join(', ')}
                                 </p>
                               </div>
                             </div>
@@ -462,13 +465,13 @@ export function InboxModal({ isOpen, onClose, onOpenChat, onOpenAuth, initialTab
                               {item.isBiletForMe && (
                                 <span
                                   className="px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider bg-[#F59E0B]/15 text-[#F59E0B] border border-[#F59E0B]/40 whitespace-nowrap"
-                                  title="Bu istek BİLET ile öne çıkarılmış"
+                                  title={t.matches.ticketBadge}
                                 >
-                                  BİLETLE GELDİ
+                                  {t.matches.ticketBadge}
                                 </span>
                               )}
                               <div className="stamp-badge px-2 py-0.5 text-[11px] font-black  bg-[#EF4444]/15 border border-dashed  border-[#EF4444]  text-[#EF4444] whitespace-nowrap">
-                                %{item.compatibilityScore} UYUM
+                                %{item.compatibilityScore} {t.matches.compatScore}
                               </div>
                             </div>
                           </div>
@@ -498,7 +501,7 @@ export function InboxModal({ isOpen, onClose, onOpenChat, onOpenAuth, initialTab
                               ) : (
                                 <>
                                   <Check className="w-4 h-4 stroke-[3]" />
-                                  <span>Kabul Et & Sohbete Başla</span>
+                                  <span>{t.inbox.acceptAndChat}</span>
                                 </>
                               )}
                             </button>
@@ -509,7 +512,7 @@ export function InboxModal({ isOpen, onClose, onOpenChat, onOpenAuth, initialTab
                               className="h-11 min-h-[44px] px-4   bg-[#171717] hover:bg-[#333333]  text-[#FAFAFA] text-xs font-black uppercase border-2  border-[#404040]  shadow-[2px_2px_0px_#000000] flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50 active:translate-x-0.5 active:translate-y-0.5 transition-all"
                             >
                               <UserX className="w-4 h-4" />
-                              <span>Pas</span>
+                              <span>{t.inbox.pass}</span>
                             </button>
                           </div>
                         </div>
@@ -522,9 +525,9 @@ export function InboxModal({ isOpen, onClose, onOpenChat, onOpenAuth, initialTab
                         <div className="w-12 h-12 rounded-none  bg-[#262626] border-2  border-[#404040] mx-auto flex items-center justify-center  text-[#A3A3A3]">
                           <CinemaTrustShieldIcon size={24} className="opacity-50 text-amber-500" />
                         </div>
-                        <p className="text-xs uppercase font-black  text-[#FAFAFA]">GÖNDERİLMİŞ BEKLEYEN BİR İSTEĞİNİZ YOK.</p>
+                        <p className="text-xs uppercase font-black  text-[#FAFAFA]">{t.inbox.noOutgoing}</p>
                         <p className="text-[11px]  text-[#A3A3A3] max-w-xs mx-auto font-sans font-medium">
-                          Radardan bir sinemaseveri beğendiğinizde gönderdiğiniz istekler burada onay bekler.
+                          {t.inbox.noOutgoingDesc}
                         </p>
                       </div>
                     ) : (
@@ -543,19 +546,19 @@ export function InboxModal({ isOpen, onClose, onOpenChat, onOpenAuth, initialTab
                               <div className="min-w-0">
                                 <h4 className="text-xs font-black uppercase  text-[#FAFAFA] truncate font-sans">{item.partner.fullName}</h4>
                                 <p className="text-[10px]  text-[#A3A3A3] font-bold truncate">
-                                  @{item.partner.username} • {(item.partner.favoriteGenres || []).slice(0, 2).join(', ')}
+                                  @{item.partner.username} • {(item.partner.favoriteGenres || []).slice(0, 2).map((g) => translateGenre(g, locale)).join(', ')}
                                 </p>
                               </div>
                             </div>
 
                             <div className="stamp-badge px-2 py-0.5 text-[10px] font-black  bg-amber-500/15 border border-dashed  border-amber-500  text-amber-400 whitespace-nowrap flex-shrink-0">
-                              ONAY BEKLENİYOR
+                              {t.inbox.awaitingApproval}
                             </div>
                           </div>
 
                           {item.lastMessage?.content && (
                             <div className=" bg-[#171717] p-2.5 border  border-[#404040] text-xs font-medium italic  text-neutral-300 font-sans">
-                              <span className="not-italic text-[10px] font-black uppercase text-[#A3A3A3] block mb-1">İlettiğiniz Not:</span>
+                              <span className="not-italic text-[10px] font-black uppercase text-[#A3A3A3] block mb-1">{t.inbox.yourNote}</span>
                               &ldquo;{item.lastMessage.content}&rdquo;
                             </div>
                           )}
@@ -573,7 +576,7 @@ export function InboxModal({ isOpen, onClose, onOpenChat, onOpenAuth, initialTab
                               className="flex-1 h-11 min-h-[44px] bg-[#171717] hover:bg-[#333333] text-[#FAFAFA] text-xs font-black uppercase border-2 border-[#404040] shadow-[2px_2px_0px_#000000] flex items-center justify-center gap-1.5 cursor-pointer active:translate-x-0.5 active:translate-y-0.5 transition-all"
                             >
                               <MessageSquare className="w-4 h-4 text-[#EF4444]" />
-                              <span>Detayı Görüntüle</span>
+                              <span>{t.inbox.viewDetails}</span>
                             </button>
 
                             <button
@@ -581,12 +584,12 @@ export function InboxModal({ isOpen, onClose, onOpenChat, onOpenAuth, initialTab
                               onClick={() => handleCancel(item)}
                               disabled={actionLoading === item.matchId}
                               className="h-11 min-h-[44px] px-4 bg-[#262626] hover:bg-rose-950 hover:text-rose-300 text-neutral-400 text-xs font-black uppercase border-2 border-[#404040] shadow-[2px_2px_0px_#000000] flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50 active:translate-x-0.5 active:translate-y-0.5 transition-all"
-                              title="İsteği İptal Et / Geri Çek"
+                              title={t.inbox.cancel}
                             >
                               {actionLoading === item.matchId ? (
                                 <Loader2 className="w-4 h-4 animate-spin" />
                               ) : (
-                                <span>İptal Et</span>
+                                <span>{t.inbox.cancel}</span>
                               )}
                             </button>
                           </div>
@@ -602,9 +605,9 @@ export function InboxModal({ isOpen, onClose, onOpenChat, onOpenAuth, initialTab
             <div className="pt-2 border-t-2  border-[#404040] flex items-center justify-between text-[11px]  text-[#A3A3A3] font-bold">
               <span className="flex items-center gap-1.5">
                 <CinemaTrustShieldIcon size={14} className=" text-[#EF4444]" />
-                CANLI İZDAŞ AĞI
+                {t.inbox.networkBadge}
               </span>
-              <span>[ESC] İLE KAPAT</span>
+              <span>{t.inbox.escClose}</span>
             </div>
           </>
         )}

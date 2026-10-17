@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { Search, X, Loader2, Star, Plus, Film, ArrowRight } from 'lucide-react';
 import { searchCatalog, getTrendingMedia } from '@/lib/omdb';
 import { MediaItem } from '@/types';
+import { useTranslation } from '@/lib/i18n';
+import { translateGenre } from '@/lib/i18n/genres';
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -21,6 +23,7 @@ const POPULAR_SUGGESTIONS = [
 ];
 
 export function SearchModal({ isOpen, onClose, onSelectMedia }: SearchModalProps) {
+  const { t, locale } = useTranslation();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -106,7 +109,7 @@ export function SearchModal({ isOpen, onClose, onSelectMedia }: SearchModalProps
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="FİLM, DİZİ, ANİME VEYA YÖNETMEN ARA..."
+            placeholder={t.searchModal.placeholder}
             autoFocus
             className="flex-1 bg-transparent text-xs sm:text-base font-black uppercase  text-[#FAFAFA]  placeholder-neutral-500 focus:outline-none tracking-tight font-mono"
           />
@@ -120,7 +123,7 @@ export function SearchModal({ isOpen, onClose, onSelectMedia }: SearchModalProps
               type="button"
               onClick={() => setQuery('')}
               className="p-1 text-neutral-400  hover:text-white cursor-pointer"
-              title="Temizle"
+              title={t.common.cancel}
             >
               <X className="w-4 h-4 stroke-[3]" />
             </button>
@@ -130,7 +133,7 @@ export function SearchModal({ isOpen, onClose, onSelectMedia }: SearchModalProps
             type="button"
             onClick={onClose}
             className="p-1.5   bg-neutral-800 hover:bg-neutral-700 border-2  border-[#404040] cursor-pointer flex-shrink-0"
-            title="Kapat (ESC)"
+            title={`${t.common.close} (ESC)`}
           >
             <X className="w-4 sm:w-5 h-4 sm:h-5 stroke-[3]" />
           </button>
@@ -138,7 +141,7 @@ export function SearchModal({ isOpen, onClose, onSelectMedia }: SearchModalProps
 
         {/* Quick Suggestion Pills */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-[11px]">
-          <span className=" text-neutral-400 font-bold whitespace-nowrap">ÖNERİLER:</span>
+          <span className=" text-neutral-400 font-bold whitespace-nowrap">{t.searchModal.suggestions}</span>
           {POPULAR_SUGGESTIONS.map((suggestion) => (
             <button
               key={suggestion}
@@ -153,8 +156,8 @@ export function SearchModal({ isOpen, onClose, onSelectMedia }: SearchModalProps
 
         {/* Section Title */}
         <div className="flex items-center justify-between text-[11px] font-black uppercase text-neutral-400 font-mono">
-          <span>{query.trim() ? `ARAMA SONUÇLARI (${results.length})` : 'POPÜLER & TREND YAPIMLAR'}</span>
-          {loading && <span className="text-[#EF4444] animate-pulse">ARANIYOR...</span>}
+          <span>{query.trim() ? `${t.searchModal.resultsTitle} (${results.length})` : t.searchModal.trendingTitle}</span>
+          {loading && <span className="text-[#EF4444] animate-pulse">{t.searchModal.searching}</span>}
         </div>
 
         {/* Results List */}
@@ -164,10 +167,10 @@ export function SearchModal({ isOpen, onClose, onSelectMedia }: SearchModalProps
               <Film className="w-10 h-10  text-[#EF4444] mx-auto stroke-[2]" />
               <div className="space-y-1">
                 <p className="text-xs sm:text-sm font-black uppercase  text-[#FAFAFA]">
-                  "{query}" İÇİN SONUÇ BULUNAMADI
+                  "{query}" {t.searchModal.noResults}
                 </p>
                 <p className="text-[11px]  text-neutral-400">
-                  Farklı bir film başlığı, yönetmen veya popüler önerilerden birini seçin.
+                  {t.searchModal.noResultsSub}
                 </p>
               </div>
               <div className="pt-2 flex flex-wrap justify-center gap-1.5">
@@ -219,8 +222,8 @@ export function SearchModal({ isOpen, onClose, onSelectMedia }: SearchModalProps
                         {item.title}
                       </h4>
                       <p className="text-[11px]  text-neutral-400 font-bold truncate mt-0.5 font-mono">
-                        {item.year || '—'} • {item.genres?.slice(0, 2).join(' / ') || (item.type === 'tv' ? 'Dizi' : 'Sinema')}
-                        {item.director ? ` • YÖN: ${item.director}` : ''}
+                        {item.year || '—'} • {item.genres?.slice(0, 2).map((g) => translateGenre(g, locale)).join(' / ') || (item.type === 'tv' ? t.mediaModal.tv : t.mediaModal.movie)}
+                        {item.director ? ` • ${t.media.director.toUpperCase().slice(0, 3)}: ${item.director}` : ''}
                       </p>
                     </div>
                   </div>
@@ -241,7 +244,7 @@ export function SearchModal({ isOpen, onClose, onSelectMedia }: SearchModalProps
                       className="px-2.5 sm:px-3 py-1.5  hover:bg-[#B91C1C] bg-[#EF4444] text-white text-[11px] font-black uppercase border-2  border-[#404040]  shadow-[2px_2px_0px_#000000] flex items-center gap-1 cursor-pointer whitespace-nowrap active:translate-x-0.5 active:translate-y-0.5"
                     >
                       <Plus className="w-3.5 h-3.5 stroke-[3]" />
-                      <span className="hidden sm:inline">Puanla</span>
+                      <span className="hidden sm:inline">{t.searchModal.rate}</span>
                     </button>
                   </div>
                 </div>
@@ -252,8 +255,8 @@ export function SearchModal({ isOpen, onClose, onSelectMedia }: SearchModalProps
 
         {/* Bottom Helper */}
         <div className="pt-2 border-t-2  border-[#404040] flex items-center justify-between text-[11px]  text-neutral-400 font-bold font-mono">
-          <span>{results.length} YAPIM LİSTELENDİ</span>
-          <span className="hidden sm:inline">[ESC] VEYA DIŞINA TIKLAYARAK KAPAT</span>
+          <span>{results.length} {t.searchModal.titlesListed}</span>
+          <span className="hidden sm:inline">{t.searchModal.escToClose}</span>
           <span className="sm:hidden">[ESC]</span>
         </div>
 

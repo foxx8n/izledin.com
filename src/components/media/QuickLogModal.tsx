@@ -25,6 +25,8 @@ import { useAuth } from "@/context/AuthContext";
 import { createWatchLog } from "@/lib/services/watch-logs.service";
 import { WatchDateSelector } from "@/components/ui/WatchDateSelector";
 import { localTodayISO } from "@/lib/date";
+import { useTranslation } from "@/lib/i18n";
+import { translateGenre } from "@/lib/i18n/genres";
 
 interface QuickLogModalProps {
   item: MediaItem | null;
@@ -43,6 +45,7 @@ export function QuickLogModal({
   onOpenAuth,
   onChangeMovie,
 }: QuickLogModalProps) {
+  const { t, locale } = useTranslation();
   const { user, profile } = useAuth();
   const [rating, setRating] = useState<number>(8.0);
   const [hoverRating, setHoverRating] = useState<number | null>(null);
@@ -198,10 +201,10 @@ export function QuickLogModal({
               id="quick-log-modal-title"
               className="stamp-badge-solid px-2.5 py-1 text-xs font-black  bg-[#EF4444] text-white border-none  shadow-[2px_2px_0px_#000000]"
             >
-              GÜNLÜĞE YAZ & PUANLA
+              {t.quickLog.title}
             </span>
             <span className="text-xs font-black  text-neutral-400 uppercase hidden sm:inline">
-              #ARŞİV-{(item.id || "26").slice(-4).toUpperCase()}
+              {t.quickLog.archivePrefix}{(item.id || "26").slice(-4).toUpperCase()}
             </span>
           </div>
 
@@ -209,8 +212,8 @@ export function QuickLogModal({
             type="button"
             onClick={handleSafeClose}
             className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center    bg-neutral-800 hover:bg-[#EF4444] hover:text-[#0A0A0A] border-2  border-[#404040] transition-colors cursor-pointer"
-            title="Kapat (ESC)"
-            aria-label="Kapat"
+            title={`${t.common.close} (ESC)`}
+            aria-label={t.common.close}
           >
             <X className="w-5 h-5 stroke-[3]" />
           </button>
@@ -220,8 +223,7 @@ export function QuickLogModal({
         {showDiscardConfirm && (
           <div className="p-3 bg-amber-500/15 border-2 border-amber-600 text-xs font-bold font-mono flex items-center justify-between gap-3 animate-in fade-in">
             <span className=" text-amber-300">
-              Yazdığınız inceleme taslak olarak kaydedildi. Çıkmak istiyor
-              musunuz?
+              {t.quickLog.discardNotice}
             </span>
             <div className="flex items-center gap-2 shrink-0">
               <button
@@ -229,14 +231,14 @@ export function QuickLogModal({
                 onClick={() => setShowDiscardConfirm(false)}
                 className="px-2.5 py-1  bg-neutral-800 text-xs font-black uppercase border border-[#0A0A0A]"
               >
-                Vazgeç
+                {t.quickLog.keepEditing}
               </button>
               <button
                 type="button"
                 onClick={onClose}
                 className="px-2.5 py-1 bg-[#DC2626] text-white text-xs font-black uppercase border border-[#0A0A0A]"
               >
-                Kapat
+                {t.quickLog.exit}
               </button>
             </div>
           </div>
@@ -268,11 +270,11 @@ export function QuickLogModal({
             </h3>
             <p className="text-xs  text-neutral-400 font-bold truncate">
               {item.year || "—"} •{" "}
-              {item.genres?.slice(0, 2).join(" / ") || "Sinema"}
+              {item.genres?.slice(0, 2).map((g) => translateGenre(g, locale)).join(" / ") || (item.type === "tv" ? t.mediaModal.tv : t.mediaModal.movie)}
             </p>
             {item.director && (
               <p className="text-xs  text-[#EF4444] font-black truncate">
-                YÖNETMEN: {item.director.toUpperCase()}
+                {t.media.director.toUpperCase()}: {item.director.toUpperCase()}
               </p>
             )}
           </div>
@@ -288,10 +290,10 @@ export function QuickLogModal({
                 onChangeMovie();
               }}
               className="px-3 py-2 min-h-[44px]   bg-[#0A0A0A] text-[#EF4444] text-xs font-black uppercase border  border-[#404040]  hover:bg-[#171717] cursor-pointer flex items-center gap-1.5 self-center flex-shrink-0"
-              title="Farklı bir film ara"
+              title={t.quickLog.changeMovie}
             >
               <Search className="w-3.5 h-3.5" />
-              <span>Değiştir</span>
+              <span>{t.quickLog.changeMovie}</span>
             </button>
           )}
         </div>
@@ -300,7 +302,7 @@ export function QuickLogModal({
         {!user && (
           <div className="p-3 bg-amber-50 bg-amber-950/40 border-2 border-amber-500 text-xs font-bold flex items-center justify-between gap-2">
             <span className=" text-amber-300">
-              İzleme günlüğünüze kaydetmek için giriş yapmalısınız.
+              {t.quickLog.authNotice}
             </span>
             <button
               type="button"
@@ -310,7 +312,7 @@ export function QuickLogModal({
               }}
               className="px-3 py-1.5  hover:bg-[#B91C1C] bg-[#EF4444] text-white text-[11px] font-black uppercase border  border-[#404040] cursor-pointer whitespace-nowrap active:translate-x-0.5"
             >
-              Giriş Yap
+              {t.quickLog.signIn}
             </button>
           </div>
         )}
@@ -327,14 +329,14 @@ export function QuickLogModal({
               size={15}
               className=" text-green-400"
             />
-            <span>İZLEME GÜNLÜĞÜNÜZE MÜHÜRLENDİ!</span>
+            <span>{t.quickLog.success}</span>
           </div>
         )}
 
         {/* 1 to 10 Star Rating Selector */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs font-black uppercase">
-            <span>PUANINIZ (1 - 10):</span>
+            <span>{t.quickLog.yourRating}</span>
             <div className="marker-highlight text-sm font-black  text-[#FAFAFA] flex items-center gap-1">
               <CinemaStarIcon size={14} className=" text-[#EF4444]" />
               <span>
@@ -358,7 +360,7 @@ export function QuickLogModal({
                   onMouseEnter={() => setHoverRating(starVal)}
                   onMouseLeave={() => setHoverRating(null)}
                   className="p-1 hover:scale-125 transition-transform cursor-pointer focus:outline-none"
-                  aria-label={`${starVal} Puan`}
+                  aria-label={`${starVal}`}
                 >
                   <CinemaStarIcon
                     size={22}
@@ -381,13 +383,13 @@ export function QuickLogModal({
             htmlFor="log-review-textarea"
             className="text-xs font-black uppercase  text-[#FAFAFA] block"
           >
-            DAKTİLO İNCELEME & NOTLAR:
+            {t.quickLog.reviewLabel}
           </label>
           <textarea
             id="log-review-textarea"
             value={review}
             onChange={(e) => setReview(e.target.value)}
-            placeholder="Bu yapım hakkındaki düşüncelerinizi, favori sahneleri daktilo ile kaydedin..."
+            placeholder={t.quickLog.reviewPlaceholder}
             rows={3}
             className="w-full  bg-neutral-800  text-[#FAFAFA] placeholder-neutral-500 border-2  border-[#404040] p-3 text-xs font-mono font-bold focus:outline-none  focus:bg-neutral-900 transition-colors"
           />
@@ -397,7 +399,7 @@ export function QuickLogModal({
         <WatchDateSelector
           value={watchedDate}
           onChange={setWatchedDate}
-          label="İZLEME TARİHİ"
+          label={t.quickLog.watchDate}
         />
 
         {/* Toggles (Favorite & Rewatch) */}
@@ -412,7 +414,7 @@ export function QuickLogModal({
             }`}
           >
             <Heart className="w-4 h-4 fill-current stroke-[2]" />
-            <span>FAVORİ BAŞYAPIT</span>
+            <span>{t.quickLog.favorite}</span>
           </button>
 
           <button
@@ -425,7 +427,7 @@ export function QuickLogModal({
             }`}
           >
             <Repeat className="w-4 h-4 stroke-[3]" />
-            <span>TEKRAR İZLENDİ</span>
+            <span>{t.quickLog.rewatch}</span>
           </button>
         </div>
 
@@ -439,12 +441,12 @@ export function QuickLogModal({
           {saving ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span>GÜNLÜĞE YAZILIYOR...</span>
+              <span>{t.quickLog.saving}</span>
             </>
           ) : (
             <>
               <Check className="w-4 h-4 stroke-[3]" />
-              <span>GÜNLÜĞE MÜHÜRLE & KAYDET</span>
+              <span>{t.quickLog.save}</span>
             </>
           )}
         </button>

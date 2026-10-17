@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { Star, Check, Bookmark, Plus, Film } from 'lucide-react';
 import { MediaItem } from '@/types';
+import { useTranslation } from '@/lib/i18n';
+import { translateGenre } from '@/lib/i18n/genres';
 
 interface MediaCardProps {
   item: MediaItem;
@@ -29,11 +31,13 @@ export function MediaCard({
   isWatchlisted,
   onOpenLog,
 }: MediaCardProps) {
+  const { t, locale } = useTranslation();
   const [imgError, setImgError] = useState(false);
 
-  const primaryGenre =
+  const rawGenre =
     item.genres?.[0] ||
     (item.type === 'anime' ? 'Anime' : item.type === 'tv' ? 'Dizi' : 'Sinema');
+  const primaryGenre = translateGenre(rawGenre, locale);
 
   const ratingFormatted =
     typeof item.voteAverage === 'number' && item.voteAverage > 0
@@ -41,7 +45,7 @@ export function MediaCard({
       : null;
 
   const typeLabel =
-    item.type === 'anime' ? 'Anime' : item.type === 'tv' ? 'Dizi' : 'Film';
+    item.type === 'anime' ? t.mediaModal.anime : item.type === 'tv' ? t.mediaModal.tv : t.mediaModal.movie;
 
   return (
     <div className="group relative flex flex-col justify-between  bg-[#171717]  text-[#FAFAFA] border-2  border-[#404040]  shadow-[4px_4px_0px_#000000]  hover:shadow-[6px_6px_0px_#EF4444] hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all duration-150 p-2.5 sm:p-3 select-none">
@@ -104,7 +108,7 @@ export function MediaCard({
       <div className="pt-2.5 flex flex-col justify-between flex-1 space-y-1.5 font-mono">
         <div>
           <div className="flex items-center justify-between text-[11px]  text-neutral-400 font-bold">
-            <span>YIL: {item.year || '—'}</span>
+            <span>{t.watchDate.year}: {item.year || '—'}</span>
             {item.streamingOn && item.streamingOn.length > 0 && (
               <span className="px-1 py-0.2  bg-neutral-800  text-[#FAFAFA] text-[10px] font-black border  border-[#404040] truncate max-w-[65px]">
                 {item.streamingOn[0]}
@@ -131,7 +135,7 @@ export function MediaCard({
           <div className="pt-2 border-t-2  border-[#404040] flex items-center justify-between gap-0.5 sm:gap-1 mt-auto">
             <div
               className={`flex items-center gap-0.5 sm:gap-1 font-black text-[10px] sm:text-[11px]   bg-[#FAFAFA] text-[#0A0A0A] px-1 sm:px-1.5 py-1 border-2  border-[#FAFAFA] cursor-pointer   hover:bg-[#DC2626] hover:border-[#DC2626] hover:text-white transition-colors shrink-0 ${ratingFormatted ? '' : 'opacity-40'}`}
-              title={ratingFormatted ? 'Detaylı İncele & Puanları Gör' : 'Puan verilmemiş'}
+              title={ratingFormatted ? `${item.title} (${ratingFormatted}/10)` : t.watchDate.noDateSelected}
               onClick={() => onSelect?.(item)}
             >
               <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-[#F59E0B] text-[#F59E0B] inline stroke-none" />
@@ -148,8 +152,8 @@ export function MediaCard({
                     e.stopPropagation();
                     onOpenLog(item);
                   }}
-                  title="İzledim olarak işaretle"
-                  aria-label="İzledim olarak işaretle"
+                  title={t.mediaModal.markWatched}
+                  aria-label={t.mediaModal.markWatched}
                   className="w-6 h-6 sm:w-7 sm:h-7 min-w-[24px] sm:min-w-[28px] min-h-[24px] sm:min-h-[28px] flex items-center justify-center border-2  border-[#404040] transition-all cursor-pointer shrink-0 bg-[#171717]  text-[#FAFAFA] hover:bg-[#0A0A0A] hover:text-white"
                 >
                   <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 stroke-[3]" />
@@ -163,8 +167,8 @@ export function MediaCard({
                     e.stopPropagation();
                     onToggleWatchlist(item);
                   }}
-                  title={isWatchlisted ? 'Listeden çıkar' : 'İzleme listeme ekle'}
-                  aria-label={isWatchlisted ? 'Listeden çıkar' : 'İzleme listeme ekle'}
+                  title={isWatchlisted ? t.mediaModal.inWatchlist : t.mediaModal.addWatchlist}
+                  aria-label={isWatchlisted ? t.mediaModal.inWatchlist : t.mediaModal.addWatchlist}
                   aria-pressed={Boolean(isWatchlisted)}
                   className={`w-6 h-6 sm:w-7 sm:h-7 min-w-[24px] sm:min-w-[28px] min-h-[24px] sm:min-h-[28px] flex items-center justify-center border-2  border-[#404040] transition-all cursor-pointer shrink-0 ${
                     isWatchlisted
@@ -182,12 +186,12 @@ export function MediaCard({
                   e.stopPropagation();
                   onLogClick?.(item);
                 }}
-                title="İzleme Kaydı Ekle & Puanla"
-                aria-label="İzleme Kaydı Ekle & Puanla"
+                title={t.quickLog.title}
+                aria-label={t.quickLog.title}
                 className="h-6 w-6 sm:h-7 sm:w-auto sm:px-2 min-h-[24px] sm:min-h-[28px] min-w-[24px] sm:min-w-[28px]  hover:bg-[#B91C1C] bg-[#DC2626] text-white font-mono font-black text-[11px] border-2  border-[#404040]  shadow-[1.5px_1.5px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 transition-all flex items-center justify-center gap-1 cursor-pointer p-0 sm:p-1 shrink-0"
               >
                 <Plus className="w-2.5 h-2.5 sm:w-3 sm:h-3 stroke-[3]" />
-                <span className="hidden sm:inline">Yaz</span>
+                <span className="hidden sm:inline">{t.searchModal.rate}</span>
               </button>
             </div>
           </div>

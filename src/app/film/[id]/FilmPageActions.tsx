@@ -20,6 +20,7 @@ import React, { useMemo, useRef, useState } from 'react';
 import { Star, Share2, Check } from 'lucide-react';
 import { QuickLogModal } from '@/components/media/QuickLogModal';
 import { AuthModal } from '@/components/auth/AuthModal';
+import { useTranslation } from '@/lib/i18n';
 import { MediaItem } from '@/types';
 
 interface FilmActionDataProps {
@@ -37,6 +38,7 @@ interface FilmActionDataProps {
 }
 
 export function FilmShareButton() {
+  const { locale } = useTranslation();
   const [copied, setCopied] = useState(false);
   const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -56,8 +58,8 @@ export function FilmShareButton() {
     <button
       type="button"
       onClick={handleCopy}
-      title={copied ? 'Link kopyalandı' : 'Linki Kopyala'}
-      aria-label="Sayfa linkini kopyala"
+      title={copied ? (locale === 'tr' ? 'Link kopyalandı' : 'Link copied') : (locale === 'tr' ? 'Linki Kopyala' : 'Copy link')}
+      aria-label={locale === 'tr' ? "Sayfa linkini kopyala" : "Copy page link"}
       aria-live="polite"
       className={`h-10 px-3 flex items-center justify-center gap-1.5 border-2 transition-colors cursor-pointer font-mono text-[10px] font-black uppercase tracking-wider ${
         copied
@@ -68,7 +70,7 @@ export function FilmShareButton() {
       {copied ? (
         <>
           <Check className="w-4 h-4 stroke-[3]" />
-          <span>KOPYALANDI</span>
+          <span>{locale === 'tr' ? 'KOPYALANDI' : 'COPIED'}</span>
         </>
       ) : (
         <Share2 className="w-4 h-4" />
@@ -78,6 +80,7 @@ export function FilmShareButton() {
 }
 
 export function FilmPageActions(props: FilmActionDataProps) {
+  const { locale } = useTranslation();
   const [isQuickLogOpen, setIsQuickLogOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
 
@@ -120,7 +123,7 @@ export function FilmPageActions(props: FilmActionDataProps) {
         className="w-full py-4 bg-[#DC2626] hover:bg-[#B91C1C] text-white font-black uppercase text-sm border-4 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] transition-transform active:translate-y-1 active:shadow-none flex items-center justify-center gap-2 cursor-pointer"
       >
         <Star className="w-5 h-5 fill-current" />
-        <span>DAKTİLOYA EKLE (PUANLA)</span>
+        <span>{locale === 'tr' ? 'DAKTİLOYA EKLE (PUANLA)' : 'LOG TO DIARY (RATE)'}</span>
       </button>
 
       <QuickLogModal

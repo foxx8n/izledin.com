@@ -34,6 +34,7 @@ import {
   DiscoverySortOption,
 } from "@/lib/algorithms/discovery";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslation, translateGenre } from "@/lib/i18n";
 import type { MediaItem } from "@/types";
 
 const QuickLogModal = dynamic(
@@ -71,6 +72,7 @@ const DISCOVERY_PAGE_SIZE = 15;
  * same CineScore ranking, same filters/sort/shuffle/watchlist flows.
  */
 export function KesifView() {
+  const { t, locale } = useTranslation();
   const { user, profile } = useAuth();
 
   const [mediaItems, setMediaItems] = useState<MediaItem[]>(
@@ -189,13 +191,21 @@ export function KesifView() {
       await toggleWatchlistItem(user.id, item);
       showCardToast(
         wasWatchlisted
-          ? `"${item.title}" izleme listenden çıkarıldı.`
-          : `"${item.title}" izleme listene eklendi.`,
+          ? locale === "tr"
+            ? `"${item.title}" izleme listenden çıkarıldı.`
+            : `"${item.title}" removed from your watchlist.`
+          : locale === "tr"
+            ? `"${item.title}" izleme listene eklendi.`
+            : `"${item.title}" added to your watchlist.`,
       );
     } catch (err) {
       console.warn("toggleWatchlistItem failed:", err);
       setWatchlistIds(watchlistIds); // roll back — never show unsaved state
-      showCardToast("İzleme listesi güncellenemedi. Lütfen tekrar deneyin.");
+      showCardToast(
+        locale === "tr"
+          ? "İzleme listesi güncellenemedi. Lütfen tekrar deneyin."
+          : "Could not update watchlist. Please try again.",
+      );
     } finally {
       watchlistPendingRef.current.delete(item.id);
     }
@@ -314,7 +324,7 @@ export function KesifView() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
                 <div className="absolute top-3 left-3 stamp-badge-solid px-2.5 py-1 text-[11px] font-black bg-[#0A0A0A] text-[#EF4444] border-2 border-white flex items-center gap-1.5 shadow-[2px_2px_0px_#000000]">
                   <MasterpieceLaurelIcon size={14} className="text-[#EF4444]" />
-                  <span>HAFTANIN BAŞYAPITI</span>
+                  <span>{t.kesif.masterpieceHeroBadge}</span>
                 </div>
                 <div className="absolute bottom-3 right-3 flex items-center border-2 border-black shadow-[3px_3px_0px_#000000] overflow-hidden select-none">
                   <span className="bg-[#F5C518] text-black font-black text-[11px] px-2 py-0.5 tracking-tight font-sans uppercase">
@@ -336,7 +346,7 @@ export function KesifView() {
               <div className="flex items-center gap-2 flex-wrap">
                 {activeFeatured.director && (
                   <span className="px-2.5 py-1 bg-neutral-900 text-neutral-300 text-xs font-bold border border-neutral-700">
-                    YÖNETMEN: {activeFeatured.director.toUpperCase()}
+                    {t.kesif.director} {activeFeatured.director.toUpperCase()}
                   </span>
                 )}
                 {activeFeatured.year && (
@@ -347,7 +357,7 @@ export function KesifView() {
                 )}
                 {activeFeatured.genres && activeFeatured.genres.length > 0 && (
                   <span className="px-2.5 py-1 bg-[#DC2626]/20 text-[#EF4444] text-xs font-black border border-[#DC2626]/40 uppercase">
-                    {activeFeatured.genres.slice(0, 2).join(" / ")}
+                    {activeFeatured.genres.slice(0, 2).map((g) => translateGenre(g, locale)).join(" / ")}
                   </span>
                 )}
               </div>
@@ -376,7 +386,7 @@ export function KesifView() {
 
               {activeFeatured.actors && (
                 <p className="text-xs text-neutral-300 font-medium font-mono">
-                  <span className="text-[#A3A3A3] font-bold">KADRO: </span>
+                  <span className="text-[#A3A3A3] font-bold">{t.kesif.cast} </span>
                   {activeFeatured.actors}
                 </p>
               )}
@@ -392,7 +402,7 @@ export function KesifView() {
                   className="min-h-[48px] px-6 py-3.5 bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-black uppercase tracking-wider border-2 border-white shadow-[3px_3px_0px_#FFFFFF] hover:shadow-[1px_1px_0px_#FFFFFF] hover:translate-x-[1px] hover:translate-y-[1px] active:translate-x-1 active:translate-y-1 transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Plus className="w-4 h-4 stroke-[3]" />
-                  <span>İzledim & Günlüğe Yaz</span>
+                  <span>{t.kesif.logAction}</span>
                 </button>
                 <button
                   type="button"
@@ -400,7 +410,7 @@ export function KesifView() {
                   className="min-h-[48px] px-5 py-3.5 bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-black uppercase tracking-wider border-2 border-neutral-700 shadow-[3px_3px_0px_#000000] hover:translate-x-[1px] hover:translate-y-[1px] transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <Info className="w-4 h-4" />
-                  <span>Filmi İncele</span>
+                  <span>{t.kesif.detailsAction}</span>
                 </button>
               </div>
             </div>
@@ -414,10 +424,10 @@ export function KesifView() {
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b-4 border-[#404040] pb-3">
             <div>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-[#FAFAFA] uppercase tracking-tight font-sans">
-                VİZYONDAKİLER & KEŞİF
+                {t.kesif.sectionTitle}
               </h2>
               <p className="text-xs sm:text-sm text-neutral-400 font-mono mt-1">
-                Kulüp üyelerinin puanladığı ve tartıştığı kült yapımlar.
+                {t.kesif.sectionSubtitle}
               </p>
             </div>
 
@@ -426,8 +436,8 @@ export function KesifView() {
                 <Search className="w-3.5 h-3.5 text-[#EF4444] stroke-[2.5] shrink-0 ml-2.5 select-none" />
                 <input
                   type="text"
-                  placeholder="FİLTRELE..."
-                  aria-label="Katalogda başlık veya yönetmen filtrele"
+                  placeholder={t.kesif.filterPlaceholder}
+                  aria-label={t.kesif.filterPlaceholder}
                   value={catalogSearch}
                   onChange={(e) => {
                     setCatalogSearch(e.target.value);
@@ -443,8 +453,8 @@ export function KesifView() {
                       setVisibleCount(DISCOVERY_PAGE_SIZE);
                     }}
                     className="p-1 mr-1 text-neutral-400 hover:text-[#EF4444] transition-colors cursor-pointer"
-                    title="Aramayı temizle"
-                    aria-label="Aramayı temizle"
+                    title={locale === "tr" ? "Aramayı temizle" : "Clear search"}
+                    aria-label={locale === "tr" ? "Aramayı temizle" : "Clear search"}
                   >
                     <X className="w-3.5 h-3.5 stroke-[3]" />
                   </button>
@@ -455,20 +465,20 @@ export function KesifView() {
                 type="button"
                 onClick={handleShuffle}
                 className="group flex items-center gap-2 px-3 py-2 bg-[#171717] hover:bg-[#262626] text-[#FAFAFA] border-2 border-[#404040] shadow-[3px_3px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 text-xs font-black uppercase transition-all cursor-pointer select-none"
-                title="Kataloğu rastgele karıştır"
+                title={t.kesif.shuffle}
               >
                 <Shuffle
                   className={`w-3.5 h-3.5 text-[#EF4444] stroke-[2.5] transition-transform duration-300 ${isShuffling ? "rotate-180 scale-110" : "group-hover:rotate-45"}`}
                 />
-                <span className="hidden sm:inline">Karıştır</span>
+                <span className="hidden sm:inline">{t.kesif.shuffle}</span>
               </button>
 
               <div className="flex items-center bg-[#171717] p-1 border-2 border-[#404040] shadow-[3px_3px_0px_#000000]">
                 {[
-                  { key: "all", label: "TÜMÜ" },
-                  { key: "movie", label: "FİLMLER" },
-                  { key: "tv", label: "DİZİLER" },
-                  { key: "anime", label: "ANİME" },
+                  { key: "all", label: t.kesif.all },
+                  { key: "movie", label: t.kesif.movies },
+                  { key: "tv", label: t.kesif.series },
+                  { key: "anime", label: t.kesif.anime },
                 ].map((tab) => (
                   <button
                     key={tab.key}
@@ -504,7 +514,7 @@ export function KesifView() {
                   : "bg-neutral-800 text-[#FAFAFA] hover:bg-neutral-700"
               }`}
             >
-              TÜM TÜRLER
+              {t.kesif.allGenres}
             </button>
             {POPULAR_GENRES.map((genre) => (
               <button
@@ -520,7 +530,7 @@ export function KesifView() {
                     : "bg-neutral-800 text-[#FAFAFA] hover:bg-neutral-700"
                 }`}
               >
-                {genre}
+                {translateGenre(genre, locale)}
               </button>
             ))}
           </div>
@@ -528,12 +538,12 @@ export function KesifView() {
           {/* Sort Bar */}
           <div className="flex items-center justify-between gap-3 text-xs font-mono border-t border-neutral-800 pt-2 flex-wrap">
             <div className="flex items-center gap-1.5 text-neutral-400 text-[11px] font-bold flex-wrap">
-              <span className="text-neutral-400 font-black">SIRALA:</span>
+              <span className="text-neutral-400 font-black">{t.kesif.sortBy}</span>
               {[
-                { key: "recommended", label: "ÖNERİLEN (CINESCORE)" },
-                { key: "rating", label: "EN YÜKSEK PUAN" },
-                { key: "popular", label: "EN POPÜLER" },
-                { key: "newest", label: "EN YENİ" },
+                { key: "recommended", label: t.kesif.recommended },
+                { key: "rating", label: t.kesif.topRated },
+                { key: "popular", label: t.kesif.mostPopular },
+                { key: "newest", label: t.kesif.newest },
               ].map((opt) => (
                 <button
                   key={opt.key}
@@ -553,7 +563,7 @@ export function KesifView() {
               ))}
             </div>
             <span className="text-[11px] text-neutral-500 font-bold">
-              {filteredMedia.length} BAŞYAPIT
+              {filteredMedia.length} {t.kesif.titlesCount}
             </span>
           </div>
 
@@ -562,7 +572,7 @@ export function KesifView() {
             <div className="py-20 flex flex-col items-center justify-center gap-3 font-mono">
               <Loader2 className="w-8 h-8 text-[#EF4444] animate-spin" />
               <span className="text-xs font-black uppercase text-[#FAFAFA]">
-                KATALOG YÜKLENİYOR...
+                {t.kesif.loadingCatalog}
               </span>
             </div>
           ) : filteredMedia.length === 0 ? (
@@ -570,13 +580,17 @@ export function KesifView() {
               <Film className="w-10 h-10 text-[#EF4444] mx-auto" />
               <h3 className="text-sm font-black uppercase text-[#FAFAFA]">
                 {catalogSearch
-                  ? `"${catalogSearch.toUpperCase()}" İÇİN SONUÇ BULUNAMADI`
-                  : "BU TÜRDE FİLM BULUNAMADI"}
+                  ? `"${catalogSearch.toUpperCase()}" ${t.kesif.noResults}`
+                  : t.kesif.noGenreResults}
               </h3>
               <p className="text-xs text-neutral-400 font-bold">
                 {catalogSearch
-                  ? "Farklı bir anahtar kelime, yönetmen adı veya orijinal başlık ile aramayı deneyebilirsiniz."
-                  : `"${selectedGenre}" türüne ait başyapıtlar hazırlanıyor. Diğer popüler türlere göz atabilirsiniz.`}
+                  ? (locale === "tr"
+                      ? "Farklı bir anahtar kelime, yönetmen adı veya orijinal başlık ile aramayı deneyebilirsiniz."
+                      : "You can try searching with a different keyword, director name, or original title.")
+                  : (locale === "tr"
+                      ? `"${selectedGenre}" türüne ait başyapıtlar hazırlanıyor. Diğer popüler türlere göz atabilirsiniz.`
+                      : `Masterpieces for genre "${translateGenre(selectedGenre, locale)}" are being curated. Check out other genres.`)}
               </p>
               <button
                 type="button"
@@ -588,7 +602,7 @@ export function KesifView() {
                 }}
                 className="px-4 py-2 hover:bg-[#B91C1C] bg-[#DC2626] text-white text-xs font-black uppercase border-2 border-[#404040] cursor-pointer shadow-[2px_2px_0px_#000000]"
               >
-                ARAMAYI VE FİLTRELERİ SIFIRLA
+                {t.kesif.resetFilters}
               </button>
             </div>
           ) : (
@@ -617,7 +631,7 @@ export function KesifView() {
                     className="px-8 py-3.5 hover:text-white bg-neutral-100 hover:bg-white text-[#0A0A0A] font-mono text-xs font-black uppercase border-2 border-[#404040] shadow-[4px_4px_0px_#000000] hover:shadow-[2px_2px_0px_#0A0A0A] hover:translate-x-0.5 hover:translate-y-0.5 transition-all cursor-pointer inline-flex items-center gap-2"
                   >
                     <span>
-                      DAHA FAZLA FİLM GÖSTER (+
+                      {t.kesif.showMore} (+
                       {Math.min(
                         DISCOVERY_PAGE_SIZE,
                         filteredMedia.length - visibleCount,
