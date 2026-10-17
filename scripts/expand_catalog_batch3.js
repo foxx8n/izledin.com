@@ -1,9 +1,20 @@
-﻿const fs = require('fs');
+const fs = require('fs');
 const path = require('path');
 const https = require('https');
 
 const CATALOG_PATH = path.join(__dirname, '..', 'src', 'data', 'catalog.json');
-const OMDB_API_KEY = process.env.NEXT_PUBLIC_OMDB_API_KEY || '9e6a1e9c';
+let OMDB_API_KEY = process.env.OMDB_API_KEY || process.env.NEXT_PUBLIC_OMDB_API_KEY || '';
+if (!OMDB_API_KEY) {
+  try {
+    const envFile = fs.readFileSync(path.join(__dirname, '..', '.env.local'), 'utf8');
+    const m = envFile.match(/(?:OMDB_API_KEY|NEXT_PUBLIC_OMDB_API_KEY)=([^\r\n]+)/);
+    if (m) OMDB_API_KEY = m[1].trim();
+  } catch {}
+}
+if (!OMDB_API_KEY) {
+  console.error('Error: OMDB_API_KEY is required in environment variables or .env.local');
+  process.exit(1);
+}
 
 // Load existing catalog
 let existingCatalog = [];

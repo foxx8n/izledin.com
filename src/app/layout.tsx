@@ -83,6 +83,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
@@ -129,10 +130,10 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icon.svg" />
         <link rel="preconnect" href="https://m.media-amazon.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://lh3.googleusercontent.com" crossOrigin="anonymous" />
-        <link rel="preconnect" href="https://hipavaiaumdkpqqwvlzp.supabase.co" />
+        {supabaseUrl && <link rel="preconnect" href={supabaseUrl} crossOrigin="anonymous" />}
         <link rel="dns-prefetch" href="https://m.media-amazon.com" />
         <link rel="dns-prefetch" href="https://lh3.googleusercontent.com" />
-        <link rel="dns-prefetch" href="https://hipavaiaumdkpqqwvlzp.supabase.co" />
+        {supabaseUrl && <link rel="dns-prefetch" href={supabaseUrl} />}
       </head>
       <body className="min-h-screen bg-[#0A0A0A] text-[#FAFAFA] pb-mobile-nav selection:bg-[#DC2626] selection:text-white overflow-x-hidden">
         <script

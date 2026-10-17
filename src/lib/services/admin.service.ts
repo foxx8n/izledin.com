@@ -3,7 +3,12 @@ import { WatchLog, Profile } from '@/types';
 import { mapDbLogToWatchLog } from './watch-logs.service';
 import { mapDbProfileToProfile, PROFILE_SELECT_COLUMNS } from './profile.service';
 
-export const ADMIN_EMAILS = ['foxyluxytr@gmail.com'];
+export const ADMIN_EMAILS: string[] = (
+  process.env.NEXT_PUBLIC_ADMIN_EMAILS || ''
+)
+  .split(',')
+  .map((e) => e.trim().toLowerCase())
+  .filter(Boolean);
 
 /**
  * Checks if the given email belongs to a designated platform administrator.

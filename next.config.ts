@@ -57,7 +57,7 @@ const nextConfig: NextConfig = {
     // - images.unsplash.com                 : poster fallbacks in services + admin/diary pages
     // - lh3.googleusercontent.com           : Google account avatar URLs stored as user_metadata.picture
     // - api.dicebear.com                    : generated initial-avatar fallbacks
-    // - hipavaiaumdkpqqwvlzp.supabase.co    : Supabase storage public URLs + auth/db/realtime
+    // - *.supabase.co                       : Supabase storage public URLs + auth/db/realtime
     // 'unsafe-inline' on style/script is the phase-1 concession for Tailwind's
     // runtime styles and Next.js inline bootstrap scripts. 'unsafe-eval' is a
     // DEV-ONLY concession: React's dev-mode debugger uses eval() for callstack
@@ -68,10 +68,10 @@ const nextConfig: NextConfig = {
       : "script-src 'self' 'unsafe-inline'";
     const contentSecurityPolicy = [
       "default-src 'self'",
-      `img-src 'self' https://image.tmdb.org https://m.media-amazon.com https://ia.media-imdb.com https://upload.wikimedia.org https://static.tvmaze.com https://images.unsplash.com https://lh3.googleusercontent.com https://avatars.githubusercontent.com https://cdn.myanimelist.net https://api.dicebear.com https://hipavaiaumdkpqqwvlzp.supabase.co https://*.supabase.co data: blob:`,
+      `img-src 'self' https://image.tmdb.org https://m.media-amazon.com https://ia.media-imdb.com https://upload.wikimedia.org https://static.tvmaze.com https://images.unsplash.com https://lh3.googleusercontent.com https://avatars.githubusercontent.com https://cdn.myanimelist.net https://api.dicebear.com https://*.supabase.co data: blob:`,
       "style-src 'self' 'unsafe-inline'",
       scriptSrc,
-      "connect-src 'self' https://hipavaiaumdkpqqwvlzp.supabase.co wss://hipavaiaumdkpqqwvlzp.supabase.co",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
       "frame-ancestors 'none'",
       "object-src 'none'",
       "base-uri 'self'",

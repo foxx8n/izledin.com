@@ -163,7 +163,7 @@ export function Navbar({
     }
   };
 
-  const isUserAdmin = isAdminEmail(user?.email);
+  const isUserAdmin = isAdminEmail(user?.email) || (user?.app_metadata as any)?.role === 'admin';
 
   // Load global broadcast announcement
   useEffect(() => {

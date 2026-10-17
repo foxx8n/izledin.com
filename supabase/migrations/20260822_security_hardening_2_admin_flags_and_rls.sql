@@ -95,21 +95,21 @@ BEGIN
     RETURN false;
   END IF;
 
-  -- Primary admin by immutable UUID
-  IF curr_uid = '0078c0a8-ed45-43ee-880b-4c577f29a9e5'::uuid THEN
-    RETURN true;
-  END IF;
+  -- Primary admin by immutable UUID (configure with your admin user UUID)
+  -- IF curr_uid = '00000000-0000-0000-0000-000000000000'::uuid THEN
+  --   RETURN true;
+  -- END IF;
 
   -- Trusted JWT email claim (set by GoTrue from the verified account email).
   -- raw_user_meta_data is client-writable and must NEVER be used here.
-  IF LOWER(COALESCE(auth.jwt() ->> 'email', '')) = 'foxyluxytr@gmail.com'
+  IF LOWER(COALESCE(auth.jwt() ->> 'email', '')) = 'admin@izledin.com'
      OR (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin' THEN
     RETURN true;
   END IF;
 
   -- Server-side lookup of the account email (SECURITY DEFINER grants access)
   SELECT LOWER(email) INTO user_email FROM auth.users WHERE id = curr_uid;
-  IF user_email = 'foxyluxytr@gmail.com' THEN
+  IF user_email = 'admin@izledin.com' THEN
     RETURN true;
   END IF;
 

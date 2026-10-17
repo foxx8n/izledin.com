@@ -1,0 +1,18 @@
+# izledin.com Source-Available License (v1.0)
+
+Copyright (c) 2026 izledin.com and contributors. All rights reserved.
+
+This software and associated documentation files (the "Software") are made available under a Source-Available model. By accessing, downloading, or using the Software, you agree to the following terms:
+
+### 1. Permitted Uses (İzin Verilen Kullanımlar)
+* **Inspect & Learn:** You may freely view, inspect, study, fork, and experiment with the source code for educational, personal, and research purposes.
+* **Contributions:** You may create modifications, patches, or extensions to propose improvements and contribute back to the official izledin.com repository via Pull Requests.
+* **Personal & Non-Commercial Self-Hosting:** You may run a private instance strictly for personal, non-commercial evaluation and development.
+
+### 2. Restrictions (Kısıtlamalar)
+* **No Commercial Hosting / SaaS:** You may NOT host, deploy, sublicense, or distribute the Software (in whole or substantial part, modified or unmodified) as a commercial service, hosted multi-tenant platform, or public competing product.
+* **Brand & Trademarks:** The names "izledin", "izledin.com", "İzdaş", "İzdaş Radarı", "Ortak Seans", associated logos, SVG iconography, fanzine visual identity, and signature design assets are proprietary trademarks of the project author. This license grants no rights to use these trademarks in connection with any derivative service or public release.
+* **Attribution:** Any non-commercial fork or permitted distribution must retain the original copyright notice, this license, and clear attribution to the original repository.
+
+### 3. Disclaimer (Sorumluluk Reddi)
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
