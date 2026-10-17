@@ -7,6 +7,7 @@ import type { MediaItem } from "@/types";
 import { useTranslation } from "@/lib/i18n/context";
 import { translateGenre } from "@/lib/i18n/genres";
 import { resolvePosterUrl, applyArtfulPosterFallback } from "@/lib/poster-placeholder";
+import { triggerHaptic } from "@/lib/native-bridge";
 
 interface MediaSwipeCardProps {
   item: MediaItem;
@@ -19,12 +20,6 @@ interface MediaSwipeCardProps {
 
 const SWIPE_THRESHOLD = 0.28;
 const SWIPE_EXIT_DISTANCE = 1.25;
-
-function triggerHaptic(pattern: number[]) {
-  if (typeof window !== "undefined" && "vibrate" in navigator) {
-    navigator.vibrate(pattern);
-  }
-}
 
 /**
  * PERDE title card — the media variant of the SwipeMatchCard drag engine
@@ -73,7 +68,7 @@ export function MediaSwipeCard({
 
   const finish = useCallback(
     (dir: "pass" | "like") => {
-      triggerHaptic([15]);
+      triggerHaptic(dir === "like" ? "success" : "light");
       setIsExiting(dir);
       setDragX(
         dir === "pass"

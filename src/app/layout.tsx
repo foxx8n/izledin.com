@@ -91,6 +91,7 @@ export const metadata: Metadata = {
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
 import { OfflineSyncIndicator } from "@/components/common/OfflineSyncIndicator";
+import { NativeAppInitializer } from "@/components/common/NativeAppInitializer";
 import { serializeJsonLd } from "@/lib/jsonld";
 import { LanguageProvider } from "@/lib/i18n/context";
 import { getServerLocale } from "@/lib/i18n/server";
@@ -166,6 +167,7 @@ export default async function RootLayout({
             {children}
           </LanguageProvider>
           <OfflineSyncIndicator />
+          <NativeAppInitializer />
         </AuthProvider>
         <SpeedInsights />
         <Analytics />

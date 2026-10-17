@@ -14,6 +14,7 @@ import { MovieMateMatch } from '@/types';
 import { generateDynamicBio } from '@/lib/cinema-bio-generator';
 import { useTranslation } from '@/lib/i18n/context';
 import { resolvePosterUrl, applyArtfulPosterFallback } from '@/lib/poster-placeholder';
+import { triggerHaptic } from '@/lib/native-bridge';
 
 interface SwipeMatchCardProps {
   match: MovieMateMatch;
@@ -28,12 +29,6 @@ interface SwipeMatchCardProps {
 
 const SWIPE_THRESHOLD = 0.28;
 const SWIPE_EXIT_DISTANCE = 1.25;
-
-function triggerHaptic(pattern: number[]) {
-  if (typeof window !== 'undefined' && 'vibrate' in navigator) {
-    navigator.vibrate(pattern);
-  }
-}
 
 export function SwipeMatchCard({ match, nextMatch, onChatClick, onLike, onPass, onBilet, onMovieClick }: SwipeMatchCardProps) {
   const { t, locale } = useTranslation();
@@ -83,7 +78,7 @@ export function SwipeMatchCard({ match, nextMatch, onChatClick, onLike, onPass, 
     const absProgress = Math.abs(dx) / cardWidth;
     if (absProgress >= SWIPE_THRESHOLD) {
       const dir = dx < 0 ? 'pass' : 'like';
-      triggerHaptic([15]);
+      triggerHaptic(dir === 'like' ? 'success' : 'light');
       setIsExiting(dir);
       setDragX(dx < 0 ? -window.innerWidth * SWIPE_EXIT_DISTANCE : window.innerWidth * SWIPE_EXIT_DISTANCE);
       setTimeout(() => {
@@ -99,7 +94,7 @@ export function SwipeMatchCard({ match, nextMatch, onChatClick, onLike, onPass, 
 
   const exitCard = (dir: 'pass' | 'like', likeOverride?: (m: MovieMateMatch) => void) => {
     if (isExiting) return;
-    triggerHaptic([12]);
+    triggerHaptic(dir === 'like' ? 'success' : 'light');
     setIsExiting(dir);
     setDragX(dir === 'pass' ? -window.innerWidth * SWIPE_EXIT_DISTANCE : window.innerWidth * SWIPE_EXIT_DISTANCE);
     setTimeout(() => {
