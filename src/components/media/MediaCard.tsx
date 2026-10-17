@@ -94,10 +94,10 @@ export function MediaCard({
           <div className="w-full h-full flex flex-col items-center justify-center p-3 text-center bg-neutral-900 text-neutral-300 space-y-2">
             <Film className="w-8 h-8 text-[#DC2626] stroke-[2]" />
             <span className="font-mono text-[11px] font-black uppercase line-clamp-2 text-neutral-200">
-              {item.title}
+              {locale === 'en' && item.originalTitle ? item.originalTitle : item.title}
             </span>
             <span className="font-mono text-[10px] text-neutral-400">
-              {item.year || 'Arşiv'}
+              {item.year || (locale === 'en' ? 'Archive' : 'Arşiv')}
             </span>
           </div>
         )}
@@ -128,7 +128,7 @@ export function MediaCard({
             }}
             className="font-sans font-black text-xs sm:text-sm uppercase tracking-tight line-clamp-2  hover:text-[#EF4444] transition-colors cursor-pointer leading-snug min-h-[32px] sm:min-h-[38px]  text-[#FAFAFA]"
           >
-            {item.title}
+            {locale === 'en' && item.originalTitle ? item.originalTitle : item.title}
           </h3>
 
           {/* 4. Action & Score Bar */}

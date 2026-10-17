@@ -1,8 +1,5 @@
-/**
- * Cinema Bio Generator & Prompt Templates for izledin.com
- * Provides dynamic cinema DNA summaries and rich prompt starters.
- * STRICTLY NO EMOJIS — Uses brutalist typography and cinema metadata.
- */
+import { Locale } from './i18n/types';
+import { translateGenre } from './i18n/genres';
 
 export interface CinemaProfileData {
   favoriteGenres?: string[];
@@ -11,7 +8,7 @@ export interface CinemaProfileData {
   location?: string;
 }
 
-export const CINEMA_PROMPT_STARTERS = [
+export const CINEMA_PROMPT_STARTERS_TR = [
   'En çok tekrar izlediğim kült başyapıt: ',
   'Bence sinema tarihinin en iyi yönetmeni: ',
   'Karanlık sinema salonunda izlemekten en keyif aldığım: ',
@@ -26,29 +23,60 @@ export const CINEMA_PROMPT_STARTERS = [
   'Beni sinemaya ve 35mm perdeye bağlayan ilk yapım: ',
 ];
 
-export function generateDynamicBio(profile?: CinemaProfileData | null): string {
+export const CINEMA_PROMPT_STARTERS_EN = [
+  'Cult masterpiece I rewatch the most: ',
+  'Greatest director in cinema history: ',
+  'What I enjoy most watching in a dark cinema hall: ',
+  'Hidden cinematic gem that deserved more recognition: ',
+  'Film whose cinematography and frames mesmerized me: ',
+  'Masterpiece that left the deepest impression on first watch: ',
+  'Trilogy or franchise that best sums up my cinema taste: ',
+  'Genre I love watching alone at midnight: ',
+  'Movie whose score and soundtrack album spellbinds me: ',
+  'Film that blew my mind with its screenplay and plot twist: ',
+  'Classic I never get tired of rewatching: ',
+  'First movie that made me fall in love with 35mm celluloid: ',
+];
+
+export const CINEMA_PROMPT_STARTERS = CINEMA_PROMPT_STARTERS_TR;
+
+export function getCinemaPromptStarters(locale: Locale = 'tr'): string[] {
+  return locale === 'en' ? CINEMA_PROMPT_STARTERS_EN : CINEMA_PROMPT_STARTERS_TR;
+}
+
+export function generateDynamicBio(profile?: CinemaProfileData | null, locale: Locale = 'tr'): string {
   if (!profile) {
-    return '35mm perde müdavimi ve bağımsız sinema takipçisi.';
+    return locale === 'en'
+      ? '35mm celluloid regular and independent cinema follower.'
+      : '35mm perde müdavimi ve bağımsız sinema takipçisi.';
   }
 
   const genres = (profile.favoriteGenres || []).filter(Boolean);
   const favorites = (profile.top4Favorites || []).map(f => f.title).filter(Boolean);
 
   if (genres.length > 0 && favorites.length > 0) {
-    const genreStr = genres.slice(0, 2).join(' ve ');
-    const favStr = favorites.slice(0, 2).join(' ve ');
-    return `${genreStr} odaklı 35mm sinefil zevki. ${favStr} hayranı.`;
+    const genreStr = genres.slice(0, 2).map(g => translateGenre(g, locale)).join(locale === 'en' ? ' & ' : ' ve ');
+    const favStr = favorites.slice(0, 2).join(locale === 'en' ? ' & ' : ' ve ');
+    return locale === 'en'
+      ? `${genreStr} focused 35mm cinephile taste. Admirer of ${favStr}.`
+      : `${genreStr} odaklı 35mm sinefil zevki. ${favStr} hayranı.`;
   }
 
   if (genres.length > 0) {
-    const genreStr = genres.slice(0, 2).join(' ve ');
-    return `${genreStr} tutkunu, karanlık salon ve festival müdavimi.`;
+    const genreStr = genres.slice(0, 2).map(g => translateGenre(g, locale)).join(locale === 'en' ? ' & ' : ' ve ');
+    return locale === 'en'
+      ? `${genreStr} enthusiast, dark room and film festival regular.`
+      : `${genreStr} tutkunu, karanlık salon ve festival müdavimi.`;
   }
 
   if (favorites.length > 0) {
-    const favStr = favorites.slice(0, 2).join(' ve ');
-    return `${favStr} hayranı, kült sinema ve daktilo günlüğü takipçisi.`;
+    const favStr = favorites.slice(0, 2).join(locale === 'en' ? ' & ' : ' ve ');
+    return locale === 'en'
+      ? `Admirer of ${favStr}, cult cinema and typewriter diary follower.`
+      : `${favStr} hayranı, kült sinema ve daktilo günlüğü takipçisi.`;
   }
 
-  return '35mm perde müdavimi ve bağımsız sinema takipçisi.';
+  return locale === 'en'
+    ? '35mm celluloid regular and independent cinema follower.'
+    : '35mm perde müdavimi ve bağımsız sinema takipçisi.';
 }

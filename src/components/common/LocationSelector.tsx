@@ -9,6 +9,7 @@ import {
   parseLocationString, 
   formatLocationString 
 } from '@/data/locations';
+import { useTranslation } from '@/lib/i18n';
 
 interface LocationSelectorProps {
   value?: string;
@@ -23,6 +24,7 @@ export function LocationSelector({
   className = '',
   allowAllDistricts = false,
 }: LocationSelectorProps) {
+  const { t, locale } = useTranslation();
   const initial = parseLocationString(value);
   const [selectedProvince, setSelectedProvince] = useState<string>(initial.province || 'İstanbul');
   const [selectedDistrict, setSelectedDistrict] = useState<string>(initial.district || 'Kadıköy');
@@ -57,13 +59,13 @@ export function LocationSelector({
       <div className="relative flex-1">
         <label className="block text-xs font-black uppercase  text-[#FAFAFA] mb-1.5 flex items-center gap-1.5">
           <MapPin className="w-3.5 h-3.5  text-[#EF4444]" aria-hidden="true" />
-          <span>ŞEHİR (İL)</span>
+          <span>{locale === 'en' ? 'CITY (PROVINCE)' : 'ŞEHİR (İL)'}</span>
         </label>
         <div className="relative">
           <select
             value={selectedProvince}
             onChange={(e) => handleProvinceChange(e.target.value)}
-            aria-label="Şehir Seçimi"
+            aria-label={locale === 'en' ? 'City Selection' : 'Şehir Seçimi'}
             className="w-full appearance-none px-3 py-2.5  bg-[#171717]  text-[#FAFAFA] text-xs font-black uppercase border-2  border-[#404040] focus:outline-none focus:border-[#DC2626] cursor-pointer pr-8  shadow-[2px_2px_0px_#000000]"
           >
             {provinces.map((prov) => (
@@ -79,19 +81,19 @@ export function LocationSelector({
       {/* District Select */}
       <div className="relative flex-1">
         <label className="block text-xs font-black uppercase  text-[#FAFAFA] mb-1.5">
-          İLÇE / BÖLGE
+          {locale === 'en' ? 'DISTRICT / REGION' : 'İLÇE / BÖLGE'}
         </label>
         <div className="relative">
           <select
             value={selectedDistrict}
             onChange={(e) => handleDistrictChange(e.target.value)}
             disabled={districts.length === 0}
-            aria-label="İlçe Seçimi"
+            aria-label={locale === 'en' ? 'District Selection' : 'İlçe Seçimi'}
             className="w-full appearance-none px-3 py-2.5  bg-[#171717]  text-[#FAFAFA] text-xs font-black uppercase border-2  border-[#404040] focus:outline-none focus:border-[#DC2626] cursor-pointer pr-8  shadow-[2px_2px_0px_#000000] disabled:opacity-50"
           >
             {allowAllDistricts && (
               <option value="Tüm İlçeler" className=" bg-[#171717]  text-[#FAFAFA]">
-                Tüm İlçeler
+                {locale === 'en' ? 'All Districts' : 'Tüm İlçeler'}
               </option>
             )}
             {districts.map((dist) => (

@@ -48,9 +48,11 @@ import { getUserWatchLogs } from '@/lib/services/watch-logs.service';
 import { getOMDBDetails } from '@/lib/omdb';
 import { WatchLog, MediaItem, Profile, MovieMateMatch } from '@/types';
 import { generateDynamicBio } from '@/lib/cinema-bio-generator';
+import { useTranslation, translateGenre } from '@/lib/i18n';
 
 export default function ProfilePage() {
   const { user, profile, updateUserProfile, isLoading } = useAuth();
+  const { t, locale } = useTranslation();
   const [userLogs, setUserLogs] = useState<WatchLog[]>([]);
   const [activeTab, setActiveTab] = useState<'favorites' | 'logs' | 'dna'>('favorites');
   const [isTasteProfilerOpen, setIsTasteProfilerOpen] = useState(false);
@@ -177,13 +179,15 @@ export default function ProfilePage() {
         <main className="flex-1 max-w-2xl mx-auto px-4 py-20 w-full text-center space-y-8">
           <div className="bg-[#0A0A0A] text-[#FAFAFA] border-2  border-[#404040]  shadow-[8px_8px_0px_#000000] p-8 sm:p-12 space-y-6">
             <span className="stamp-badge-solid px-3 py-1 text-xs font-black inline-block">
-              SİNEMA KİMLİK KARTI
+              {locale === 'en' ? 'CINEMA ID CARD' : 'SİNEMA KİMLİK KARTI'}
             </span>
             <h1 className="text-2xl sm:text-4xl font-black uppercase  text-[#EF4444] font-sans tracking-tight">
-              SİNEMA DNA PROFİLİNİZİ OLUŞTURUN
+              {locale === 'en' ? 'CRAFT YOUR CINEMA DNA PROFILE' : 'SİNEMA DNA PROFİLİNİZİ OLUŞTURUN'}
             </h1>
             <p className="text-xs sm:text-sm text-[#D4D4D4] leading-relaxed max-w-lg mx-auto">
-              İzleme geçmişinizi daktilo ile kaydetmek, favori 4 başyapıtınızı sergilemek ve sinema zevkinize uyan kişilerle eşleşmek için giriş yapın veya ücretsiz üye olun.
+              {locale === 'en'
+                ? 'Sign in or join for free to log your watch history on typewriters, showcase your top 4 masterpieces, and match with fellow cinephiles sharing your wavelength.'
+                : 'İzleme geçmişinizi daktilo ile kaydetmek, favori 4 başyapıtınızı sergilemek ve sinema zevkinize uyan kişilerle eşleşmek için giriş yapın veya ücretsiz üye olun.'}
             </p>
             <div className="pt-2">
               <button
@@ -191,7 +195,7 @@ export default function ProfilePage() {
                 className="px-6 py-3.5 bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-black uppercase tracking-wider border-2 border-white shadow-[4px_4px_0px_#ffffff] cursor-pointer inline-flex items-center gap-2 transition-transform active:translate-x-0.5 active:translate-y-0.5"
               >
                 <LogIn className="w-4 h-4 stroke-[3]" />
-                <span>GİRİŞ YAP / HESAP OLUŞTUR</span>
+                <span>{t.profile.authPromptButton}</span>
               </button>
             </div>
           </div>
@@ -251,14 +255,14 @@ export default function ProfilePage() {
     try {
       const realItem = await getOMDBDetails(fav.id);
       if (!realItem) {
-        showDetailNotice('Detay bulunamadı.');
+        showDetailNotice(t.profile.detailNotFound);
         return;
       }
       setDetailMediaItem(realItem);
       setIsMediaDetailOpen(true);
     } catch (err) {
       console.warn('handleOpenPosterDetail failed:', err);
-      showDetailNotice('Detay bulunamadı.');
+      showDetailNotice(t.profile.detailNotFound);
     }
   };
 
@@ -288,15 +292,15 @@ export default function ProfilePage() {
               </div>
               <div className="space-y-1.5 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="text-xl sm:text-2xl font-black uppercase text-white font-sans truncate" title={profile?.fullName || 'Sinemasever'}>
-                    {profile?.fullName || user.user_metadata?.full_name || 'Sinemasever'}
+                  <h1 className="text-xl sm:text-2xl font-black uppercase text-white font-sans truncate" title={profile?.fullName || (locale === 'en' ? 'Cinephile' : 'Sinemasever')}>
+                    {profile?.fullName || user.user_metadata?.full_name || (locale === 'en' ? 'Cinephile' : 'Sinemasever')}
                   </h1>
                   <span className="stamp-badge-solid px-2 py-0.5 text-[10px] font-black">
-                    SİNEFİL ÜYE
+                    {t.profile.cinephileMember}
                   </span>
                 </div>
                 <p className="text-xs text-[#A3A3A3] font-mono truncate">
-                  @{profile?.username || 'kullanici'} • {profile?.age ? `${profile.age} Yaşında • ` : ''}{profile?.location || 'Türkiye'}
+                  @{profile?.username || (locale === 'en' ? 'user' : 'kullanici')} • {profile?.age ? `${profile.age} ${t.profile.ageSuffix} • ` : ''}{profile?.location || (locale === 'en' ? 'World' : 'Türkiye')}
                 </p>
               </div>
             </div>
@@ -307,7 +311,7 @@ export default function ProfilePage() {
               <button
                 onClick={() => setIsTasteProfilerOpen(true)}
                 className="group relative cursor-pointer overflow-hidden border-2 border-[#F59E0B] bg-[#0A0A0A] p-0.5 text-[#FAFAFA] shadow-[4px_4px_0px_#F59E0B] transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[5px_5px_0px_#F59E0B] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[2px_2px_0px_#F59E0B]"
-                title="Sinema zevk profilinizi, favori türlerinizi ve film seçimlerinizi yeniden kalibre edin"
+                title={locale === 'en' ? 'Recalibrate your cinema taste profile, favorite genres, and movie picks' : 'Sinema zevk profilinizi, favori türlerinizi ve film seçimlerinizi yeniden kalibre edin'}
               >
                 <div className="flex items-center bg-[#171717] px-3 py-2 border border-[#262626] group-hover:border-[#F59E0B]/50 transition-colors">
                   <div className="flex items-center gap-2.5">
@@ -317,10 +321,10 @@ export default function ProfilePage() {
                     <div className="text-left leading-none">
                       <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-[#F59E0B]">
                         <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#F59E0B] animate-pulse" />
-                        <span>TASTE PROFILER</span>
+                        <span>{t.profile.tasteProfiler}</span>
                       </div>
                       <div className="text-xs font-black uppercase tracking-wider text-white mt-0.5 font-sans">
-                        DNA DÜZENLE
+                        {t.profile.editDna}
                       </div>
                     </div>
                   </div>
@@ -337,7 +341,7 @@ export default function ProfilePage() {
                 <button
                   onClick={() => setIsIdentityOpen(true)}
                   className="group relative cursor-pointer overflow-hidden border-2 border-[#10B981] bg-[#0A0A0A] p-0.5 text-[#FAFAFA] shadow-[4px_4px_0px_#10B981] transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[5px_5px_0px_#10B981] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[2px_2px_0px_#10B981]"
-                  title="Sistem tarafından oluşturulan adınızı ve rumuzunuzu değiştirin — bu hakkı yalnızca 1 kez kullanabilirsiniz"
+                  title={locale === 'en' ? 'Change your system-generated name and handle — usable only once' : 'Sistem tarafından oluşturulan adınızı ve rumuzunuzu değiştirin — bu hakkı yalnızca 1 kez kullanabilirsiniz'}
                 >
                   <div className="flex items-center bg-[#171717] px-3 py-2 border border-[#262626] group-hover:border-[#10B981]/50 transition-colors">
                     <div className="flex items-center gap-2.5">
@@ -347,10 +351,10 @@ export default function ProfilePage() {
                       <div className="text-left leading-none">
                         <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-[#10B981]">
                           <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse" />
-                          <span>TEK HAK</span>
+                          <span>{t.profile.oneTimeChange}</span>
                         </div>
                         <div className="text-xs font-black uppercase tracking-wider text-white mt-0.5 font-sans">
-                          İSİM &amp; RUMUZ
+                          {t.profile.nameAndUsername}
                         </div>
                       </div>
                     </div>
@@ -368,7 +372,7 @@ export default function ProfilePage() {
                 type="button"
                 onClick={() => setIsSharePassportOpen(true)}
                 className="group relative cursor-pointer overflow-hidden border-2  border-[#525252] bg-[#0A0A0A] p-0.5 text-[#FAFAFA]  shadow-[4px_4px_0px_#404040] hover:border-[#DC2626] hover:shadow-[5px_5px_0px_#DC2626] transition-all duration-150 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5"
-                title="35mm Sinema Pasaportunuzu ve Zevk Kartınızı Paylaşın"
+                title={t.profile.sharePassportTitle}
               >
                 <div className="flex items-center bg-[#171717] px-3 py-2 border border-[#262626] group-hover:border-[#DC2626]/50 transition-colors">
                   <div className="flex items-center gap-2.5">
@@ -377,10 +381,10 @@ export default function ProfilePage() {
                     </div>
                     <div className="text-left leading-none">
                       <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-[#A3A3A3]">
-                        <span>SOSYAL KART</span>
+                        <span>{t.profile.socialCard}</span>
                       </div>
                       <div className="text-xs font-black uppercase tracking-wider text-white mt-0.5 font-sans">
-                        PAYLAŞ
+                        {t.profile.sharePassport}
                       </div>
                     </div>
                   </div>
@@ -402,7 +406,7 @@ export default function ProfilePage() {
                 }
               }}
               className="group relative cursor-pointer border border-dashed border-transparent hover:border-[#DC2626]/60 hover:bg-[#141414] p-3 -m-3 transition-all duration-150 rounded-none text-left"
-              title="Biyografinizi düzenlemek için tıklayın"
+              title={locale === 'en' ? 'Click to edit your bio' : 'Biyografinizi düzenlemek için tıklayın'}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="space-y-1 flex-1 min-w-0">
@@ -411,20 +415,20 @@ export default function ProfilePage() {
                       <>&ldquo;{profile.bio}&rdquo;</>
                     ) : (
                       <span className="text-[#888888] not-italic">
-                        &ldquo;{generateDynamicBio(profile)}&rdquo;
+                        &ldquo;{generateDynamicBio(profile, locale)}&rdquo;
                       </span>
                     )}
                   </p>
                   {!profile?.bio && (
                     <p className="text-[10px] text-[#737373] font-mono flex items-center gap-1">
                       <Edit3 className="w-3 h-3 text-[#DC2626]" />
-                      <span>(Özel sinema biyografinizi eklemek için tıklayın)</span>
+                      <span>{t.profile.bioHint}</span>
                     </p>
                   )}
                 </div>
                 <div className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 flex items-center gap-1.5 text-[10px] font-mono font-bold text-[#D4D4D4] bg-[#1E1E1E] px-2 py-1 border border-[#404040]">
                   <Edit3 className="w-3 h-3 text-[#DC2626]" />
-                  <span>DÜZENLE</span>
+                  <span>{t.profile.editBio}</span>
                 </div>
               </div>
             </div>
@@ -433,7 +437,7 @@ export default function ProfilePage() {
               <div className="flex items-center justify-between text-[11px] font-black uppercase text-[#D4D4D4]">
                 <label className="flex items-center gap-1.5 text-[#EF4444]">
                   <Edit3 className="w-3.5 h-3.5" />
-                  <span>SİNEMA BİYOGRAFİSİ:</span>
+                  <span>{t.profile.bioLabel}</span>
                 </label>
                 <span className={`text-[10px] font-mono ${bioInput.length > 240 ? 'text-[#EF4444] font-bold' : 'text-[#737373]'}`}>
                   {bioInput.length}/280
@@ -454,7 +458,7 @@ export default function ProfilePage() {
                 maxLength={280}
                 autoFocus
                 className="w-full bg-[#0A0A0A] text-white border border-[#404040] focus:border-[#DC2626] p-3 text-xs sm:text-sm font-mono placeholder-[#737373] focus:outline-none leading-relaxed resize-y"
-                placeholder="Sinema zevkinizi, favori yönetmenlerinizi ve film izleme alışkanlıklarınızı anlatın..."
+                placeholder={t.profile.bioPlaceholder}
               />
               <div className="flex items-center justify-between gap-3 pt-1 flex-wrap">
                 <div className="flex items-center gap-2.5">
@@ -463,17 +467,17 @@ export default function ProfilePage() {
                     onClick={handleSaveBio}
                     disabled={isSavingBio}
                     className="px-4 py-2 bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-black uppercase tracking-wider border-2 border-white shadow-[3px_3px_0px_#ffffff] cursor-pointer flex items-center gap-2 transition-transform active:translate-x-0.5 active:translate-y-0.5 disabled:opacity-50"
-                    title="Biyografiyi Kaydet (Ctrl+Enter)"
+                    title={locale === 'en' ? 'Save bio (Ctrl+Enter)' : 'Biyografiyi Kaydet (Ctrl+Enter)'}
                   >
                     {isSavingBio ? (
                       <>
                         <Loader2 className="w-3.5 h-3.5 animate-spin stroke-[2.5]" />
-                        <span>KAYDEDİLİYOR...</span>
+                        <span>{t.profile.savingBio}</span>
                       </>
                     ) : (
                       <>
                         <Check className="w-3.5 h-3.5 stroke-[3]" />
-                        <span>KAYDET</span>
+                        <span>{t.profile.saveBio}</span>
                       </>
                     )}
                   </button>
@@ -482,14 +486,14 @@ export default function ProfilePage() {
                     onClick={handleCancelBio}
                     disabled={isSavingBio}
                     className="px-3.5 py-2 text-xs font-black uppercase text-[#A3A3A3] hover:text-white border border-[#404040] bg-[#262626] hover:bg-[#333333] cursor-pointer flex items-center gap-1.5 transition-colors disabled:opacity-50"
-                    title="Vazgeç (Esc)"
+                    title={locale === 'en' ? 'Cancel (Esc)' : 'Vazgeç (Esc)'}
                   >
                     <X className="w-3.5 h-3.5 stroke-[2.5]" />
-                    <span>VAZGEÇ</span>
+                    <span>{t.profile.cancelBio}</span>
                   </button>
                 </div>
                 <span className="text-[10px] text-[#737373] hidden sm:inline-block">
-                  Kaydetmek için <kbd className="px-1 py-0.5 bg-[#262626] text-[#A3A3A3] border border-[#404040] text-[9px]">Ctrl</kbd> + <kbd className="px-1 py-0.5 bg-[#262626] text-[#A3A3A3] border border-[#404040] text-[9px]">Enter</kbd>
+                  {t.profile.ctrlEnterHint} <kbd className="px-1 py-0.5 bg-[#262626] text-[#A3A3A3] border border-[#404040] text-[9px]">Ctrl</kbd> + <kbd className="px-1 py-0.5 bg-[#262626] text-[#A3A3A3] border border-[#404040] text-[9px]">Enter</kbd>
                 </span>
               </div>
             </div>
@@ -498,15 +502,15 @@ export default function ProfilePage() {
           {/* Stats Bar */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 pt-4 border-t border-[#262626] font-mono">
             <div className="bg-[#171717] p-3.5 border border-[#333333] shadow-[2px_2px_0px_#000000]">
-              <span className="text-[10px] font-black uppercase text-[#A3A3A3] block mb-1">TOPLAM İZLENEN</span>
+              <span className="text-[10px] font-black uppercase text-[#A3A3A3] block mb-1">{t.profile.totalWatched}</span>
               <div className="flex items-baseline gap-1.5">
                 <span className="text-xl sm:text-2xl font-black text-white font-sans">{totalWatched}</span>
-                <span className="text-[10px] text-[#DC2626] font-bold">FİLM</span>
+                <span className="text-[10px] text-[#DC2626] font-bold">{t.profile.moviesUnit}</span>
               </div>
             </div>
 
             <div className="bg-[#171717] p-3.5 border border-[#333333] shadow-[2px_2px_0px_#000000]">
-              <span className="text-[10px] font-black uppercase text-[#A3A3A3] block mb-1">ORTALAMA PUAN</span>
+              <span className="text-[10px] font-black uppercase text-[#A3A3A3] block mb-1">{t.profile.avgRating}</span>
               <div className="flex items-baseline gap-1.5">
                 <span className="text-xl sm:text-2xl font-black text-[#F59E0B] font-sans">{avgRating}</span>
                 <span className="text-[10px] text-[#A3A3A3]">/10</span>
@@ -514,19 +518,19 @@ export default function ProfilePage() {
             </div>
 
             <div className="bg-[#171717] p-3.5 border border-[#333333] shadow-[2px_2px_0px_#000000]">
-              <span className="text-[10px] font-black uppercase text-[#A3A3A3] block mb-1">FAVORİ TÜR</span>
+              <span className="text-[10px] font-black uppercase text-[#A3A3A3] block mb-1">{t.profile.favoriteGenre}</span>
               <div className="truncate">
                 <span className="text-xs sm:text-sm font-black text-white font-sans truncate block">
-                  {profile?.favoriteGenres?.[0] || 'Bilim Kurgu'}
+                  {translateGenre(profile?.favoriteGenres?.[0] || 'Bilim Kurgu', locale)}
                 </span>
               </div>
             </div>
 
             <div className="bg-[#171717] p-3.5 border border-[#333333] shadow-[2px_2px_0px_#000000]">
-              <span className="text-[10px] font-black uppercase text-[#A3A3A3] block mb-1">DAKTİLO İNCELEME</span>
+              <span className="text-[10px] font-black uppercase text-[#A3A3A3] block mb-1">{t.profile.typewriterReviews}</span>
               <div className="flex items-baseline gap-1.5">
                 <span className="text-xl sm:text-2xl font-black text-white font-sans">{totalReviews}</span>
-                <span className="text-[10px] text-[#DC2626] font-bold">YAZI</span>
+                <span className="text-[10px] text-[#DC2626] font-bold">{t.profile.reviewsUnit}</span>
               </div>
             </div>
           </div>
@@ -546,7 +550,7 @@ export default function ProfilePage() {
             }`}
           >
             <MasterpieceLaurelIcon size={14} className="text-current" />
-            <span>BANA GÖRE EN İYİ 4</span>
+            <span>{t.profile.top4Tab}</span>
           </button>
 
           <button
@@ -561,7 +565,7 @@ export default function ProfilePage() {
             }`}
           >
             <CinemaDnaHelixIcon size={16} className="text-current" />
-            <span>SİNEMA DNA SPEKTRUMU</span>
+            <span>{t.profile.dnaTab}</span>
           </button>
 
           <button
@@ -576,7 +580,7 @@ export default function ProfilePage() {
             }`}
           >
             <Film className="w-4 h-4 text-current" />
-            <span>GÜNLÜĞÜM ({userLogs.length})</span>
+            <span>{t.profile.diaryTab} ({userLogs.length})</span>
           </button>
         </div>
 
@@ -590,14 +594,14 @@ export default function ProfilePage() {
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-black text-[#F59E0B] uppercase tracking-wider border border-[#F59E0B]/50 px-2 py-0.5 bg-[#F59E0B]/10 inline-flex items-center gap-1 font-mono">
                     <MasterpieceLaurelIcon size={12} className="text-[#F59E0B]" />
-                    <span>FAVORİ 4 SEÇKİ</span>
+                    <span>{t.profile.top4Badge}</span>
                   </span>
                 </div>
                 <h2 className="text-lg sm:text-2xl font-black uppercase text-white font-sans tracking-tight">
-                  BANA GÖRE TÜM ZAMANLARIN EN İYİ 4 BAŞYAPITI
+                  {t.profile.top4Title}
                 </h2>
                 <p className="text-xs text-[#D4D4D4] font-mono leading-relaxed">
-                  Kişisel sinema estetiğimi, damak zevkimi ve sinematik kimliğimi temsil eden 4 başyapıtlık seçki.
+                  {t.profile.top4Subtitle}
                 </p>
               </div>
 
@@ -655,7 +659,7 @@ export default function ProfilePage() {
                                 onClick={() => handleOpenPosterDetail(fav)}
                                 className="w-full py-1.5 min-h-[36px] bg-[#FFFFFF] hover:bg-neutral-200 text-black text-[10px] font-black uppercase tracking-wider border border-black cursor-pointer shadow-sm"
                               >
-                                İNCELE
+                                {t.profile.inspect}
                               </button>
 
                               <button
@@ -666,18 +670,18 @@ export default function ProfilePage() {
                                 }}
                                 className="w-full py-1.5 min-h-[36px] bg-[#DC2626] hover:bg-[#B91C1C] text-white text-[10px] font-black uppercase tracking-wider border border-black cursor-pointer shadow-sm"
                               >
-                                DEĞİŞTİR
+                                {t.profile.change}
                               </button>
 
                               <button
                                 type="button"
                                 onClick={(e) => handleRemoveTop4Slot(slotIdx, e)}
                                 className="w-full py-1 min-h-[32px] bg-[#262626] hover:bg-red-900 text-[#D4D4D4] hover:text-white text-[10px] font-black uppercase border border-[#404040] flex items-center justify-center gap-1 cursor-pointer"
-                                title="Bu slotu boşalt"
-                                aria-label={`${fav.title} filmini kaldır`}
+                                title={locale === 'en' ? 'Clear this slot' : 'Bu slotu boşalt'}
+                                aria-label={locale === 'en' ? `Remove ${fav.title}` : `${fav.title} filmini kaldır`}
                               >
                                 <Trash2 className="w-3 h-3" />
-                                <span>KALDIR</span>
+                                <span>{t.profile.remove}</span>
                               </button>
                             </div>
                           </>
@@ -697,17 +701,17 @@ export default function ProfilePage() {
                               }
                             }}
                             className="w-full h-full flex flex-col items-center justify-center p-4 text-center text-[#A3A3A3]  hover:text-[#EF4444] transition-colors space-y-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#DC2626]"
-                            aria-label={`Reel ${frameNumbers[slotIdx]} için başyapıt seç`}
+                            aria-label={locale === 'en' ? `Choose masterpiece for Reel ${frameNumbers[slotIdx]}` : `Reel ${frameNumbers[slotIdx]} için başyapıt seç`}
                           >
                             <div className="w-10 h-10 border-2 border-dashed border-[#404040] hover:border-[#DC2626] flex items-center justify-center transition-all">
                               <Plus className="w-5 h-5 stroke-[3]" />
                             </div>
                             <div className="space-y-0.5">
                               <span className="text-[10px] font-black uppercase font-mono block text-white hover:text-[#DC2626] transition-colors">
-                                + REEL EKLE
+                                {t.profile.addReel}
                               </span>
                               <span className="text-[10px] text-[#A3A3A3] uppercase block font-mono">
-                                BAŞYAPIT SEÇ
+                                {t.profile.chooseMasterpiece}
                               </span>
                             </div>
                           </div>
@@ -719,11 +723,11 @@ export default function ProfilePage() {
                         <div className="flex items-center justify-between text-[10px] font-black text-[#A3A3A3] uppercase mb-0.5 px-0.5">
                           <span>FRAME {frameNumbers[slotIdx]}</span>
                           <span className={fav ? 'text-[#F59E0B]' : 'text-neutral-500'}>
-                            {fav ? 'KANON' : 'BOŞ'}
+                            {fav ? t.profile.canon : t.profile.empty}
                           </span>
                         </div>
                         <h3 className="text-xs font-black uppercase text-white truncate px-0.5" title={fav ? fav.title : `Slot ${frameNumbers[slotIdx]}`}>
-                          {fav ? fav.title : 'BOŞ KANON SLOTU'}
+                          {fav ? fav.title : t.profile.emptyCanonSlot}
                         </h3>
                         <div className="mt-1.5 flex items-center justify-center">
                           <span className={`px-2 py-0.5 text-[10px] font-black uppercase tracking-wider border ${
@@ -731,7 +735,7 @@ export default function ProfilePage() {
                               ? ' text-[#EF4444] border-[#DC2626]/40 bg-[#DC2626]/10' 
                               : 'text-[#A3A3A3] border-[#333333] bg-[#171717]'
                           }`}>
-                            {fav ? 'MASTERPIECE' : '+ SEÇİM YAP'}
+                            {fav ? t.profile.masterpiece : t.profile.selectAction}
                           </span>
                         </div>
                       </div>
@@ -743,7 +747,7 @@ export default function ProfilePage() {
               {/* Bottom Sub-notice */}
               <div className="pt-3 border-t border-[#262626] flex items-center gap-1.5 text-xs font-mono text-[#A3A3A3]">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#DC2626]" />
-                <span>Bu 4 film profilinizde ve İzdaşlar (Eşleşme) radarında ana sinematik vitrininiz olarak sergilenir.</span>
+                <span>{t.profile.top4Notice}</span>
               </div>
 
             </div>
@@ -753,13 +757,12 @@ export default function ProfilePage() {
               <div className="flex items-start justify-between gap-4">
                 <div className="space-y-1.5 min-w-0">
                   <h3 className="text-xs font-black uppercase tracking-wider text-[#FAFAFA]">
-                    HAFTALIK İZDAŞ RADARI E-POSTASI
+                    {t.profile.digestTitle}
                   </h3>
                   <p className="text-[11px] text-[#A3A3A3] leading-relaxed font-sans">
-                    Radarında yeni bir izdaş belirdiğinde haftada bir e-posta ile
-                    haber ver. Dilediğin an kapatabilirsin.{' '}
+                    {t.profile.digestDesc}{' '}
                     <Link href="/acik-riza" className="text-[#EF4444] hover:underline cursor-pointer">
-                      Açık rıza metni
+                      {t.profile.consentLinkText}
                     </Link>
                   </p>
                 </div>
@@ -777,7 +780,7 @@ export default function ProfilePage() {
                       : 'bg-[#171717] hover:bg-[#262626] text-[#A3A3A3] hover:text-white border-[#404040]'
                   }`}
                 >
-                  {profile?.digestOptIn ? 'AÇIK' : 'KAPALI'}
+                  {profile?.digestOptIn ? t.profile.statusOn : t.profile.statusOff}
                 </button>
               </div>
             </div>
@@ -790,10 +793,10 @@ export default function ProfilePage() {
             <div className="flex items-center justify-between border-b-2  border-[#404040] pb-3">
               <div>
                 <span className="text-xs font-black uppercase  text-[#EF4444] tracking-wider block">
-                  GERÇEK VERİTABANI & VEKTÖR ANALİZİ
+                  {t.profile.dnaVectorAnalysis}
                 </span>
                 <h2 className="text-base sm:text-xl font-black uppercase  text-[#FAFAFA] font-sans">
-                  SİNEMA DNA VE TÜR SPEKTRUMU
+                  {t.profile.dnaSpectrumTitle}
                 </h2>
               </div>
               <button
@@ -801,7 +804,7 @@ export default function ProfilePage() {
                 onClick={() => setIsTasteProfilerOpen(true)}
                 className="text-xs font-black uppercase  text-[#EF4444] hover:underline cursor-pointer flex items-center gap-1 min-h-[44px]"
               >
-                <span>Türleri Yeniden Belirle</span>
+                <span>{t.profile.recalibrateCta}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -810,8 +813,8 @@ export default function ProfilePage() {
               {computeGenreDNA().map(({ genre, percentage, weight }) => (
                 <div key={genre} className="space-y-1.5">
                   <div className="flex justify-between text-xs font-black uppercase">
-                    <span className=" text-[#FAFAFA]">{genre}</span>
-                    <span className=" text-[#EF4444]">%{percentage} AFİNİTE ({weight} Ağırlık)</span>
+                    <span className=" text-[#FAFAFA]">{translateGenre(genre, locale)}</span>
+                    <span className=" text-[#EF4444]">%{percentage} {t.profile.dnaAffinity} ({weight} {t.profile.dnaWeight})</span>
                   </div>
                   <div className="h-4  bg-[#171717] border  border-[#404040] p-0.5">
                     <div
@@ -825,7 +828,7 @@ export default function ProfilePage() {
 
             <div className="p-4  bg-[#171717] border  border-neutral-800 text-xs  text-neutral-400 space-y-1">
               <p>
-                <strong>Not:</strong> Bu spektrum, izleme günlüğünüze eklediğiniz filmlerin tür ağırlıkları ve verdiğiniz puanların birleşik sinir ağı formülü ile anlık hesaplanır.
+                {t.profile.dnaNote}
               </p>
             </div>
           </section>
@@ -838,10 +841,10 @@ export default function ProfilePage() {
               <div className=" bg-[#0A0A0A] border-2  border-[#404040] p-12 text-center  shadow-[6px_6px_0px_#000000] space-y-4 font-mono">
                 <BookOpen className="w-12 h-12  text-[#EF4444] mx-auto stroke-[1.5]" />
                 <h2 className="text-base font-black uppercase  text-[#FAFAFA]">
-                  HENÜZ GÜNLÜĞE FİLM EKLENMEDİ
+                  {t.profile.noLogsTitle}
                 </h2>
                 <p className="text-xs  text-neutral-400 max-w-md mx-auto leading-relaxed">
-                  İzlediğiniz filmleri puanlayarak ve daktilo ile notlar ekleyerek sinema günlüğünüzü oluşturmaya başlayın.
+                  {t.profile.noLogsDesc}
                 </p>
                 <div className="pt-2">
                   <button
@@ -850,7 +853,7 @@ export default function ProfilePage() {
                     className="px-6 py-3.5 min-h-[44px] bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-black uppercase tracking-wider border-2 border-[#0A0A0A]  shadow-[4px_4px_0px_#000000] cursor-pointer inline-flex items-center gap-2 transition-transform active:translate-x-0.5 active:translate-y-0.5"
                   >
                     <Plus className="w-4 h-4 stroke-[3]" />
-                    <span>+ İLK FİLMİNİ GÜNLÜĞE YAZ</span>
+                    <span>{t.profile.logFirstMovie}</span>
                   </button>
                 </div>
               </div>
@@ -884,7 +887,7 @@ export default function ProfilePage() {
                         </p>
                       ) : (
                         <p className="text-xs text-neutral-500 font-medium line-clamp-2 leading-relaxed">
-                          (puanladı, not yazmadı)
+                          {t.profile.noReviewNote}
                         </p>
                       )}
                       <div className="flex items-center justify-between pt-1 border-t  border-neutral-800 text-xs text-neutral-500">
@@ -892,7 +895,7 @@ export default function ProfilePage() {
                         {log.isFavorite && (
                           <span className=" text-[#EF4444] font-black uppercase flex items-center gap-1">
                             <Heart className="w-3 h-3 fill-current" />
-                            <span>FAVORİ</span>
+                            <span>{t.profile.favorite}</span>
                           </span>
                         )}
                       </div>
@@ -919,7 +922,7 @@ export default function ProfilePage() {
             type="button"
             onClick={() => setDetailNotice(null)}
             className="ml-auto min-h-[44px] min-w-[44px] flex items-center justify-center text-[#A3A3A3] hover:text-white cursor-pointer"
-            aria-label="Bildirimi kapat"
+            aria-label={locale === 'en' ? 'Close notice' : 'Bildirimi kapat'}
           >
             <X className="w-4 h-4" />
           </button>

@@ -42,7 +42,7 @@ import { isOnboarded } from '@/lib/onboarding';
 import { getAllProvinces, getDistricts } from '@/data/locations';
 import { POPULAR_GENRES } from '@/lib/constants';
 import { MovieMateMatch, MediaItem, MatchIntent } from '@/types';
-import { useTranslation } from '@/lib/i18n/context';
+import { useTranslation, translateGenre } from '@/lib/i18n';
 
 export default function MatchesPage() {
   const { user, profile } = useAuth();
@@ -584,16 +584,18 @@ export default function MatchesPage() {
           <div className="flex items-center gap-2.5 flex-wrap">
             {/* Quick Genre Select */}
             <div className="flex items-center gap-2">
-              <span className="text-xs font-black uppercase  text-[#EF4444] hidden sm:inline">TÜR:</span>
+              <span className="text-xs font-black uppercase  text-[#EF4444] hidden sm:inline">
+                {locale === 'en' ? 'GENRE:' : 'TÜR:'}
+              </span>
               <select
-                aria-label="Film Türü Filtresi"
+                aria-label={locale === 'en' ? 'Movie Genre Filter' : 'Film Türü Filtresi'}
                 value={selectedGenre}
                 onChange={(e) => setSelectedGenre(e.target.value)}
                 className="h-11 min-h-[44px]  bg-[#262626] border-2  border-[#404040] px-3 py-2 text-xs font-black uppercase  text-[#FAFAFA] focus:outline-none  focus:border-[#EF4444] cursor-pointer"
               >
-                <option value="Hepsi">TÜM TÜRLER</option>
+                <option value="Hepsi">{locale === 'en' ? 'ALL GENRES' : 'TÜM TÜRLER'}</option>
                 {POPULAR_GENRES.map((g) => (
-                  <option key={g} value={g}>{g.toUpperCase()}</option>
+                  <option key={g} value={g}>{translateGenre(g, locale).toUpperCase()}</option>
                 ))}
               </select>
             </div>
@@ -602,7 +604,7 @@ export default function MatchesPage() {
             <button
               type="button"
               onClick={() => setIsFilterDrawerOpen(true)}
-              aria-label="Detaylı Filtreleri Aç"
+              aria-label={locale === 'en' ? 'Open Detailed Filters' : 'Detaylı Filtreleri Aç'}
               className={`h-11 min-h-[44px] px-3.5 border-2  border-[#404040] text-xs font-black uppercase flex items-center gap-2 cursor-pointer transition-all active:translate-x-0.5 active:translate-y-0.5 ${
                 (selectedCity !== 'Hepsi' || selectedDistrict !== 'Hepsi' || selectedAgeRange !== 'Hepsi')
                   ? 'bg-[#DC2626] text-white shadow-[2px_2px_0px_#000000]'
@@ -610,7 +612,7 @@ export default function MatchesPage() {
               }`}
             >
               <SlidersHorizontal className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span>DETAYLI FİLTRE</span>
+              <span>{locale === 'en' ? 'DETAILED FILTER' : 'DETAYLI FİLTRE'}</span>
               {(selectedCity !== 'Hepsi' || selectedDistrict !== 'Hepsi' || selectedAgeRange !== 'Hepsi') && (
                 <span className="px-1.5 py-0.5 text-[10px] font-black bg-white text-[#0A0A0A]">
                   {(selectedCity !== 'Hepsi' ? 1 : 0) + (selectedDistrict !== 'Hepsi' ? 1 : 0) + (selectedAgeRange !== 'Hepsi' ? 1 : 0)}
@@ -621,12 +623,12 @@ export default function MatchesPage() {
             {hasActiveFilters && (
               <button
                 onClick={resetFilters}
-                aria-label="Filtreleri Sıfırla"
+                aria-label={locale === 'en' ? 'Reset Filters' : 'Filtreleri Sıfırla'}
                 className="h-11 min-h-[44px] px-3  bg-[#262626]  hover:bg-[#333333] border-2  border-[#404040] text-xs font-black uppercase  text-[#EF4444] cursor-pointer flex items-center gap-1.5 transition-colors"
-                title="Filtreleri Sıfırla"
+                title={locale === 'en' ? 'Reset Filters' : 'Filtreleri Sıfırla'}
               >
                 <RotateCcw className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Sıfırla</span>
+                <span className="hidden sm:inline">{locale === 'en' ? 'Reset' : 'Sıfırla'}</span>
               </button>
             )}
           </div>
@@ -635,23 +637,23 @@ export default function MatchesPage() {
             <div className="flex items-center gap-2">
               {profile?.isPremium && (
                 <span className="px-2 py-1 text-[11px] font-black uppercase font-mono border bg-amber-500/10 text-amber-500 border-amber-500">
-                  İZLEDİN+ KULÜP
+                  {locale === 'en' ? 'IZLEDIN+ CLUB' : 'İZLEDİN+ KULÜP'}
                 </span>
               )}
               <span className="text-xs font-black uppercase  text-[#A3A3A3]">
-                {filteredMatches.length} İZDAŞ
+                {filteredMatches.length} {locale === 'en' ? 'FILM MATES' : 'İZDAŞ'}
               </span>
             </div>
 
             <button
               onClick={() => fetchMatches(true)}
               disabled={loading}
-              aria-label="Radarı Yenile"
+              aria-label={locale === 'en' ? 'Refresh Radar' : 'Radarı Yenile'}
               className="h-11 min-h-[44px] px-3  bg-[#262626]  hover:bg-[#333333] border-2  border-[#404040]  shadow-[2px_2px_0px_#000000] text-xs font-black uppercase  text-[#FAFAFA] flex items-center gap-1.5 cursor-pointer disabled:opacity-50 active:translate-x-0.5 active:translate-y-0.5 transition-all"
-              title="Radarı Yenile"
+              title={locale === 'en' ? 'Refresh Radar' : 'Radarı Yenile'}
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin  text-[#EF4444]' : ''}`} />
-              <span className="hidden sm:inline">Yenile</span>
+              <span className="hidden sm:inline">{locale === 'en' ? 'Refresh' : 'Yenile'}</span>
             </button>
           </div>
 
@@ -662,7 +664,7 @@ export default function MatchesPage() {
           <div className="py-16 flex flex-col items-center justify-center gap-3 font-mono">
             <Loader2 className="w-10 h-10  text-[#EF4444] animate-spin" />
             <span className="text-xs font-black uppercase tracking-widest  text-[#FAFAFA]">
-              RADAR TARANIYOR...
+              {locale === 'en' ? 'SCANNING RADAR...' : 'RADAR TARANIYOR...'}
             </span>
           </div>
         ) : matches.length === 0 ? (
@@ -673,10 +675,12 @@ export default function MatchesPage() {
             
             <div className="space-y-2 max-w-lg mx-auto">
               <h3 className="text-lg sm:text-xl font-black uppercase tracking-tight  text-[#FAFAFA] pt-2">
-                ŞU AN RADARDA İZDAŞ YOK
+                {locale === 'en' ? 'NO FILM MATES ON RADAR RIGHT NOW' : 'ŞU AN RADARDA İZDAŞ YOK'}
               </h3>
               <p className="text-xs  text-[#A3A3A3] font-bold leading-relaxed">
-                Sinema DNA'nla eşleşen bir profil bulunamadı. DNA'nı güncelleyerek yeni türler ekleyebilir veya radarı yeniden tarayabilirsin.
+                {locale === 'en'
+                  ? "No profiles found matching your Cinema DNA. You can update your DNA with new genres or rescan the radar."
+                  : "Sinema DNA'nla eşleşen bir profil bulunamadı. DNA'nı güncelleyerek yeni türler ekleyebilir veya radarı yeniden tarayabilirsin."}
               </p>
             </div>
 
@@ -692,7 +696,7 @@ export default function MatchesPage() {
                 className="h-11 min-h-[44px] px-5   bg-[#EF4444] hover:bg-[#DC2626]  text-[#0A0A0A] text-xs font-black uppercase border-2  border-[#404040]  shadow-[3px_3px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer flex items-center gap-2"
               >
                 <CinemaDnaHelixIcon size={16} className=" text-[#0A0A0A]" />
-                <span>SİNEMA DNA'SINI GÜNCELLE</span>
+                <span>{locale === 'en' ? 'UPDATE CINEMA DNA' : "SİNEMA DNA'SINI GÜNCELLE"}</span>
               </button>
 
               <button
@@ -700,7 +704,7 @@ export default function MatchesPage() {
                 className="h-11 min-h-[44px] px-4  bg-[#262626]  hover:bg-[#333333]  text-[#FAFAFA] text-xs font-black uppercase border-2  border-[#404040]  shadow-[2px_2px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer flex items-center gap-1.5"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
-                <span>Radarı Yeniden Tara</span>
+                <span>{locale === 'en' ? 'Rescan Radar' : 'Radarı Yeniden Tara'}</span>
               </button>
 
               {/* Discovery loop: empty radar sends you back to the deck */}
@@ -708,7 +712,7 @@ export default function MatchesPage() {
                 href="/"
                 className="h-11 min-h-[44px] px-4 bg-[#171717] hover:bg-[#262626] text-[#FAFAFA] text-xs font-black uppercase border-2 border-[#404040] shadow-[2px_2px_0px_#000000] transition-all cursor-pointer inline-flex items-center gap-1.5"
               >
-                PERDEYE DÖN
+                {locale === 'en' ? 'BACK TO SCREEN' : 'PERDEYE DÖN'}
               </Link>
             </div>
           </div>
@@ -719,10 +723,12 @@ export default function MatchesPage() {
 
             <div className="space-y-1 max-w-md mx-auto">
               <h3 className="text-sm sm:text-base font-black uppercase tracking-tight  text-[#FAFAFA]">
-                BU KRİTERLERE UYGUN İZDAŞ BULUNAMADI
+                {locale === 'en' ? 'NO FILM MATES MATCH THESE CRITERIA' : 'BU KRİTERLERE UYGUN İZDAŞ BULUNAMADI'}
               </h3>
               <p className="text-xs  text-[#A3A3A3] font-bold">
-                Şehir, yaş veya tür filtrelerini sıfırlayarak daha fazla İzdaş keşfedebilirsin.
+                {locale === 'en'
+                  ? 'Try resetting city, age, or genre filters to discover more film mates.'
+                  : 'Şehir, yaş veya tür filtrelerini sıfırlayarak daha fazla İzdaş keşfedebilirsin.'}
               </p>
             </div>
 
@@ -732,7 +738,7 @@ export default function MatchesPage() {
                 className="h-11 min-h-[44px] px-5   bg-[#EF4444] hover:bg-[#DC2626]  text-[#0A0A0A] text-xs font-black uppercase border-2  border-[#404040]  shadow-[3px_3px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer inline-flex items-center gap-2"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
-                <span>FİLTRELERİ SIFIRLA</span>
+                <span>{locale === 'en' ? 'RESET FILTERS' : 'FİLTRELERİ SIFIRLA'}</span>
               </button>
             </div>
           </div>
@@ -810,7 +816,7 @@ export default function MatchesPage() {
         {gridUndoToast && (
           <div className="fixed bottom-6 right-6 z-50 bg-[#0A0A0A] text-white border-2 border-white shadow-[4px_4px_0px_#DC2626] px-4 py-3 font-mono text-xs flex items-center gap-3 animate-in slide-in-from-bottom-3 duration-150">
             <span className="font-bold truncate max-w-[200px]">
-              @{gridUndoToast.user.username} pas geçildi.
+              @{gridUndoToast.user.username} {locale === 'en' ? 'passed.' : 'pas geçildi.'}
             </span>
             <button
               type="button"
@@ -818,7 +824,7 @@ export default function MatchesPage() {
               className="px-2.5 py-1 bg-[#DC2626] hover:bg-[#B91C1C] text-white font-black uppercase border border-white text-[11px] cursor-pointer flex items-center gap-1"
             >
               <Undo2 className="w-3 h-3" />
-              <span>Geri Al</span>
+              <span>{locale === 'en' ? 'Undo' : 'Geri Al'}</span>
             </button>
           </div>
         )}
@@ -834,7 +840,7 @@ export default function MatchesPage() {
             <button
               type="button"
               onClick={() => setDeckNotice(null)}
-              aria-label="Bildirimi kapat"
+              aria-label={locale === 'en' ? 'Close notice' : 'Bildirimi kapat'}
               className="text-neutral-400 hover:text-white cursor-pointer shrink-0"
             >
               <X className="w-3.5 h-3.5" />
@@ -860,13 +866,13 @@ export default function MatchesPage() {
               <div className="flex items-center gap-2">
                 <SlidersHorizontal className="w-5 h-5  text-[#EF4444]" />
                 <h3 className="text-sm font-black uppercase tracking-tight font-sans">
-                  DETAYLI SİNEFİL FİLTRESİ
+                  {locale === 'en' ? 'DETAILED CINEPHILE FILTER' : 'DETAYLI SİNEFİL FİLTRESİ'}
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setIsFilterDrawerOpen(false)}
-                aria-label="Filtreleri Kapat"
+                aria-label={locale === 'en' ? 'Close Filters' : 'Filtreleri Kapat'}
                 className="w-9 h-9 flex items-center justify-center border-2  border-[#404040] hover:bg-[#DC2626] hover:text-white cursor-pointer"
               >
                 <X className="w-4 h-4 stroke-[3]" />
@@ -877,10 +883,10 @@ export default function MatchesPage() {
               {/* Şehir */}
               <div className="space-y-1.5">
                 <label className="font-black uppercase  text-[#A3A3A3] block">
-                  Şehir:
+                  {locale === 'en' ? 'City:' : 'Şehir:'}
                 </label>
                 <select
-                  aria-label="Şehir Seçimi"
+                  aria-label={locale === 'en' ? 'City Selection' : 'Şehir Seçimi'}
                   value={selectedCity}
                   onChange={(e) => {
                     setSelectedCity(e.target.value);
@@ -888,7 +894,7 @@ export default function MatchesPage() {
                   }}
                   className="w-full h-11  bg-[#262626] border-2  border-[#404040] px-3 font-bold uppercase  text-[#FAFAFA] focus:outline-none focus:border-[#DC2626]"
                 >
-                  <option value="Hepsi">TÜM ŞEHİRLER</option>
+                  <option value="Hepsi">{locale === 'en' ? 'ALL CITIES' : 'TÜM ŞEHİRLER'}</option>
                   {provinces.map((city) => (
                     <option key={city} value={city}>{city.toUpperCase()}</option>
                   ))}
@@ -899,15 +905,15 @@ export default function MatchesPage() {
               {selectedCity !== 'Hepsi' && cityDistricts.length > 0 && (
                 <div className="space-y-1.5">
                   <label className="font-black uppercase  text-[#A3A3A3] block">
-                    İlçe:
+                    {locale === 'en' ? 'District:' : 'İlçe:'}
                   </label>
                   <select
-                    aria-label="İlçe Seçimi"
+                    aria-label={locale === 'en' ? 'District Selection' : 'İlçe Seçimi'}
                     value={selectedDistrict}
                     onChange={(e) => setSelectedDistrict(e.target.value)}
                     className="w-full h-11  bg-[#262626] border-2  border-[#404040] px-3 font-bold uppercase  text-[#FAFAFA] focus:outline-none focus:border-[#DC2626]"
                   >
-                    <option value="Hepsi">TÜM İLÇELER</option>
+                    <option value="Hepsi">{locale === 'en' ? 'ALL DISTRICTS' : 'TÜM İLÇELER'}</option>
                     {cityDistricts.map((d) => (
                       <option key={d} value={d}>{d.toUpperCase()}</option>
                     ))}
@@ -918,23 +924,25 @@ export default function MatchesPage() {
               {/* Yaş Aralığı */}
               <div className="space-y-1.5">
                 <label className="font-black uppercase  text-[#A3A3A3] block">
-                  Yaş Aralığı:
+                  {locale === 'en' ? 'Age Range:' : 'Yaş Aralığı:'}
                 </label>
                 <select
-                  aria-label="Yaş Grubu Seçimi"
+                  aria-label={locale === 'en' ? 'Age Range Selection' : 'Yaş Grubu Seçimi'}
                   value={selectedAgeRange}
                   onChange={(e) => setSelectedAgeRange(e.target.value)}
                   className="w-full h-11  bg-[#262626] border-2  border-[#404040] px-3 font-bold uppercase  text-[#FAFAFA] focus:outline-none focus:border-[#DC2626]"
                 >
-                  <option value="Hepsi">TÜM YAŞLAR</option>
-                  <option value="18-24">18 - 24 YAŞ</option>
-                  <option value="25-34">25 - 34 YAŞ</option>
-                  <option value="35-44">35 - 44 YAŞ</option>
-                  <option value="45+">45+ YAŞ</option>
+                  <option value="Hepsi">{locale === 'en' ? 'ALL AGES' : 'TÜM YAŞLAR'}</option>
+                  <option value="18-24">{locale === 'en' ? 'AGES 18 - 24' : '18 - 24 YAŞ'}</option>
+                  <option value="25-34">{locale === 'en' ? 'AGES 25 - 34' : '25 - 34 YAŞ'}</option>
+                  <option value="35-44">{locale === 'en' ? 'AGES 35 - 44' : '35 - 44 YAŞ'}</option>
+                  <option value="45+">{locale === 'en' ? 'AGES 45+' : '45+ YAŞ'}</option>
                 </select>
                 {selectedAgeRange !== 'Hepsi' && (
                   <p className="text-[10px] text-neutral-500 leading-snug">
-                    Yaşını gizleyen üyeler bu filtrede görünmez.
+                    {locale === 'en'
+                      ? 'Members who hide their age are not shown in this filter.'
+                      : 'Yaşını gizleyen üyeler bu filtrede görünmez.'}
                   </p>
                 )}
               </div>
@@ -946,7 +954,7 @@ export default function MatchesPage() {
                 onClick={resetFilters}
                 className="px-4 py-2.5  bg-[#262626] hover:bg-[#E5E5E5]  text-[#EF4444] text-xs font-black uppercase border  border-[#404040] cursor-pointer"
               >
-                Sıfırla
+                {locale === 'en' ? 'Reset' : 'Sıfırla'}
               </button>
               {/* Filters apply live — this is just an honest close. */}
               <button
@@ -954,7 +962,7 @@ export default function MatchesPage() {
                 onClick={() => setIsFilterDrawerOpen(false)}
                 className="flex-1 py-2.5   bg-[#EF4444] hover:bg-[#DC2626]  text-[#0A0A0A] text-xs font-black uppercase border-2 border-[#0A0A0A] shadow-[2px_2px_0px_#000000] cursor-pointer"
               >
-                TAMAM
+                {locale === 'en' ? 'APPLY' : 'TAMAM'}
               </button>
             </div>
           </div>

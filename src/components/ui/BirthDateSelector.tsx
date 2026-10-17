@@ -3,6 +3,7 @@
 import React, { useMemo } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { CinemaCalendarIcon } from '@/components/icons/CinemaIcons';
+import { useTranslation } from '@/lib/i18n';
 
 interface BirthDateSelectorProps {
   value: string; // Format: "YYYY-MM-DD" or ""
@@ -11,7 +12,7 @@ interface BirthDateSelectorProps {
   required?: boolean;
 }
 
-const MONTHS = [
+const MONTHS_TR = [
   { value: '01', label: '01 - Ocak' },
   { value: '02', label: '02 - Şubat' },
   { value: '03', label: '03 - Mart' },
@@ -26,12 +27,30 @@ const MONTHS = [
   { value: '12', label: '12 - Aralık' },
 ];
 
+const MONTHS_EN = [
+  { value: '01', label: '01 - January' },
+  { value: '02', label: '02 - February' },
+  { value: '03', label: '03 - March' },
+  { value: '04', label: '04 - April' },
+  { value: '05', label: '05 - May' },
+  { value: '06', label: '06 - June' },
+  { value: '07', label: '07 - July' },
+  { value: '08', label: '08 - August' },
+  { value: '09', label: '09 - September' },
+  { value: '10', label: '10 - October' },
+  { value: '11', label: '11 - November' },
+  { value: '12', label: '12 - December' },
+];
+
 export function BirthDateSelector({
   value,
   onChange,
   className = '',
   required = false,
 }: BirthDateSelectorProps) {
+  const { t, locale } = useTranslation();
+  const monthsList = locale === 'en' ? MONTHS_EN : MONTHS_TR;
+
   // Parse current value
   const [yearStr, monthStr, dayStr] = useMemo(() => {
     if (!value || typeof value !== 'string') return ['', '', ''];
@@ -122,15 +141,24 @@ export function BirthDateSelector({
     }
 
     let era = '';
-    if (y < 1970) era = 'Klasik Dönem Sinefili';
-    else if (y < 1980) era = '70’ler Yeni Hollywood Kuşağı';
-    else if (y < 1990) era = '80’ler Kült Sinema Kuşağı';
-    else if (y < 2000) era = '90’lar Selüloit Kuşağı';
-    else if (y < 2010) era = '2000’ler Dijital Sinema Kuşağı';
-    else era = 'Genç Sinefil Kuşağı';
+    if (locale === 'en') {
+      if (y < 1970) era = 'Golden Era Cinephile';
+      else if (y < 1980) era = '70s New Hollywood Generation';
+      else if (y < 1990) era = '80s Cult Cinema Generation';
+      else if (y < 2000) era = '90s Celluloid Generation';
+      else if (y < 2010) era = '2000s Digital Cinema Generation';
+      else era = 'Young Cinephile Generation';
+    } else {
+      if (y < 1970) era = 'Klasik Dönem Sinefili';
+      else if (y < 1980) era = '70’ler Yeni Hollywood Kuşağı';
+      else if (y < 1990) era = '80’ler Kült Sinema Kuşağı';
+      else if (y < 2000) era = '90’lar Selüloit Kuşağı';
+      else if (y < 2010) era = '2000’ler Dijital Sinema Kuşağı';
+      else era = 'Genç Sinefil Kuşağı';
+    }
 
     return { age, era };
-  }, [yearStr, monthStr, dayStr]);
+  }, [yearStr, monthStr, dayStr, locale]);
 
   return (
     <div className={`space-y-2 font-mono ${className}`}>
@@ -140,7 +168,7 @@ export function BirthDateSelector({
         {/* GÜN (Day) — 3 cols */}
         <div className="col-span-3 relative">
           <label className="block text-[10px] font-black uppercase  text-[#A3A3A3] mb-1">
-            GÜN
+            {locale === 'en' ? 'DAY' : 'GÜN'}
           </label>
           <div className="relative">
             <select
@@ -162,7 +190,7 @@ export function BirthDateSelector({
         {/* AY (Month) — 5 cols */}
         <div className="col-span-5 relative">
           <label className="block text-[10px] font-black uppercase  text-[#A3A3A3] mb-1">
-            AY
+            {locale === 'en' ? 'MONTH' : 'AY'}
           </label>
           <div className="relative">
             <select
@@ -171,7 +199,7 @@ export function BirthDateSelector({
               required={required}
               className="w-full appearance-none  bg-[#171717]  text-[#FAFAFA] font-mono font-black text-xs px-2.5 py-2.5 pr-6 border-2  border-[#404040]  focus:border-[#EF4444]  shadow-[2px_2px_0px_#000000] focus:outline-none cursor-pointer transition-colors"
             >
-              {MONTHS.map((m) => (
+              {monthsList.map((m) => (
                 <option key={m.value} value={m.value} className=" bg-[#171717]  text-[#FAFAFA]">
                   {m.label}
                 </option>
@@ -184,7 +212,7 @@ export function BirthDateSelector({
         {/* YIL (Year) — 4 cols */}
         <div className="col-span-4 relative">
           <label className="block text-[10px] font-black uppercase  text-[#A3A3A3] mb-1">
-            YIL
+            {locale === 'en' ? 'YEAR' : 'YIL'}
           </label>
           <div className="relative">
             <select
@@ -210,7 +238,7 @@ export function BirthDateSelector({
         <div className="flex items-center justify-between px-2.5 py-1  bg-[#171717] border  border-[#404040] text-[10px] font-bold  text-[#A3A3A3] select-none">
           <div className="flex items-center gap-1.5">
             <CinemaCalendarIcon size={12} className="text-[#DC2626]" />
-            <span>Yaş: <strong className=" text-[#FAFAFA]">{cinephileAgeInfo.age}</strong></span>
+            <span>{locale === 'en' ? 'Age:' : 'Yaş:'} <strong className=" text-[#FAFAFA]">{cinephileAgeInfo.age}</strong></span>
           </div>
           <span className=" text-[#EF4444] font-black uppercase tracking-tight">
             {cinephileAgeInfo.era}

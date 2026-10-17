@@ -572,7 +572,7 @@ export function ChatModal({
               <div className="p-6 bg-emerald-500/10 border-4 border-emerald-600 text-center space-y-3">
                 <Check className="w-10 h-10  text-emerald-400 mx-auto stroke-[3]" />
                 <h4 className="text-sm font-black uppercase  text-emerald-300">
-                  BİLDİRİM DURUMU
+                  {locale === 'en' ? 'REPORT STATUS' : 'BİLDİRİM DURUMU'}
                 </h4>
                 <p className="text-neutral-300 text-[11px] whitespace-pre-line">
                   {reportSuccess}
@@ -583,11 +583,11 @@ export function ChatModal({
                 <div className="flex items-start justify-between border-b-2 border-neutral-700 pb-2">
                   <div className="flex items-center gap-2 text-rose-500 font-black uppercase text-xs">
                     <ShieldAlert className="w-4 h-4" />
-                    <span>NİYET İHLALİ & GÜVENLİK BİLDİRİMİ</span>
+                    <span>{locale === 'en' ? 'INTENT BREACH & SAFETY REPORT' : 'NİYET İHLALİ & GÜVENLİK BİLDİRİMİ'}</span>
                   </div>
                   <button
                     onClick={() => setIsReportOpen(false)}
-                    aria-label="Bildirimi Kapat"
+                    aria-label={locale === 'en' ? 'Close Report' : 'Bildirimi Kapat'}
                     className="p-1 hover:text-rose-500 cursor-pointer"
                   >
                     <X className="w-4 h-4" />
@@ -595,8 +595,9 @@ export function ChatModal({
                 </div>
 
                 <p className="text-[11px] text-neutral-300">
-                  @{match.user.username} adlı kullanıcıyı bildirme gerekçenizi
-                  seçin. Sahte niyet beyanları topluluktan men edilme sebebidir:
+                  {locale === 'en'
+                    ? `Select the reason for reporting @${match.user.username}. False intent claims may lead to a community ban:`
+                    : `@${match.user.username} adlı kullanıcıyı bildirme gerekçenizi seçin. Sahte niyet beyanları topluluktan men edilme sebebidir:`}
                 </p>
 
                 <div className="space-y-2">
@@ -604,17 +605,23 @@ export function ChatModal({
                     {
                       id: "intent_breach",
                       label:
-                        "“Film Arkadaşı” seçmesine rağmen flört/rahatsız edici mesaj attı",
+                        locale === 'en'
+                          ? "Selected “Film Friend” but sent flirting or inappropriate messages"
+                          : "“Film Arkadaşı” seçmesine rağmen flört/rahatsız edici mesaj attı",
                     },
                     {
                       id: "false_profile",
                       label:
-                        "Profil bilgileri ve niyet beyanı gerçeği yansıtmıyor",
+                        locale === 'en'
+                          ? "Profile details and intent declaration do not reflect reality"
+                          : "Profil bilgileri ve niyet beyanı gerçeği yansıtmıyor",
                     },
                     {
                       id: "harassment",
                       label:
-                        "Saygısız, saldırgan veya sinema dışı ısrarcı tutum",
+                        locale === 'en'
+                          ? "Disrespectful, aggressive, or persistent non-cinema attitude"
+                          : "Saygısız, saldırgan veya sinema dışı ısrarcı tutum",
                     },
                   ].map((opt) => (
                     <label
@@ -644,7 +651,7 @@ export function ChatModal({
                     onClick={() => setIsReportOpen(false)}
                     className="px-3 py-1.5 border border-neutral-600 text-neutral-300 font-black text-xs uppercase cursor-pointer"
                   >
-                    İPTAL
+                    {locale === 'en' ? 'CANCEL' : 'İPTAL'}
                   </button>
                   {reportError && (
                     <p className="text-[11px] font-black text-rose-400 mr-auto">
@@ -672,14 +679,17 @@ export function ChatModal({
                         if (!result) {
                           throw new Error("submit failed");
                         }
-                        let notice =
-                          "Bildiriminiz alındı. Bu eşleşme sonlandırıldı.";
+                        let notice = locale === 'en'
+                          ? "Your report has been received. This match has been closed."
+                          : "Bildiriminiz alındı. Bu eşleşme sonlandırıldı.";
                         if (!result.accepted) {
-                          notice =
-                            "Bu kullanıcı için zaten bir bildiriminiz kayıtlı.";
+                          notice = locale === 'en'
+                            ? "You have already submitted a report for this user."
+                            : "Bu kullanıcı için zaten bir bildiriminiz kayıtlı.";
                         } else if (result.targetBlocked) {
-                          notice +=
-                            "\nKullanıcı tekrarlayan ihlaller nedeniyle otomatik olarak askıya alındı.";
+                          notice += locale === 'en'
+                            ? "\nThe user has been automatically suspended due to repeat violations."
+                            : "\nKullanıcı tekrarlayan ihlaller nedeniyle otomatik olarak askıya alındı.";
                         }
                         setReportSuccess(notice);
                         setTimeout(() => {
@@ -689,7 +699,9 @@ export function ChatModal({
                         }, 1400);
                       } catch {
                         setReportError(
-                          "Bildirim gönderilemedi. Lütfen tekrar deneyin.",
+                          locale === 'en'
+                            ? "Failed to submit report. Please try again."
+                            : "Bildirim gönderilemedi. Lütfen tekrar deneyin.",
                         );
                       } finally {
                         setReportSubmitting(false);
@@ -700,7 +712,7 @@ export function ChatModal({
                     {reportSubmitting && (
                       <Loader2 className="w-3 h-3 animate-spin" />
                     )}
-                    BİLDİR VE ENGELLE
+                    {locale === 'en' ? 'REPORT & BLOCK' : 'BİLDİR VE ENGELLE'}
                   </button>
                 </div>
               </div>

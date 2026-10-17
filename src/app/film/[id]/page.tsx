@@ -231,11 +231,11 @@ export default async function FilmDetailPage({ params }: Props) {
             <div className="flex-1 space-y-6">
               <div>
                 <h1 className="text-3xl sm:text-5xl font-black uppercase font-sans tracking-tight  text-[#FAFAFA] leading-none mb-2">
-                  {movie.title}
+                  {locale === 'en' && movie.originalTitle ? movie.originalTitle : movie.title}
                 </h1>
                 {movie.originalTitle && movie.originalTitle !== movie.title && (
                   <h2 className="text-sm font-bold  text-neutral-400 italic font-serif">
-                    {movie.originalTitle}
+                    {locale === 'en' ? movie.title : movie.originalTitle}
                   </h2>
                 )}
               </div>
@@ -279,7 +279,7 @@ export default async function FilmDetailPage({ params }: Props) {
                   {locale === 'tr' ? 'Özet' : 'Overview'}
                 </h3>
                 <p className="text-sm font-sans leading-relaxed text-neutral-300">
-                  {movie.overview}
+                  {locale === 'en' && movie.overviewEn ? movie.overviewEn : movie.overview}
                 </p>
               </div>
 

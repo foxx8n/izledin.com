@@ -8,6 +8,7 @@ import {
   CinemaVerifiedSeal,
   CinemaPassTicketIcon,
 } from '@/components/icons/CinemaIcons';
+import { useTranslation } from '@/lib/i18n';
 
 interface PremiumModalProps {
   isOpen: boolean;
@@ -18,6 +19,8 @@ interface PremiumModalProps {
 }
 
 export function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
+  const { t, locale } = useTranslation();
+
   // Handle ESC key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -48,7 +51,7 @@ export function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
           <div className="flex items-center gap-2">
             <span className="px-2.5 py-0.5 bg-[#DC2626] text-white text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-[2px_2px_0px_#000000]">
               <MasterpieceLaurelIcon size={14} className="text-white" />
-              <span>İZLEDİN+ KULÜP ÜYELİĞİ</span>
+              <span>{locale === 'en' ? 'IZLEDIN+ CLUB MEMBERSHIP' : 'İZLEDİN+ KULÜP ÜYELİĞİ'}</span>
             </span>
           </div>
 
@@ -56,7 +59,7 @@ export function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
             type="button"
             onClick={onClose}
             className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center bg-[#171717] hover:bg-[#EF4444] hover:text-[#0A0A0A] border border-[#404040] cursor-pointer transition-colors"
-            aria-label="Modalı Kapat"
+            aria-label={locale === 'en' ? 'Close Modal' : 'Modalı Kapat'}
           >
             <X className="w-4 h-4 stroke-[2.5]" />
           </button>
@@ -65,38 +68,60 @@ export function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
         {/* Intro */}
         <div className="space-y-2 text-center">
           <h2 id="premium-modal-title" className="text-2xl sm:text-3xl font-black uppercase font-sans tracking-tight text-[#FAFAFA]">
-            BAĞIMSIZ SİNEFİL KULÜBÜ
+            {locale === 'en' ? 'INDEPENDENT CINEPHILE CLUB' : 'BAĞIMSIZ SİNEFİL KULÜBÜ'}
           </h2>
           <p className="text-xs text-neutral-400 font-sans leading-relaxed">
-            Altın mühür, radarda ve akışta öncelik, bağımsız sinemaya destek. Çekirdek platform zaten herkese ücretsiz ve reklamsızdır.
+            {locale === 'en'
+              ? 'Golden seal, radar and stream priority, supporting independent cinema. The core platform remains completely free and ad-free for everyone.'
+              : 'Altın mühür, radarda ve akışta öncelik, bağımsız sinemaya destek. Çekirdek platform zaten herkese ücretsiz ve reklamsızdır.'}
           </p>
         </div>
 
         {/* Benefits List */}
         <div className="p-3.5 bg-neutral-900 border-2 border-[#333333] space-y-2">
           <span className="text-[11px] font-black uppercase text-[#EF4444] block">
-            KULÜP AYRICALIKLARI:
+            {locale === 'en' ? 'CLUB PRIVILEGES:' : 'KULÜP AYRICALIKLARI:'}
           </span>
           <ul className="space-y-1.5 text-xs font-sans text-[#FAFAFA] list-none p-0 m-0">
             <li className="flex items-center gap-2">
               <CinemaVerifiedSeal size={13} className="text-[#F59E0B] shrink-0" />
-              <span>Altın Kulüp Mührü — profilinde ve günlük notlarında görünen VIP rozeti</span>
+              <span>
+                {locale === 'en'
+                  ? 'Golden Club Seal — VIP badge displayed on your profile and logs'
+                  : 'Altın Kulüp Mührü — profilinde ve günlük notlarında görünen VIP rozeti'}
+              </span>
             </li>
             <li className="flex items-center gap-2">
               <CinemaVerifiedSeal size={13} className="text-[#F59E0B] shrink-0" />
-              <span>Radarda Öncelikli Sıralama — İzdaş keşif radarında eşleşmede öne alın</span>
+              <span>
+                {locale === 'en'
+                  ? 'Radar Priority Ranking — spotlight in Film Mates discovery matches'
+                  : 'Radarda Öncelikli Sıralama — İzdaş keşif radarında eşleşmede öne alın'}
+              </span>
             </li>
             <li className="flex items-center gap-2">
               <CinemaVerifiedSeal size={13} className="text-[#F59E0B] shrink-0" />
-              <span>Akışta Görünürlük Önceliği — topluluk akışında ölçülü görünürlük</span>
+              <span>
+                {locale === 'en'
+                  ? 'Feed Visibility Priority — curated presence in community stream'
+                  : 'Akışta Görünürlük Önceliği — topluluk akışında ölçülü görünürlük'}
+              </span>
             </li>
             <li className="flex items-center gap-2">
               <CinemaVerifiedSeal size={13} className="text-[#F59E0B] shrink-0" />
-              <span>Bağımsız Sinemaya Destek — kısa film fonu ve yerel gösterimlere katkı</span>
+              <span>
+                {locale === 'en'
+                  ? 'Support Independent Cinema — contributes to short film funds and local screenings'
+                  : 'Bağımsız Sinemaya Destek — kısa film fonu ve yerel gösterimlere katkı'}
+              </span>
             </li>
             <li className="flex items-center gap-2">
               <CinemaVerifiedSeal size={13} className="text-[#F59E0B] shrink-0" />
-              <span>Yeni Modüllere Erken Erişim — yeni modüller herkesten önce açılır</span>
+              <span>
+                {locale === 'en'
+                  ? 'Early Access to New Modules — new modules unlocked before anyone else'
+                  : 'Yeni Modüllere Erken Erişim — yeni modüller herkesten önce açılır'}
+              </span>
             </li>
           </ul>
         </div>
@@ -105,17 +130,31 @@ export function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
         <div className="p-4 bg-[#F59E0B]/5 border-2 border-[#F59E0B] space-y-2">
           <span className="flex items-center gap-1.5 text-[11px] font-black uppercase text-[#F59E0B] tracking-wider">
             <CinemaPassTicketIcon size={14} className="shrink-0" />
-            <span>ÜYELİK ATAMASI</span>
+            <span>{locale === 'en' ? 'MEMBERSHIP ASSIGNMENT' : 'ÜYELİK ATAMASI'}</span>
           </span>
           <p className="text-xs font-sans text-[#FAFAFA] leading-relaxed">
-            İzledin+ VIP üyeliği şu anda satışa açık değil; yönetim tarafından davetiye ve katkı usulüne göre atanır.
+            {locale === 'en'
+              ? 'Izledin+ VIP membership is currently invite-only and assigned by community management based on cultural contributions.'
+              : 'İzledin+ VIP üyeliği şu anda satışa açık değil; yönetim tarafından davetiye ve katkı usulüne göre atanır.'}
           </p>
           <p className="text-[11px] font-sans text-neutral-400 leading-relaxed">
-            Kulübe davet edildiyseniz ayrıcalıklarınız profilinize otomatik olarak işlenir. Sorularınız için{' '}
-            <Link href="/iletisim" onClick={onClose} className="text-[#EF4444] font-black underline decoration-2 underline-offset-2 hover:text-white transition-colors">
-              iletişim formunu
-            </Link>{' '}
-            kullanabilirsiniz.
+            {locale === 'en' ? (
+              <>
+                If you have been invited to the club, your privileges are automatically applied to your profile. For inquiries, you can use the{' '}
+                <Link href="/iletisim" onClick={onClose} className="text-[#EF4444] font-black underline decoration-2 underline-offset-2 hover:text-white transition-colors">
+                  contact form
+                </Link>
+                .
+              </>
+            ) : (
+              <>
+                Kulübe davet edildiyseniz ayrıcalıklarınız profilinize otomatik olarak işlenir. Sorularınız için{' '}
+                <Link href="/iletisim" onClick={onClose} className="text-[#EF4444] font-black underline decoration-2 underline-offset-2 hover:text-white transition-colors">
+                  iletişim formunu
+                </Link>{' '}
+                kullanabilirsiniz.
+              </>
+            )}
           </p>
         </div>
       </div>

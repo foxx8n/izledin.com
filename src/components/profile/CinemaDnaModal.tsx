@@ -24,6 +24,7 @@ import { useAuth } from '@/context/AuthContext';
 import { POPULAR_GENRES } from '@/lib/constants';
 import { MatchIntent } from '@/types';
 import { LocationSelector } from '@/components/common/LocationSelector';
+import { useTranslation, translateGenre } from '@/lib/i18n';
 
 interface CinemaDnaModalProps {
   isOpen: boolean;
@@ -32,6 +33,7 @@ interface CinemaDnaModalProps {
 
 export function CinemaDnaModal({ isOpen, onClose }: CinemaDnaModalProps) {
   const { profile, updateUserProfile } = useAuth();
+  const { t, locale } = useTranslation();
 
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [location, setLocation] = useState('Kadıköy, İstanbul');
@@ -79,7 +81,9 @@ export function CinemaDnaModal({ isOpen, onClose }: CinemaDnaModalProps) {
       const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
       return {
         isLocked: true,
-        remainingText: `${hours > 0 ? `${hours} saat ` : ''}${minutes} dakika`,
+        remainingText: locale === 'en'
+          ? `${hours > 0 ? `${hours}h ` : ''}${minutes}m`
+          : `${hours > 0 ? `${hours} saat ` : ''}${minutes} dakika`,
       };
     }
 
@@ -101,7 +105,11 @@ export function CinemaDnaModal({ isOpen, onClose }: CinemaDnaModalProps) {
     if (saving) return;
 
     if (selectedGenres.length === 0) {
-      setErrorMsg('Lütfen en az 1 favori sinema türü seçin.');
+      setErrorMsg(
+        locale === 'en'
+          ? 'Please select at least 1 favorite cinema genre.'
+          : 'Lütfen en az 1 favori sinema türü seçin.'
+      );
       return;
     }
 
@@ -117,7 +125,11 @@ export function CinemaDnaModal({ isOpen, onClose }: CinemaDnaModalProps) {
       // Only include matchIntent if it changed and is not locked
       if (matchIntent !== profile.matchIntent) {
         if (isIntentLocked) {
-          setErrorMsg(`İzdaş niyetinizi 24 saatte bir kez değiştirebilirsiniz. Kalan süre: ${cooldownRemainingText}`);
+          setErrorMsg(
+            locale === 'en'
+              ? `You can only change your match intent once every 24 hours. Remaining: ${cooldownRemainingText}`
+              : `İzdaş niyetinizi 24 saatte bir kez değiştirebilirsiniz. Kalan süre: ${cooldownRemainingText}`
+          );
           setSaving(false);
           return;
         }
@@ -133,11 +145,17 @@ export function CinemaDnaModal({ isOpen, onClose }: CinemaDnaModalProps) {
       if (res?.success) {
         onClose();
       } else {
-        setErrorMsg(res?.error || 'Güncelleme yapılırken bir hata oluştu.');
+        setErrorMsg(
+          res?.error ||
+          (locale === 'en' ? 'An error occurred during update.' : 'Güncelleme yapılırken bir hata oluştu.')
+        );
       }
     } catch (err: any) {
       console.error('Cinema DNA update error:', err);
-      setErrorMsg(err?.message || 'Güncelleme sırasında bir sorun oluştu.');
+      setErrorMsg(
+        err?.message ||
+        (locale === 'en' ? 'A problem occurred during update.' : 'Güncelleme sırasında bir sorun oluştu.')
+      );
     } finally {
       setSaving(false);
     }
@@ -162,18 +180,18 @@ export function CinemaDnaModal({ isOpen, onClose }: CinemaDnaModalProps) {
             <div className="flex items-center gap-2 flex-wrap">
               <span className="px-2.5 py-0.5 bg-[#F59E0B] text-[#0A0A0A] text-[10px] sm:text-xs font-black uppercase tracking-wider flex items-center gap-1">
                 <CinemaDnaHelixIcon size={13} />
-                <span>SİNEMA DNA KALİBRATÖRÜ</span>
+                <span>{locale === 'en' ? 'CINEMA DNA CALIBRATOR' : 'SİNEMA DNA KALİBRATÖRÜ'}</span>
               </span>
             </div>
             <h2 id="cinema-dna-modal-title" className="text-base sm:text-xl font-black uppercase text-[#FAFAFA] font-sans tracking-tight">
-              SİNEMA DNA & İZDAŞ TERCİHLERİ
+              {locale === 'en' ? 'CINEMA DNA & FILM MATE PREFERENCES' : 'SİNEMA DNA & İZDAŞ TERCİHLERİ'}
             </h2>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            aria-label="Modalı Kapat"
+            aria-label={locale === 'en' ? 'Close Modal' : 'Modalı Kapat'}
             className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center bg-[#171717] hover:bg-[#EF4444] hover:text-[#0A0A0A] border border-[#404040] cursor-pointer transition-colors"
           >
             <X className="w-5 h-5 stroke-[2.5]" />
@@ -191,7 +209,7 @@ export function CinemaDnaModal({ isOpen, onClose }: CinemaDnaModalProps) {
               type="button"
               onClick={() => setErrorMsg(null)}
               className="p-1 text-red-400 hover:text-white cursor-pointer min-h-[32px] min-w-[32px] flex items-center justify-center"
-              aria-label="Hatayı kapat"
+              aria-label={locale === 'en' ? 'Close error' : 'Hatayı kapat'}
             >
               <X className="w-4 h-4" />
             </button>
@@ -203,23 +221,25 @@ export function CinemaDnaModal({ isOpen, onClose }: CinemaDnaModalProps) {
           <div className="flex items-center justify-between flex-wrap gap-2">
             <label className="text-xs font-black uppercase text-[#FAFAFA] flex items-center gap-2">
               <Users className="w-4 h-4 text-[#EF4444]" />
-              <span>İZDAŞ RADARI EŞLEŞME NİYETİ:</span>
+              <span>{locale === 'en' ? 'FILM MATES RADAR INTENT:' : 'İZDAŞ RADARI EŞLEŞME NİYETİ:'}</span>
             </label>
             {isIntentLocked ? (
               <span className="px-2 py-0.5 bg-[#1E1E1E] border border-amber-500/60 text-[10px] font-mono text-[#F59E0B] flex items-center gap-1.5">
                 <Clock className="w-3 h-3 text-[#F59E0B]" />
-                <span>24 Saat Kilidi: {cooldownRemainingText} kaldı</span>
+                <span>{locale === 'en' ? `24h Cooldown: ${cooldownRemainingText} left` : `24 Saat Kilidi: ${cooldownRemainingText} kaldı`}</span>
               </span>
             ) : (
               <span className="text-[10px] text-emerald-400 font-mono flex items-center gap-1">
                 <Sparkles className="w-3 h-3" />
-                <span>Günde 1 kez değiştirilebilir</span>
+                <span>{locale === 'en' ? 'Can be changed once a day' : 'Günde 1 kez değiştirilebilir'}</span>
               </span>
             )}
           </div>
 
           <p className="text-xs text-neutral-400 font-sans leading-relaxed">
-            İzdaş Radarı&apos;nda diğer sinefillerle hangi niyetle eşleşmek istediğinizi belirleyin.
+            {locale === 'en'
+              ? "Select your matching intent with fellow cinephiles on the Film Mates Radar."
+              : "İzdaş Radarı'nda diğer sinefillerle hangi niyetle eşleşmek istediğinizi belirleyin."}
           </p>
 
           {/* 3 Intent Cards */}
@@ -227,20 +247,20 @@ export function CinemaDnaModal({ isOpen, onClose }: CinemaDnaModalProps) {
             {[
               {
                 id: 'friend',
-                title: 'FİLM ARKADAŞLIĞI',
-                subtitle: 'Platonik & Sinema Sohbeti',
+                title: locale === 'en' ? 'FILM FRIENDSHIP' : 'FİLM ARKADAŞLIĞI',
+                subtitle: locale === 'en' ? 'Platonic & Cinema Talks' : 'Platonik & Sinema Sohbeti',
                 icon: CinemaFriendshipIcon,
               },
               {
                 id: 'dating',
-                title: 'SİNEMATİK FLÖRT',
-                subtitle: 'Romantik & Randevu',
+                title: locale === 'en' ? 'CINEMATIC DATING' : 'SİNEMATİK FLÖRT',
+                subtitle: locale === 'en' ? 'Romance & Movie Dates' : 'Romantik & Randevu',
                 icon: CinemaRomanceIcon,
               },
               {
                 id: 'both',
-                title: 'HER İKİSİNE DE AÇIĞIM',
-                subtitle: 'Esnek Sinefil Tanışma',
+                title: locale === 'en' ? 'OPEN TO BOTH' : 'HER İKİSİNE DE AÇIĞIM',
+                subtitle: locale === 'en' ? 'Flexible Cinephile Connection' : 'Esnek Sinefil Tanışma',
                 icon: CinemaDuoIntentIcon,
               },
             ].map((item) => {
@@ -286,15 +306,19 @@ export function CinemaDnaModal({ isOpen, onClose }: CinemaDnaModalProps) {
           <div className="flex items-center justify-between">
             <label className="text-xs font-black uppercase text-[#FAFAFA] flex items-center gap-2">
               <FilmReelIcon size={14} className="text-[#EF4444]" />
-              <span>FAVORİ SİNEMA TÜRLERİNİZ ({selectedGenres.length}):</span>
+              <span>{locale === 'en' ? `FAVORITE CINEMA GENRES (${selectedGenres.length}):` : `FAVORİ SİNEMA TÜRLERİNİZ (${selectedGenres.length}):`}</span>
             </label>
             <span className="text-[10px] text-[#DC2626] font-mono font-bold">
-              {selectedGenres.length === 0 ? 'En az 1 adet seçin' : `${selectedGenres.length} Tür Seçildi`}
+              {selectedGenres.length === 0
+                ? (locale === 'en' ? 'Select at least 1' : 'En az 1 adet seçin')
+                : (locale === 'en' ? `${selectedGenres.length} Genres Selected` : `${selectedGenres.length} Tür Seçildi`)}
             </span>
           </div>
 
           <p className="text-xs text-neutral-400 font-sans leading-relaxed">
-            Sinema zevkinizi ve algoritma afinite oranınızı belirleyen favori türleri seçin veya kaldırın.
+            {locale === 'en'
+              ? 'Select or remove favorite genres that define your cinema taste and algorithm affinity.'
+              : 'Sinema zevkinizi ve algoritma afinite oranınızı belirleyen favori türleri seçin veya kaldırın.'}
           </p>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1 max-h-52 overflow-y-auto pr-1">
@@ -311,7 +335,7 @@ export function CinemaDnaModal({ isOpen, onClose }: CinemaDnaModalProps) {
                       : 'bg-neutral-900 text-[#FAFAFA] border-[#404040] hover:border-neutral-500'
                   }`}
                 >
-                  <span className="truncate">{genre}</span>
+                  <span className="truncate">{translateGenre(genre, locale)}</span>
                   {isSelected && <Check className="w-3.5 h-3.5 stroke-[3] shrink-0" />}
                 </button>
               );
@@ -340,12 +364,16 @@ export function CinemaDnaModal({ isOpen, onClose }: CinemaDnaModalProps) {
           >
             <div>
               <span className="text-xs font-black uppercase tracking-wider block">
-                RADARDA GÖRÜNME HAKKI
+                {locale === 'en' ? 'RADAR VISIBILITY RIGHT' : 'RADARDA GÖRÜNME HAKKI'}
               </span>
               <span className="text-[10px] font-bold text-neutral-400 block mt-0.5 leading-relaxed">
                 {radarVisible
-                  ? 'Profilin İzdaş radarında görünür. Kapatırsan kimse destende seni göremez.'
-                  : 'Profilin gizli — hiçbir desteye düşmezsin. Dilediğin an geri açabilirsin.'}
+                  ? (locale === 'en'
+                      ? 'Your profile appears on Film Mates radar. If off, no one will see you in their deck.'
+                      : 'Profilin İzdaş radarında görünür. Kapatırsan kimse destende seni göremez.')
+                  : (locale === 'en'
+                      ? 'Profile hidden — you will not appear in any deck. You can turn this back on anytime.'
+                      : 'Profilin gizli — hiçbir desteye düşmezsin. Dilediğin an geri açabilirsin.')}
               </span>
             </div>
             <span
@@ -355,7 +383,7 @@ export function CinemaDnaModal({ isOpen, onClose }: CinemaDnaModalProps) {
                   : 'bg-emerald-500 text-[#0A0A0A] border-[#0A0A0A]'
               }`}
             >
-              {radarVisible ? 'AÇIK' : 'GİZLİ'}
+              {radarVisible ? (locale === 'en' ? 'ACTIVE' : 'AÇIK') : (locale === 'en' ? 'HIDDEN' : 'GİZLİ')}
             </span>
           </button>
         </div>
@@ -367,7 +395,7 @@ export function CinemaDnaModal({ isOpen, onClose }: CinemaDnaModalProps) {
             onClick={onClose}
             className="px-4 py-2.5 min-h-[44px] bg-[#262626] hover:bg-[#333333] text-[#A3A3A3] hover:text-white text-xs font-black uppercase border border-[#404040] cursor-pointer transition-colors"
           >
-            Vazgeç
+            {locale === 'en' ? 'Cancel' : 'Vazgeç'}
           </button>
 
           <button
@@ -378,12 +406,12 @@ export function CinemaDnaModal({ isOpen, onClose }: CinemaDnaModalProps) {
             {saving ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>GÜNCELLENİYOR...</span>
+                <span>{locale === 'en' ? 'UPDATING...' : 'GÜNCELLENİYOR...'}</span>
               </>
             ) : (
               <>
                 <Check className="w-4 h-4 stroke-[3]" />
-                <span>SİNEMA DNA&apos;SINI GÜNCELLE</span>
+                <span>{locale === 'en' ? 'UPDATE CINEMA DNA' : "SİNEMA DNA'SINI GÜNCELLE"}</span>
               </>
             )}
           </button>

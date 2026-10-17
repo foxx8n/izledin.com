@@ -15,3 +15,5 @@ export const POPULAR_GENRES = [
   'Neo-Noir',
   'Klasik Sinema',
 ];
+
+export { translateGenre } from './i18n/genres';

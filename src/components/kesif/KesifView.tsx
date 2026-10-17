@@ -116,16 +116,22 @@ export function KesifView() {
   const [isPremiumOpen, setIsPremiumOpen] = useState(false);
 
   const [featuredMedia, setFeaturedMedia] = useState<MediaItem>(() => {
+    const syncItem = getMasterpieceOfTheWeekSync();
     if (typeof window !== "undefined") {
       try {
         const cached = localStorage.getItem("izledin_cached_featured_masterpiece");
         if (cached) {
           const parsed = JSON.parse(cached);
-          if (parsed?.id && parsed?.title) return parsed;
+          if (parsed?.id && parsed?.title) {
+            return {
+              ...parsed,
+              overviewEn: parsed.overviewEn || (syncItem.id === parsed.id ? syncItem.overviewEn : undefined),
+            };
+          }
         }
       } catch {}
     }
-    return getMasterpieceOfTheWeekSync();
+    return syncItem;
   });
 
   // Fetch real media catalog for selected tab
@@ -374,7 +380,7 @@ export function KesifView() {
                 }}
                 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight uppercase leading-none font-sans cursor-pointer hover:text-[#EF4444] transition-colors focus:outline-none focus:underline"
               >
-                {activeFeatured.title}
+                {locale === 'en' && activeFeatured.originalTitle ? activeFeatured.originalTitle : activeFeatured.title}
               </h1>
 
               {activeFeatured.awards && (
@@ -392,7 +398,7 @@ export function KesifView() {
               )}
 
               <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed line-clamp-3 sm:line-clamp-4 font-sans font-medium">
-                &ldquo;{activeFeatured.overview}&rdquo;
+                &ldquo;{locale === 'en' && activeFeatured.overviewEn ? activeFeatured.overviewEn : activeFeatured.overview}&rdquo;
               </p>
 
               <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 font-mono">

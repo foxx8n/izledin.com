@@ -20,6 +20,7 @@ import { Navbar } from '@/components/layout/Navbar';
 import { ProfileViewTracker } from '@/components/profile/ProfileViewTracker';
 import { Footer } from '@/components/layout/Footer';
 import { generateDynamicBio } from '@/lib/cinema-bio-generator';
+import { getServerTranslation } from '@/lib/i18n/server';
 
 type Props = {
   params: Promise<{ username: string }>;
@@ -63,13 +64,18 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const resolvedParams = await params;
   const profile = await getProfileByUsername(resolvedParams.username);
+  const { locale } = await getServerTranslation();
   
   if (!profile) {
-    return { title: 'Profil Bulunamadı — izledin.com' };
+    return { title: locale === 'en' ? 'Profile Not Found — izledin.com' : 'Profil Bulunamadı — izledin.com' };
   }
 
-  const title = `${profile.fullName} (@${profile.username}) Sinema Günlüğü — izledin.com`;
-  const description = profile.bio || `${profile.fullName} kullanıcısının izlediği filmler, diziler ve sinema değerlendirmeleri.`;
+  const title = locale === 'en'
+    ? `${profile.fullName} (@${profile.username}) Cinema Diary — izledin.com`
+    : `${profile.fullName} (@${profile.username}) Sinema Günlüğü — izledin.com`;
+  const description = profile.bio || (locale === 'en'
+    ? `Movies, series, and reviews logged by ${profile.fullName}.`
+    : `${profile.fullName} kullanıcısının izlediği filmler, diziler ve sinema değerlendirmeleri.`);
 
   return {
     title,
@@ -99,6 +105,7 @@ export default async function PublicProfilePage({ params }: Props) {
     notFound();
   }
 
+  const { locale, t } = await getServerTranslation();
   const logs = await getProfileLogs(profile.id);
 
   // ProfilePage JSON-LD
@@ -160,7 +167,7 @@ export default async function PublicProfilePage({ params }: Props) {
               </div>
 
               <p className="text-sm font-sans italic text-neutral-300 max-w-xl mx-auto sm:mx-0">
-                &ldquo;{profile.bio || generateDynamicBio(profile)}&rdquo;
+                &ldquo;{profile.bio || generateDynamicBio(profile, locale)}&rdquo;
               </p>
 
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 text-xs font-bold  text-neutral-400">
@@ -173,12 +180,12 @@ export default async function PublicProfilePage({ params }: Props) {
                 {profile.age && (
                   <span className="flex items-center gap-1">
                     <Calendar className="w-3.5 h-3.5" />
-                    {profile.age} Yaşında
+                    {profile.age} {t.profile.ageSuffix}
                   </span>
                 )}
                 <span className="flex items-center gap-1">
                   <Film className="w-3.5 h-3.5" />
-                  {profile.totalWatchedCount || logs.length} İzleme
+                  {profile.totalWatchedCount || logs.length} {locale === 'en' ? 'Watched' : 'İzleme'}
                 </span>
               </div>
             </div>
@@ -190,7 +197,7 @@ export default async function PublicProfilePage({ params }: Props) {
           <div className="mb-10">
             <h3 className="text-sm font-black uppercase mb-4 border-b-4  border-[#404040] pb-2 inline-flex items-center gap-2">
               <Heart className="w-4 h-4 fill-current text-[#DC2626]" />
-              BAŞYAPITLAR (TOP 4)
+              {locale === 'en' ? 'MASTERPIECES (TOP 4)' : 'BAŞYAPITLAR (TOP 4)'}
             </h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {profile.top4Favorites.map((fav, idx) => (
@@ -214,12 +221,14 @@ export default async function PublicProfilePage({ params }: Props) {
         <div>
           <h3 className="text-sm font-black uppercase mb-4 border-b-4  border-[#404040] pb-2 inline-flex items-center gap-2">
             <BookOpen className="w-4 h-4" />
-            DAKTİLO (SON İZLENENLER)
+            {locale === 'en' ? 'TYPEWRITER (RECENT LOGS)' : 'DAKTİLO (SON İZLENENLER)'}
           </h3>
           
           {logs.length === 0 ? (
             <div className=" bg-neutral-900 border-2 border-dashed  border-neutral-700 p-8 text-center">
-              <p className="text-sm font-bold text-neutral-500">Henüz hiçbir içeriği puanlamadı.</p>
+              <p className="text-sm font-bold text-neutral-500">
+                {locale === 'en' ? 'Has not rated any title yet.' : 'Henüz hiçbir içeriği puanlamadı.'}
+              </p>
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
@@ -239,7 +248,7 @@ export default async function PublicProfilePage({ params }: Props) {
                       {log.rating ? log.rating.toFixed(1) : '-'}
                     </div>
                     <div className=" text-neutral-400 truncate max-w-[60%]">
-                      {new Date(log.watchedDate).toLocaleDateString('tr-TR')}
+                      {new Date(log.watchedDate).toLocaleDateString(locale === 'en' ? 'en-US' : 'tr-TR')}
                     </div>
                   </div>
                 </div>
