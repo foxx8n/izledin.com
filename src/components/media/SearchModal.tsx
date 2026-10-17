@@ -6,6 +6,7 @@ import { searchCatalog, getTrendingMedia } from '@/lib/omdb';
 import { MediaItem } from '@/types';
 import { useTranslation } from '@/lib/i18n';
 import { translateGenre } from '@/lib/i18n/genres';
+import { resolvePosterUrl, applyArtfulPosterFallback } from '@/lib/poster-placeholder';
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -203,18 +204,15 @@ export function SearchModal({ isOpen, onClose, onSelectMedia }: SearchModalProps
                 >
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     <div className="w-12 h-16 bg-neutral-900 border-2  border-[#404040] flex-shrink-0 overflow-hidden relative">
-                      {!isImgFailed && item.posterPath ? (
-                        <img
-                          src={item.posterPath}
-                          alt={item.title}
-                          className="w-full h-full object-cover"
-                          onError={() => handleImageError(item.id)}
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-neutral-400">
-                          <Film className="w-5 h-5 text-[#DC2626]" />
-                        </div>
-                      )}
+                      <img
+                        src={resolvePosterUrl(item.posterPath, item.title, item.year, item.genres?.[0])}
+                        alt={item.title}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          applyArtfulPosterFallback(e, item.title, item.year, item.genres?.[0]);
+                          handleImageError(item.id);
+                        }}
+                      />
                     </div>
 
                     <div className="min-w-0 flex-1">

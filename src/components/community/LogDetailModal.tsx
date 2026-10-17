@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { X, Star, Share2, Award, Clock } from "lucide-react";
 import { WatchLog } from "@/types";
 import { getRecentMediaLogs } from "@/lib/services/watch-logs.service";
+import { resolvePosterUrl, applyArtfulPosterFallback } from "@/lib/poster-placeholder";
 
 interface LogDetailModalProps {
   log: WatchLog | null;
@@ -62,9 +63,10 @@ export function LogDetailModal({ log, isOpen, onClose }: LogDetailModalProps) {
         <div className="flex items-center justify-between border-b-4  border-[#404040] pb-3.5 mb-5">
           <div className="flex items-center gap-3">
             <img
-              src={log.posterUrl}
+              src={resolvePosterUrl(log.posterUrl, log.title, log.year, log.genres?.[0])}
               alt={log.title}
               className="w-10 h-14 object-cover border-2  border-[#404040]"
+              onError={(e) => applyArtfulPosterFallback(e, log.title, log.year, log.genres?.[0])}
             />
             <div className="flex flex-col">
               <span className="font-black text-lg sm:text-xl uppercase tracking-tight line-clamp-1">

@@ -3,15 +3,22 @@ import { movieDetailsCache, searchQueryCache, trendingCatalogCache } from './cac
 import { searchDbCatalog, getDbCatalogItem, saveMediaItemToDb } from '@/lib/services/media-catalog.service';
 import rawCatalog from '@/data/catalog.json';
 import rawUpcomingCatalog from '@/data/upcoming-master.json';
+import { getArtfulPosterDataUri, isMissingOrDicebearPoster } from '@/lib/poster-placeholder';
 
 const STATIC_CATALOG: MediaItem[] = rawCatalog as MediaItem[];
 export const STATIC_UPCOMING_CATALOG: MediaItem[] = rawUpcomingCatalog as MediaItem[];
 
 // Pre-warm the in-memory details cache with the static master catalog for 0ms lookup
 STATIC_CATALOG.forEach((item) => {
+  if (isMissingOrDicebearPoster(item.posterPath)) {
+    item.posterPath = getArtfulPosterDataUri(item.title, item.year, item.genres?.[0]);
+  }
   movieDetailsCache.set(item.id, item);
 });
 STATIC_UPCOMING_CATALOG.forEach((item) => {
+  if (isMissingOrDicebearPoster(item.posterPath)) {
+    item.posterPath = getArtfulPosterDataUri(item.title, item.year, item.genres?.[0]);
+  }
   movieDetailsCache.set(item.id, item);
 });
 
@@ -180,7 +187,7 @@ function mapOMDBToMediaItem(raw: any): MediaItem {
 
   let poster = raw.Poster && raw.Poster !== 'N/A'
     ? raw.Poster
-    : CUSTOM_POSTERS[raw.imdbID] || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(raw.Title || 'İsimsiz Yapım')}&backgroundColor=0a0a0a&textColor=ef4444&fontWeight=900`;
+    : CUSTOM_POSTERS[raw.imdbID] || getArtfulPosterDataUri(raw.Title, rawYear, raw.Genre);
 
   const backdrop = MASTERPIECE_BACKDROPS[raw.imdbID] || poster;
 

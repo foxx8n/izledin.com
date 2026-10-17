@@ -21,6 +21,7 @@ import { ProfileViewTracker } from '@/components/profile/ProfileViewTracker';
 import { Footer } from '@/components/layout/Footer';
 import { generateDynamicBio } from '@/lib/cinema-bio-generator';
 import { getServerTranslation } from '@/lib/i18n/server';
+import { resolvePosterUrl } from '@/lib/poster-placeholder';
 
 type Props = {
   params: Promise<{ username: string }>;
@@ -213,7 +214,7 @@ export default async function PublicProfilePage({ params }: Props) {
                 <div key={`${fav.id}-${idx}`} className="group relative aspect-[2/3] bg-[#0A0A0A] border-2  border-[#404040] overflow-hidden">
                   <Link href={`/film/${fav.id}`} className="absolute inset-0 z-10" />
                   <img
-                    src={fav.posterUrl}
+                    src={resolvePosterUrl(fav.posterUrl, fav.title, fav.year)}
                     alt={fav.title}
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />
@@ -246,7 +247,7 @@ export default async function PublicProfilePage({ params }: Props) {
                   <Link href={`/film/${log.mediaId}`} className="absolute inset-0 z-10" />
                   <div className="aspect-[2/3] w-full bg-[#0A0A0A] mb-2 overflow-hidden border  border-neutral-800">
                     <img
-                      src={log.posterUrl}
+                      src={resolvePosterUrl(log.posterUrl, log.title, log.year, log.genres?.[0])}
                       alt={log.title}
                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />

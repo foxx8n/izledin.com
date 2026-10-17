@@ -6,6 +6,7 @@ import { Star, Check, Bookmark, Plus, Film } from 'lucide-react';
 import { MediaItem } from '@/types';
 import { useTranslation } from '@/lib/i18n';
 import { translateGenre } from '@/lib/i18n/genres';
+import { resolvePosterUrl, applyArtfulPosterFallback } from '@/lib/poster-placeholder';
 
 interface MediaCardProps {
   item: MediaItem;
@@ -79,28 +80,18 @@ export function MediaCard({
         />
         
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {!imgError && item.posterPath ? (
           <img
-            src={item.posterPath}
+            src={resolvePosterUrl(item.posterPath, item.title, item.year, item.genres?.[0])}
             alt={item.title}
             width={300}
             height={450}
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105 filter contrast-105 brightness-95 group-hover:brightness-100"
             loading="lazy"
             decoding="async"
-            onError={() => setImgError(true)}
+            onError={(e) => {
+              applyArtfulPosterFallback(e, item.title, item.year, item.genres?.[0]);
+            }}
           />
-        ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center p-3 text-center bg-neutral-900 text-neutral-300 space-y-2">
-            <Film className="w-8 h-8 text-[#DC2626] stroke-[2]" />
-            <span className="font-mono text-[11px] font-black uppercase line-clamp-2 text-neutral-200">
-              {locale === 'en' && item.originalTitle ? item.originalTitle : item.title}
-            </span>
-            <span className="font-mono text-[10px] text-neutral-400">
-              {item.year || (locale === 'en' ? 'Archive' : 'Arşiv')}
-            </span>
-          </div>
-        )}
         </div>
       </div>
 

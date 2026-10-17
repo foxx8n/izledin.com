@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/client';
 import { MediaItem, MediaType } from '@/types';
+import { resolvePosterUrl } from '@/lib/poster-placeholder';
 
 export function mapDbToMediaItem(row: any): MediaItem {
   return {
@@ -9,7 +10,7 @@ export function mapDbToMediaItem(row: any): MediaItem {
     originalTitle: row.original_title || row.title,
     overview: row.overview || 'Açıklama henüz eklenmedi.',
     overviewEn: row.overview_en || undefined,
-    posterPath: row.poster_path || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(row.title || 'İzledin')}&backgroundColor=0a0a0a&textColor=ef4444&fontWeight=900`,
+    posterPath: resolvePosterUrl(row.poster_path, row.title, row.year, row.genres?.[0]),
     backdropPath: row.backdrop_path || row.poster_path || undefined,
     releaseDate: row.release_date || undefined,
     year: row.year ? Number(row.year) : undefined,

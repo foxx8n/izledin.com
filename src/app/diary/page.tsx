@@ -54,6 +54,7 @@ import {
 } from "@/lib/services/watch-logs.service";
 import { WatchLog, MediaItem, MovieMateMatch, MediaType } from "@/types";
 import { useTranslation } from "@/lib/i18n/context";
+import { resolvePosterUrl, applyArtfulPosterFallback } from "@/lib/poster-placeholder";
 
 export default function DiaryPage() {
   const { user } = useAuth();
@@ -633,15 +634,10 @@ export default function DiaryPage() {
                       aria-label={`${log.title} detaylarını incele`}
                     >
                       <img
-                        src={log.posterUrl}
+                        src={resolvePosterUrl(log.posterUrl, log.title, log.year, log.genres?.[0])}
                         alt={log.title}
                         onError={(e) => {
-                          const img = e.currentTarget;
-                          if (!img.dataset.fallbackApplied) {
-                            img.dataset.fallbackApplied = "1";
-                            img.src =
-                              "https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=800&auto=format&fit=crop";
-                          }
+                          applyArtfulPosterFallback(e, log.title, log.year, log.genres?.[0]);
                         }}
                         className="w-16 h-24 object-cover border-2  border-[#404040] shrink-0 bg-black group-hover/card:scale-105 transition-transform duration-150"
                       />

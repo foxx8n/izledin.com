@@ -6,6 +6,7 @@ import { ClapperboardIcon } from "@/components/icons/CinemaIcons";
 import type { MediaItem } from "@/types";
 import { useTranslation } from "@/lib/i18n/context";
 import { translateGenre } from "@/lib/i18n/genres";
+import { resolvePosterUrl, applyArtfulPosterFallback } from "@/lib/poster-placeholder";
 
 interface MediaSwipeCardProps {
   item: MediaItem;
@@ -106,10 +107,14 @@ export function MediaSwipeCard({
     [finish],
   );
 
-  const posterSrc =
+  const posterSrc = resolvePosterUrl(
     imgError
       ? item.backdropPath || item.posterPath
-      : item.posterPath || item.backdropPath;
+      : item.posterPath || item.backdropPath,
+    item.title,
+    item.year,
+    item.genres?.[0]
+  );
 
   return (
     <div className="relative w-full max-w-md mx-auto" style={{ perspective: "1000px" }}>
@@ -121,12 +126,13 @@ export function MediaSwipeCard({
           <div className="bg-[#171717] border-2 border-[#404040] p-3 opacity-50 font-mono shadow-[3px_3px_0px_#000000] flex items-center gap-3">
             <div className="w-9 h-[54px] border border-[#404040] bg-black overflow-hidden shrink-0">
               <img
-                src={nextItem.posterPath}
+                src={resolvePosterUrl(nextItem.posterPath, nextItem.title, nextItem.year, nextItem.genres?.[0])}
                 alt={nextItem.title}
                 width={36}
                 height={54}
                 loading="lazy"
                 decoding="async"
+                onError={(e) => applyArtfulPosterFallback(e, nextItem.title, nextItem.year, nextItem.genres?.[0])}
                 className="w-full h-full object-cover"
               />
             </div>
@@ -235,8 +241,11 @@ export function MediaSwipeCard({
               alt={item.title}
               width={400}
               height={600}
-              onError={() => setImgError(true)}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              onError={(e) => {
+                applyArtfulPosterFallback(e, item.title, item.year, item.genres?.[0]);
+                setImgError(true);
+              }}
               loading="eager"
               decoding="async"
             />

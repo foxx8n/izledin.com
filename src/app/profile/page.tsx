@@ -48,6 +48,7 @@ import { getUserWatchLogs } from '@/lib/services/watch-logs.service';
 import { getOMDBDetails } from '@/lib/omdb';
 import { WatchLog, MediaItem, Profile, MovieMateMatch } from '@/types';
 import { generateDynamicBio } from '@/lib/cinema-bio-generator';
+import { resolvePosterUrl, applyArtfulPosterFallback } from '@/lib/poster-placeholder';
 import { useTranslation, translateGenre } from '@/lib/i18n';
 
 export default function ProfilePage() {
@@ -633,9 +634,10 @@ export default function ProfilePage() {
                         {fav ? (
                           <>
                             <img 
-                              src={fav.posterUrl} 
+                              src={resolvePosterUrl(fav.posterUrl, fav.title, fav.year)} 
                               alt={fav.title} 
                               className="w-full h-full object-cover" 
+                              onError={(e) => applyArtfulPosterFallback(e, fav.title, fav.year)}
                             />
                             
                             {/* Year Badge */}
@@ -865,9 +867,10 @@ export default function ProfilePage() {
                     className=" bg-[#171717]  text-[#FAFAFA] border-2  border-[#404040] p-4 flex gap-4  shadow-[4px_4px_0px_#000000] relative group hover:-translate-y-0.5 transition-transform"
                   >
                     <img 
-                      src={log.posterUrl} 
+                      src={resolvePosterUrl(log.posterUrl, log.title, log.year, log.genres?.[0])} 
                       alt={log.title} 
                       className="w-16 h-24 object-cover border  border-[#404040] shrink-0 bg-black" 
+                      onError={(e) => applyArtfulPosterFallback(e, log.title, log.year, log.genres?.[0])}
                     />
                     <div className="space-y-1.5 flex-1 min-w-0">
                       <div className="flex justify-between items-start gap-2">

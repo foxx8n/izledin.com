@@ -4,6 +4,7 @@ import { mapDbProfileToProfile, PROFILE_SELECT_COLUMNS } from './profile.service
 import { getOMDBDetails, getMasterpieceOfTheWeek } from '@/lib/omdb';
 import { checkRateLimit, RATE_LIMIT_PROFILES } from '@/lib/rate-limiter';
 import { localTodayISO } from '@/lib/date';
+import { resolvePosterUrl } from '@/lib/poster-placeholder';
 
 export function mapDbLogToWatchLog(row: any): WatchLog {
   const user: Profile | undefined = row.profiles
@@ -18,7 +19,7 @@ export function mapDbLogToWatchLog(row: any): WatchLog {
     mediaType: row.media_type,
     title: row.title,
     year: row.year,
-    posterUrl: row.poster_url || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(row.title || 'İzledin')}&backgroundColor=0a0a0a&textColor=ef4444&fontWeight=900`,
+    posterUrl: resolvePosterUrl(row.poster_url, row.title, row.year, row.genres?.[0]),
     backdropUrl: row.backdrop_url,
     genres: row.genres || [],
     rating: row.rating !== null && row.rating !== undefined ? Number(row.rating) : undefined,

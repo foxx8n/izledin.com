@@ -715,7 +715,7 @@ export function Navbar({
                   : " text-[#A3A3A3]"
               }
             />
-            <span className="truncate max-w-full">{user ? (locale === 'tr' ? "PROFİL" : "PROFILE") : (locale === 'tr' ? "GİRİŞ" : "LOGIN")}</span>
+            <span className="truncate max-w-full">{user ? (locale === 'tr' ? "PROFİL" : "PROFILE") : (locale === 'tr' ? "GİRİŞ" : "SIGN IN")}</span>
             {user && unreadCount > 0 && (
               <span className="absolute top-1 right-2 w-2 h-2 rounded-full bg-[#DC2626]" />
             )}
@@ -945,7 +945,7 @@ export function Navbar({
               className="w-full flex items-center justify-center gap-2 px-4 py-3  bg-[#FAFAFA]  hover:bg-[#F4F4F5]  text-[#0A0A0A] text-xs font-black uppercase font-mono border-2 border-[#0A0A0A]  shadow-[2px_2px_0px_#000000] cursor-pointer transition-all min-h-[48px]"
             >
               <LogIn className="w-3.5 h-3.5 text-[#DC2626] stroke-[3]" />
-              <span>GİRİŞ YAP</span>
+              <span>{t.nav.signIn.toUpperCase()}</span>
             </button>
           )}
         </div>

@@ -21,6 +21,7 @@ import { MediaItem } from "@/types";
 import { useAuth } from "@/context/AuthContext";
 import { useTranslation } from "@/lib/i18n";
 import { translateGenre } from "@/lib/i18n/genres";
+import { resolvePosterUrl, applyArtfulPosterFallback, getArtfulPosterDataUri } from "@/lib/poster-placeholder";
 import {
   toggleWatchlistItem,
   getMyMediaStatus,
@@ -220,21 +221,15 @@ export function MediaDetailModal({
           {/* Left Poster / Visual */}
           <div className="md:col-span-4 space-y-3">
             <div className="relative aspect-[2/3] w-full overflow-hidden bg-[#0A0A0A] border-3  border-[#404040]  shadow-[4px_4px_0px_#000000]">
-              {!imgError && (item.posterPath || item.backdropPath) ? (
-                <img
-                  src={item.posterPath || item.backdropPath}
-                  alt={item.title}
-                  className="w-full h-full object-cover filter contrast-105"
-                  onError={() => setImgError(true)}
-                />
-              ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center bg-neutral-900 text-neutral-300 space-y-2">
-                  <Film className="w-10 h-10 text-[#DC2626] stroke-[2]" />
-                  <span className="font-mono text-xs font-black uppercase line-clamp-2">
-                    {item.title}
-                  </span>
-                </div>
-              )}
+              <img
+                src={resolvePosterUrl(item.posterPath || item.backdropPath, item.title, item.year, item.genres?.[0])}
+                alt={item.title}
+                className="w-full h-full object-cover filter contrast-105"
+                onError={(e) => {
+                  applyArtfulPosterFallback(e, item.title, item.year, item.genres?.[0]);
+                  setImgError(true);
+                }}
+              />
             </div>
 
             {/* Quick Watchlist / Watched Toggles */}

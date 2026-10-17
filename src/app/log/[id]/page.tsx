@@ -6,6 +6,7 @@ import { Star, Award, ChevronLeft, ArrowLeft } from 'lucide-react';
 import { getWatchLogById, getRecentMediaLogs } from '@/lib/services/watch-logs.service';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
+import { resolvePosterUrl } from '@/lib/poster-placeholder';
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -88,7 +89,7 @@ export default async function LogPage({ params }: Props) {
           <div className="flex items-center justify-between border-b-4  border-[#404040] pb-3.5 mb-5">
             <Link href={`/film/${log.mediaId}`} className="flex items-center gap-3 group">
               <img
-                src={log.posterUrl}
+                src={resolvePosterUrl(log.posterUrl, log.title, log.year, log.genres?.[0])}
                 alt={log.title}
                 className="w-12 h-16 object-cover border-2  border-[#404040] group-hover:border-[#DC2626] transition-colors"
               />

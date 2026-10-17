@@ -24,6 +24,7 @@ import {
   FilmPageActions,
   FilmShareButton,
 } from './FilmPageActions';
+import { resolvePosterUrl } from '@/lib/poster-placeholder';
 
 function getRelatedMovies(currentMovie: MediaItem, count = 4): MediaItem[] {
   const currentGenres = new Set(currentMovie.genres || []);
@@ -251,7 +252,7 @@ export default async function FilmDetailPage({ params }: Props) {
             <div className="w-full md:w-1/3 shrink-0 flex flex-col gap-4">
               <div className="relative aspect-[2/3] w-full bg-[#0A0A0A] border-4  border-[#404040]  shadow-[6px_6px_0px_#EF4444] overflow-hidden group">
                 <img
-                  src={movie.posterPath}
+                  src={resolvePosterUrl(movie.posterPath, movie.title, movie.year, movie.genres?.[0])}
                   alt={`${movie.title} ${locale === 'en' ? 'Poster' : 'Afişi'}`}
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   crossOrigin="anonymous"
@@ -385,7 +386,7 @@ export default async function FilmDetailPage({ params }: Props) {
                   >
                     <div className="aspect-[2/3] w-full bg-[#0A0A0A] border border-[#404040] overflow-hidden mb-2.5 relative">
                       <img
-                        src={rel.posterPath}
+                        src={resolvePosterUrl(rel.posterPath, rel.title, rel.year, rel.genres?.[0])}
                         alt={`${rel.title} ${locale === 'en' ? 'Poster' : 'Afişi'}`}
                         loading="lazy"
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"

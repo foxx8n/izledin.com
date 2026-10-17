@@ -27,6 +27,7 @@ import { WatchDateSelector } from "@/components/ui/WatchDateSelector";
 import { localTodayISO } from "@/lib/date";
 import { useTranslation } from "@/lib/i18n";
 import { translateGenre } from "@/lib/i18n/genres";
+import { resolvePosterUrl, applyArtfulPosterFallback } from "@/lib/poster-placeholder";
 
 interface QuickLogModalProps {
   item: MediaItem | null;
@@ -247,18 +248,15 @@ export function QuickLogModal({
         {/* Media Preview Header */}
         <div className="flex gap-3.5 items-center  bg-neutral-800 p-3 border-2  border-[#404040] relative">
           <div className="w-14 sm:w-16 h-20 sm:h-24 bg-neutral-900 border-2  border-[#404040] flex-shrink-0 overflow-hidden">
-            {!imgError && item.posterPath ? (
-              <img
-                src={item.posterPath}
-                alt={item.title}
-                className="w-full h-full object-cover"
-                onError={() => setImgError(true)}
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-neutral-400">
-                <Film className="w-6 h-6 text-[#DC2626]" />
-              </div>
-            )}
+            <img
+              src={resolvePosterUrl(item.posterPath, item.title, item.year, item.genres?.[0])}
+              alt={item.title}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                applyArtfulPosterFallback(e, item.title, item.year, item.genres?.[0]);
+                setImgError(true);
+              }}
+            />
           </div>
 
           <div className="space-y-1 flex-1 min-w-0">

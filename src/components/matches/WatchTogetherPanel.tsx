@@ -10,6 +10,7 @@ import {
   removeWatchTogetherItem,
   subscribeToWatchTogetherItems,
 } from '@/lib/services/watch-together.service';
+import { resolvePosterUrl, applyArtfulPosterFallback } from '@/lib/poster-placeholder';
 
 interface WatchTogetherPanelProps {
   match: MovieMateMatch;
@@ -197,11 +198,12 @@ export function WatchTogetherPanel({ match, currentUserId, isPremium, onUpgradeC
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={item.posterPath}
+                    src={resolvePosterUrl(item.posterPath, item.title, item.year, item.genres?.[0])}
                     alt=""
                     width={28}
                     height={42}
                     className="w-7 h-[42px] object-cover bg-black shrink-0"
+                    onError={(e) => applyArtfulPosterFallback(e, item.title, item.year, item.genres?.[0])}
                   />
                   <span className="min-w-0 flex-1">
                     <span className="block text-[11px] font-black uppercase truncate text-[#FAFAFA]">{item.title}</span>
@@ -236,20 +238,15 @@ export function WatchTogetherPanel({ match, currentUserId, isPremium, onUpgradeC
                 key={item.id}
                 className="flex items-stretch gap-2.5 p-2 bg-[#171717] border-2 border-[#404040]"
               >
-                {item.posterUrl ? (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img
-                    src={item.posterUrl}
-                    alt=""
-                    width={36}
-                    height={54}
-                    className="w-9 h-[54px] object-cover bg-black border border-[#404040] shrink-0"
-                  />
-                ) : (
-                  <div className="w-9 h-[54px] bg-neutral-900 border border-[#404040] flex items-center justify-center shrink-0">
-                    <Film className="w-4 h-4 text-neutral-600" />
-                  </div>
-                )}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={resolvePosterUrl(item.posterUrl, item.title)}
+                  alt=""
+                  width={36}
+                  height={54}
+                  className="w-9 h-[54px] object-cover bg-black border border-[#404040] shrink-0"
+                  onError={(e) => applyArtfulPosterFallback(e, item.title)}
+                />
                 <div className="min-w-0 flex-1 flex flex-col justify-between py-0.5">
                   <p className="text-xs font-black uppercase text-[#FAFAFA] truncate leading-tight">{item.title}</p>
                   <div className="flex items-center gap-1.5 flex-wrap">

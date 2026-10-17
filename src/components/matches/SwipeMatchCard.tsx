@@ -13,6 +13,7 @@ import {
 import { MovieMateMatch } from '@/types';
 import { generateDynamicBio } from '@/lib/cinema-bio-generator';
 import { useTranslation } from '@/lib/i18n/context';
+import { resolvePosterUrl, applyArtfulPosterFallback } from '@/lib/poster-placeholder';
 
 interface SwipeMatchCardProps {
   match: MovieMateMatch;
@@ -380,7 +381,7 @@ export function SwipeMatchCard({ match, nextMatch, onChatClick, onLike, onPass, 
                     className="group/poster relative aspect-[2/3] h-[64px] sm:h-[72px] mx-auto overflow-hidden bg-[#171717] border border-[#404040] focus:outline-none focus:ring-2 focus:ring-[#DC2626] cursor-pointer" 
                     title={`${fav.title} — ${locale === 'en' ? 'Click to inspect' : 'İncelemek için tıkla'}`}
                   >
-                    <img src={fav.posterUrl} alt={fav.title} width={48} height={72} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover/poster:scale-105 transition-transform duration-200" />
+                    <img src={resolvePosterUrl(fav.posterUrl, fav.title)} alt={fav.title} width={48} height={72} loading="lazy" decoding="async" onError={(e) => applyArtfulPosterFallback(e, fav.title)} className="w-full h-full object-cover group-hover/poster:scale-105 transition-transform duration-200" />
                     {/* Always visible subtle bottom badge on touch, full overlay on hover */}
                     <div className="absolute inset-x-0 bottom-0 bg-black/85 px-1 py-0.5 text-center pointer-events-none group-hover/poster:opacity-0 transition-opacity">
                       <span className="text-[10px] font-bold text-white uppercase leading-none block truncate tracking-tight">{fav.title}</span>

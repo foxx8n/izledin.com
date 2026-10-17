@@ -23,6 +23,7 @@ import {
   getMasterpieceOfTheWeekSync,
   normalizeTurkishText,
 } from "@/lib/omdb";
+import { resolvePosterUrl, applyArtfulPosterFallback } from "@/lib/poster-placeholder";
 import {
   getUserWatchLogs,
   getWeeklyFeaturedMasterpiece,
@@ -309,7 +310,7 @@ export function KesifView() {
                 className="relative w-full max-w-[280px] sm:max-w-[320px] lg:max-w-none aspect-[2/3] border-4 border-[#FAFAFA] bg-black shadow-[6px_6px_0px_#EF4444] overflow-hidden cursor-pointer group select-none focus:outline-none focus:ring-4 focus:ring-[#DC2626]"
               >
                 <img
-                  src={activeFeatured.posterPath || activeFeatured.backdropPath}
+                  src={resolvePosterUrl(activeFeatured.posterPath || activeFeatured.backdropPath, activeFeatured.title, activeFeatured.year, activeFeatured.genres?.[0])}
                   alt={activeFeatured.title}
                   width={400}
                   height={600}
@@ -321,6 +322,8 @@ export function KesifView() {
                       target.src !== activeFeatured.backdropPath
                     ) {
                       target.src = activeFeatured.backdropPath;
+                    } else {
+                      applyArtfulPosterFallback(e, activeFeatured.title, activeFeatured.year, activeFeatured.genres?.[0]);
                     }
                   }}
                   className="w-full h-full object-cover object-center filter contrast-105 brightness-95 group-hover:scale-105 transition-transform duration-500"

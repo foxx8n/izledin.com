@@ -33,6 +33,7 @@ import { useAuth } from '@/context/AuthContext';
 import { searchCatalog } from '@/lib/omdb';
 import { MediaItem, MatchIntent } from '@/types';
 import { generateDynamicBio, CINEMA_PROMPT_STARTERS } from '@/lib/cinema-bio-generator';
+import { resolvePosterUrl, applyArtfulPosterFallback } from '@/lib/poster-placeholder';
 import { updateMyIdentity, normalizeUsername, validateIdentity } from '@/lib/services/profile.service';
 import { LocationSelector } from '@/components/common/LocationSelector';
 import { BirthDateSelector } from '@/components/ui/BirthDateSelector';
@@ -776,9 +777,10 @@ export function TasteProfilerModal({ isOpen, onClose, onComplete, onOpenAuth }: 
                       {item ? (
                         <div className="relative flex-1 my-1 overflow-hidden group">
                           <img
-                            src={item.posterUrl}
+                            src={resolvePosterUrl(item.posterUrl, item.title, item.year)}
                             alt={item.title}
                             className="w-full h-full object-cover"
+                            onError={(e) => applyArtfulPosterFallback(e, item.title, item.year)}
                           />
                           <button
                             type="button"
@@ -863,9 +865,10 @@ export function TasteProfilerModal({ isOpen, onClose, onComplete, onOpenAuth }: 
                           className="flex items-center gap-2 p-1.5 bg-[#171717] border border-neutral-800 hover:border-[#DC2626] cursor-pointer"
                         >
                           <img
-                            src={item.posterPath}
+                            src={resolvePosterUrl(item.posterPath, item.title, item.year, item.genres?.[0])}
                             alt={item.title}
                             className="w-8 h-12 object-cover bg-black shrink-0"
+                            onError={(e) => applyArtfulPosterFallback(e, item.title, item.year, item.genres?.[0])}
                           />
                           <div className="min-w-0 flex-1">
                             <p className="text-[11px] font-black uppercase truncate text-[#FAFAFA]">{item.title}</p>

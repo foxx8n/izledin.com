@@ -48,6 +48,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useTranslation, translateGenre, Locale } from '@/lib/i18n';
 
 import { getUpcomingReleases, formatTurkishReleaseDate, trDateToISO, STATIC_UPCOMING_CATALOG } from '@/lib/omdb';
+import { resolvePosterUrl, applyArtfulPosterFallback } from '@/lib/poster-placeholder';
 import { MediaItem, MovieMateMatch } from '@/types';
 
 function formatReleaseDate(dateStr?: string, year?: number, locale: Locale = 'tr'): string {
@@ -705,10 +706,11 @@ export default function UpcomingPage() {
                                 aria-label={`${item.title} details`}
                               >
                                 <img
-                                  src={item.posterPath}
+                                  src={resolvePosterUrl(item.posterPath, item.title, item.year, item.genres?.[0])}
                                   alt={item.title}
                                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                   loading="lazy"
+                                  onError={(e) => applyArtfulPosterFallback(e, item.title, item.year, item.genres?.[0])}
                                 />
                                 <div className="absolute top-1 left-1">
                                   <span className="px-1 py-0.2 bg-[#0A0A0A] text-white text-[10px] font-mono font-black uppercase border border-[#404040]">
