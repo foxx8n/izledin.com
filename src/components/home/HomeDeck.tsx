@@ -35,6 +35,7 @@ import { useSwipeDeck, type DeckHistoryEntry } from "@/hooks/useSwipeDeck";
 import type { MediaItem, MovieMateMatch } from "@/types";
 import { SwipeMatchCard } from "@/components/matches/SwipeMatchCard";
 import { MediaSwipeCard } from "@/components/home/MediaSwipeCard";
+import { useTranslation } from "@/lib/i18n/context";
 
 const MediaDetailModal = dynamic(
   () =>
@@ -67,6 +68,7 @@ const GUEST_AUTH_HOOK_SWIPES = 8;
  */
 export function HomeDeck() {
   const { user, profile } = useAuth();
+  const { t, locale, href } = useTranslation();
   const [decision, setDecision] = useState<LiquidityDecision | null>(null);
   const [matches, setMatches] = useState<MovieMateMatch[]>([]);
   const [loadingPeople, setLoadingPeople] = useState(false);
@@ -339,7 +341,11 @@ export function HomeDeck() {
   const handleTitleLike = (item: MediaItem) => {
     if (!user) return;
     persistSwipe(item, "like");
-    showToast(`"${item.title}" beğenin kaydedildi.`);
+    showToast(
+      locale === "en"
+        ? `Saved "${item.title}" to your likes.`
+        : `"${item.title}" beğenin kaydedildi.`
+    );
     setTitleIndex((i) => i + 1);
   };
   const [titleIndex, setTitleIndex] = useState(0);
@@ -420,6 +426,9 @@ export function HomeDeck() {
     const ms = Math.max(0, cooldownUntil - Date.now());
     const h = Math.floor(ms / 3600000);
     const m = Math.floor((ms % 3600000) / 60000);
+    if (locale === "en") {
+      return h > 0 ? `${h}h ${m}m` : `${m}m`;
+    }
     return h > 0 ? `${h} sa ${m} dk` : `${m} dk`;
   };
 
@@ -448,19 +457,21 @@ export function HomeDeck() {
                 onDetail={() => {}}
               />
               <p className="text-center text-[11px] font-mono font-black uppercase text-neutral-500 tracking-widest">
-                PERDE {guestIndex + 1} / {guestQueue.length} — beğenilerin
-                kaydediliyor
+                {locale === "en"
+                  ? `SCREEN ${guestIndex + 1} / ${guestQueue.length} — likes being recorded`
+                  : `PERDE ${guestIndex + 1} / ${guestQueue.length} — beğenilerin kaydediliyor`}
               </p>
             </>
           ) : (
             <div className="bg-[#171717] border-2 sm:border-4 border-[#404040] shadow-[6px_6px_0px_#EF4444] p-8 font-mono text-center space-y-4">
               <CinemaRadarScannerIllustration size={72} className="mx-auto" />
               <h3 className="text-lg font-black uppercase text-[#FAFAFA]">
-                FREKANSIN OLUŞUYOR
+                {locale === "en" ? "FREQUENCY FORMING" : "FREKANSIN OLUŞUYOR"}
               </h3>
               <p className="text-xs text-neutral-400 max-w-sm mx-auto">
-                Google ile katıl; kaydettiğin beğeniler Sinema DNA&apos;nı
-                oluştursun ve seni aynı frekanstaki İzdaşlarla eşleştirsin.
+                {locale === "en"
+                  ? "Join with Google; your recorded likes will build your Cinema DNA and connect you with film mates on the same frequency."
+                  : "Google ile katıl; kaydettiğin beğeniler Sinema DNA'nı oluştursun ve seni aynı frekanstaki İzdaşlarla eşleştirsin."}
               </p>
             </div>
           )}
@@ -470,12 +481,14 @@ export function HomeDeck() {
         {showAuth && (
           <div className="max-w-md mx-auto bg-[#171717] border-2 border-emerald-600/60 shadow-[4px_4px_0px_#10B981] p-5 font-mono text-center space-y-3">
             <p className="text-xs font-black uppercase text-[#FAFAFA] tracking-wide">
-              DNA&apos;N OLUŞUYOR — {Math.min(sessionSwipeCount, GUEST_AUTH_HOOK_SWIPES)}{" "}
-              BEĞENİ KAYITLI
+              {locale === "en"
+                ? `DNA FORMING — ${Math.min(sessionSwipeCount, GUEST_AUTH_HOOK_SWIPES)} LIKES SAVED`
+                : `DNA'N OLUŞUYOR — ${Math.min(sessionSwipeCount, GUEST_AUTH_HOOK_SWIPES)} BEĞENİ KAYITLI`}
             </p>
             <p className="text-[11px] text-neutral-400 leading-relaxed">
-              Devam etmek için Google ile mühürle. Beğenilerin hesabına
-              aktarılır, hiçbiri kaybolmaz.
+              {locale === "en"
+                ? "Sign in with Google to keep going. All your likes transfer immediately to your account, none lost."
+                : "Devam etmek için Google ile mühürle. Beğenilerin hesabına aktarılır, hiçbiri kaybolmaz."}
             </p>
             <button
               type="button"
@@ -484,14 +497,14 @@ export function HomeDeck() {
               aria-hidden
             />
             <Link
-              href="/matches"
+              href={href("/matches")}
               className="inline-block px-6 py-3 bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-black uppercase tracking-wider border-2 border-[#404040] shadow-[3px_3px_0px_#000000]"
               onClick={(e) => {
                 e.preventDefault();
                 setShowAuth(true);
               }}
             >
-              DEVAM ET →
+              {locale === "en" ? "CONTINUE →" : "DEVAM ET →"}
             </Link>
             {!showAuth && null}
           </div>
@@ -512,7 +525,7 @@ export function HomeDeck() {
       <div className="py-20 flex flex-col items-center justify-center gap-3 font-mono">
         <Loader2 className="w-9 h-9 text-[#EF4444] animate-spin" />
         <span className="text-xs font-black uppercase text-[#FAFAFA]">
-          FREKANS TARANIYOR...
+          {locale === "en" ? "SCANNING FREQUENCY..." : "FREKANS TARANIYOR..."}
         </span>
       </div>
     );
@@ -529,27 +542,30 @@ export function HomeDeck() {
         <span className="text-[#EF4444] flex items-center gap-2">
           <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
           {decision.mode === "people_dominant"
-            ? "İZDAŞ MODU AKTİF"
-            : "PERDE MODU — TEK BAŞINA DA OYUN"}
+            ? (locale === "en" ? "FILM MATES ACTIVE" : "İZDAŞ MODU AKTİF")
+            : (locale === "en" ? "SCREEN MODE — SOLO PLAY" : "PERDE MODU — TEK BAŞINA DA OYUN")}
         </span>
-        <span className="text-neutral-500">{decision.activeCount7d} aktif sinefil</span>
+        <span className="text-neutral-500">
+          {decision.activeCount7d} {locale === "en" ? "active cinephiles" : "aktif sinefil"}
+        </span>
       </div>
 
       {needsDna ? (
         <div className="bg-[#171717] border-2 sm:border-4 border-[#404040] shadow-[6px_6px_0px_#EF4444] p-8 font-mono text-center space-y-4">
           <CinemaDnaHelixIcon size={56} className="mx-auto text-[#EF4444]" />
           <h3 className="text-lg font-black uppercase text-[#FAFAFA]">
-            ÖNCE SİNEMA DNA&apos;NI ÇIKAR
+            {locale === "en" ? "FIRST, CRAFT YOUR CINEMA DNA" : "ÖNCE SİNEMA DNA'NI ÇIKAR"}
           </h3>
           <p className="text-xs text-neutral-400 max-w-md mx-auto">
-            Favori başyapıtlarını seç; radar ancak o zaman frekansını
-            bulabilir.
+            {locale === "en"
+              ? "Select your favorite masterpieces; only then can the radar find your frequency."
+              : "Favori başyapıtlarını seç; radar ancak o zaman frekansını bulabilir."}
           </p>
           <Link
-            href="/matches"
+            href={href("/matches")}
             className="inline-block px-6 py-3 bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-black uppercase border-2 border-[#404040] shadow-[3px_3px_0px_#000000]"
           >
-            DNA&apos;NI ÇIKAR →
+            {locale === "en" ? "CRAFT DNA →" : "DNA'NI ÇIKAR →"}
           </Link>
         </div>
       ) : decision.mode === "people_dominant" && currentMatch ? (
@@ -566,7 +582,7 @@ export function HomeDeck() {
           </div>
           <div className="max-w-md mx-auto flex items-center justify-between font-mono text-[11px] font-black uppercase">
             <span className="text-neutral-500">
-              KART {Math.min(deck.index + 1, matches.length)} / {matches.length}
+              {locale === "en" ? "CARD" : "KART"} {Math.min(deck.index + 1, matches.length)} / {matches.length}
             </span>
             <button
               type="button"
@@ -574,7 +590,7 @@ export function HomeDeck() {
               disabled={!deck.canUndo}
               className="text-[#EF4444] disabled:text-neutral-600 hover:text-white transition-colors cursor-pointer disabled:cursor-default"
             >
-              ⟲ GERİ AL
+              ⟲ {locale === "en" ? "UNDO" : "GERİ AL"}
             </button>
           </div>
         </>
@@ -584,12 +600,12 @@ export function HomeDeck() {
           {matches.length > 0 && decision.dailyTeaserQuota > 0 && (
             <div className="max-w-md mx-auto space-y-2">
               <p className="text-[11px] font-black uppercase tracking-widest text-neutral-500 font-mono">
-                RADARDA BUGÜN
+                {locale === "en" ? "ON RADAR TODAY" : "RADARDA BUGÜN"}
               </p>
               {matches.slice(0, decision.dailyTeaserQuota).map((m) => (
                 <Link
                   key={m.id}
-                  href="/matches"
+                  href={href("/matches")}
                   className="flex items-center gap-3 p-2.5 bg-[#171717] border-2 border-[#404040] hover:border-[#EF4444] shadow-[3px_3px_0px_#000000] transition-all group"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -605,12 +621,12 @@ export function HomeDeck() {
                       {m.user.fullName}
                     </p>
                     <p className="text-[10px] text-neutral-500 font-bold truncate">
-                      %{m.compatibilityScore} uyum •{" "}
+                      %{m.compatibilityScore} {locale === "en" ? "match" : "uyum"} •{" "}
                       {m.sharedGenres.slice(0, 2).join(", ")}
                     </p>
                   </div>
                   <span className="text-[10px] font-black uppercase text-[#EF4444] group-hover:text-white shrink-0">
-                    GÖR →
+                    {locale === "en" ? "VIEW →" : "GÖR →"}
                   </span>
                 </Link>
               ))}
@@ -628,36 +644,42 @@ export function HomeDeck() {
                 onDetail={(item) => setDetailItem(item)}
               />
               <p className="text-center text-[11px] font-mono font-black uppercase text-neutral-500 tracking-widest">
-                PERDE {titleIndex + 1} / {titleQueue.length} — bittiğinde{" "}
+                {locale === "en"
+                  ? `SCREEN ${titleIndex + 1} / ${titleQueue.length} — when done, `
+                  : `PERDE ${titleIndex + 1} / ${titleQueue.length} — bittiğinde `}
                 <Link
-                  href="/kesif"
+                  href={href("/kesif")}
                   className="text-[#EF4444] hover:text-white underline"
                 >
-                  KEŞİF
+                  {locale === "en" ? "DISCOVERY" : "KEŞİF"}
                 </Link>{" "}
-                seni bekler
+                {locale === "en" ? "awaits you" : "seni bekler"}
               </p>
             </>
           ) : (
             <div className="bg-[#171717] border-2 sm:border-4 border-[#404040] shadow-[6px_6px_0px_#000000] p-8 font-mono text-center space-y-3 max-w-md mx-auto">
               <h3 className="text-base font-black uppercase text-[#FAFAFA]">
-                PERDE MOLASI
+                {t.home.breakTitle}
               </h3>
               <p className="text-xs text-neutral-400">
                 {poolGenuinelyEmpty
-                  ? "Görmediğin yeni başyapıt kalmadı — günlüğüne yenilerini ekledikçe perde yenilenir."
-                  : "Bugünkü desteyi bitirdin. Perde gece yarısı yenilenir; şimdilik kulübün kataloğunda kaybol."}
+                  ? (locale === "en"
+                      ? "No unseen masterpieces left — screen refreshes as you log new entries in your diary."
+                      : "Görmediğin yeni başyapıt kalmadı — günlüğüne yenilerini ekledikçe perde yenilenir.")
+                  : t.home.breakDesc}
               </p>
               {cooldownUntil && (
                 <p className="text-[10px] uppercase tracking-widest text-neutral-500">
-                  YENİ PERDE ~{formatMolaRemaining()} SONRA AÇILIR
+                  {locale === "en"
+                    ? `NEXT SCREEN OPENS IN ~${formatMolaRemaining()}`
+                    : `YENİ PERDE ~${formatMolaRemaining()} SONRA AÇILIR`}
                 </p>
               )}
               <Link
-                href="/kesif"
+                href={href("/kesif")}
                 className="inline-block px-5 py-2.5 bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-black uppercase border-2 border-[#404040] shadow-[3px_3px_0px_#000000]"
               >
-                KEŞİF'TE KAYBOL →
+                {t.home.exploreCatalog} →
               </Link>
             </div>
           )}

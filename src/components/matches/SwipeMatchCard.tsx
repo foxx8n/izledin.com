@@ -12,6 +12,7 @@ import {
 } from '@/components/icons/CinemaIcons';
 import { MovieMateMatch } from '@/types';
 import { generateDynamicBio } from '@/lib/cinema-bio-generator';
+import { useTranslation } from '@/lib/i18n/context';
 
 interface SwipeMatchCardProps {
   match: MovieMateMatch;
@@ -34,6 +35,7 @@ function triggerHaptic(pattern: number[]) {
 }
 
 export function SwipeMatchCard({ match, nextMatch, onChatClick, onLike, onPass, onBilet, onMovieClick }: SwipeMatchCardProps) {
+  const { t, locale } = useTranslation();
   const { user, compatibilityScore, sharedGenres, sharedTitles, matchReasons } = match;
   const cardRef = useRef<HTMLDivElement>(null);
   const [imgError, setImgError] = useState(false);
@@ -134,7 +136,9 @@ export function SwipeMatchCard({ match, nextMatch, onChatClick, onLike, onPass, 
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-black uppercase  text-[#FAFAFA] truncate">{nextMatch.user.fullName}</p>
-                <p className="text-[10px] font-bold text-neutral-500">%{nextMatch.compatibilityScore} UYUM</p>
+                <p className="text-[10px] font-bold text-neutral-500">
+                  %{nextMatch.compatibilityScore} {locale === 'en' ? 'MATCH' : 'UYUM'}
+                </p>
               </div>
             </div>
           </div>
@@ -176,7 +180,7 @@ export function SwipeMatchCard({ match, nextMatch, onChatClick, onLike, onPass, 
             className="flex items-center gap-1.5 bg-[#DC2626] text-white px-3 py-1.5 border-2 border-white font-mono font-black text-xs uppercase tracking-widest shadow-[3px_3px_0px_#000000]"
           >
             <X className="w-4 h-4 stroke-[3]" />
-            <span>PAS GEÇ</span>
+            <span>{t.home.pass}</span>
           </div>
         </div>
 
@@ -205,7 +209,13 @@ export function SwipeMatchCard({ match, nextMatch, onChatClick, onLike, onPass, 
             ) : (
               <CinemaDuoIntentIcon size={16} className="text-[#0A0A0A]" />
             )}
-            <span>{intent === 'friend' ? 'İZDAŞ ARKADAŞI' : intent === 'dating' ? 'SİNEMATİK FLÖRT' : 'İZDAŞ OL'}</span>
+            <span>
+              {intent === 'friend'
+                ? (locale === 'en' ? 'FILM MATE' : 'İZDAŞ ARKADAŞI')
+                : intent === 'dating'
+                ? (locale === 'en' ? 'CINEMATIC DATING' : 'SİNEMATİK FLÖRT')
+                : (locale === 'en' ? 'MATCH' : 'İZDAŞ OL')}
+            </span>
           </div>
         </div>
 
@@ -238,7 +248,7 @@ export function SwipeMatchCard({ match, nextMatch, onChatClick, onLike, onPass, 
                 %{compatibilityScore}
               </span>
               <span className="text-[10px] font-black uppercase  text-[#EF4444] font-mono tracking-widest leading-none block mt-0.5">
-                SİNEFİL UYUMU
+                {locale === 'en' ? 'CINEPHILE MATCH' : 'SİNEFİL UYUMU'}
               </span>
             </div>
           </div>
@@ -248,37 +258,37 @@ export function SwipeMatchCard({ match, nextMatch, onChatClick, onLike, onPass, 
             {intent === 'friend' && (
               <span className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider bg-emerald-500/15  text-emerald-400 border border-emerald-600/30">
                 <CinemaFriendshipIcon size={13} />
-                <span>Film Arkadaşlığı</span>
+                <span>{locale === 'en' ? 'Film Friendship' : 'Film Arkadaşlığı'}</span>
               </span>
             )}
             {intent === 'dating' && (
               <span className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider bg-rose-500/15  text-rose-400 border border-rose-600/30">
                 <CinemaRomanceIcon size={13} />
-                <span>Sinematik Flört</span>
+                <span>{locale === 'en' ? 'Cinematic Dating' : 'Sinematik Flört'}</span>
               </span>
             )}
             {intent === 'both' && (
               <span className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider bg-amber-500/15  text-amber-400 border border-amber-600/30">
                 <CinemaDuoIntentIcon size={13} />
-                <span>Tüm Niyetler</span>
+                <span>{locale === 'en' ? 'All Intents' : 'Tüm Niyetler'}</span>
               </span>
             )}
 
             {match.resurfaced && (
               <span
                 className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider bg-sky-500/15 text-sky-400 border border-sky-600/30"
-                title="Daha önce pas geçmiştin; frekansınız yeniden kesişti"
+                title={locale === 'en' ? 'Passed earlier; frequency aligned again' : 'Daha önce pas geçmiştin; frekansınız yeniden kesişti'}
               >
-                <span>Yeniden Karşında</span>
+                <span>{locale === 'en' ? 'Back on Radar' : 'Yeniden Karşında'}</span>
               </span>
             )}
 
             <span
               className="inline-flex items-center gap-1 text-[10px] font-bold  text-neutral-300  bg-neutral-800 px-1.5 py-0.5 border  border-neutral-700"
-              title="Topluluk Güven ve Niyet Uyumu"
+              title={locale === 'en' ? 'Community Trust & Intent Integrity' : 'Topluluk Güven ve Niyet Uyumu'}
             >
               <CinemaTrustShieldIcon size={12} className=" text-emerald-400" />
-              <span>%{user.intentIntegrityScore ?? 99} Güven</span>
+              <span>%{user.intentIntegrityScore ?? 99} {locale === 'en' ? 'Trust' : 'Güven'}</span>
             </span>
           </div>
 
@@ -286,15 +296,21 @@ export function SwipeMatchCard({ match, nextMatch, onChatClick, onLike, onPass, 
           <div className="grid grid-cols-3 gap-1.5 sm:gap-2 font-mono">
             <div className=" bg-[#262626] border  border-[#404040] p-1 sm:p-1.5 text-center">
               <p className="text-xs sm:text-sm font-black  text-[#FAFAFA] leading-none">{sharedTitles?.length || 0}</p>
-              <p className="text-[10px] font-black uppercase  text-neutral-400 tracking-wider mt-0.5">Ortak Film</p>
+              <p className="text-[10px] font-black uppercase  text-neutral-400 tracking-wider mt-0.5">
+                {locale === 'en' ? 'Shared Films' : 'Ortak Film'}
+              </p>
             </div>
             <div className=" bg-[#262626] border  border-[#404040] p-1 sm:p-1.5 text-center">
               <p className="text-xs sm:text-sm font-black  text-[#FAFAFA] leading-none">{sharedGenres?.length || 0}</p>
-              <p className="text-[10px] font-black uppercase  text-neutral-400 tracking-wider mt-0.5">Ortak Tür</p>
+              <p className="text-[10px] font-black uppercase  text-neutral-400 tracking-wider mt-0.5">
+                {locale === 'en' ? 'Shared Genres' : 'Ortak Tür'}
+              </p>
             </div>
             <div className=" bg-[#262626] border  border-[#404040] p-1 sm:p-1.5 text-center">
               <p className="text-xs sm:text-sm font-black  text-[#FAFAFA] leading-none">{matchReasons?.length || 0}</p>
-              <p className="text-[10px] font-black uppercase  text-neutral-400 tracking-wider mt-0.5">Sinerji</p>
+              <p className="text-[10px] font-black uppercase  text-neutral-400 tracking-wider mt-0.5">
+                {locale === 'en' ? 'Synergy' : 'Sinerji'}
+              </p>
             </div>
           </div>
 
@@ -310,7 +326,7 @@ export function SwipeMatchCard({ match, nextMatch, onChatClick, onLike, onPass, 
             <div className="flex items-center gap-1.5 mb-1">
               <FilmReelIcon size={12} className=" text-[#EF4444]" />
               <span className="text-[10px] font-black uppercase  text-[#EF4444] tracking-wider">
-                ORTAK FREKANS NOKTALARI
+                {locale === 'en' ? 'SHARED FREQUENCIES' : 'ORTAK FREKANS NOKTALARI'}
               </span>
             </div>
             <div className="h-[38px] sm:h-[44px] overflow-hidden space-y-0.5 sm:space-y-1 text-xs font-medium  text-neutral-300">
@@ -324,7 +340,9 @@ export function SwipeMatchCard({ match, nextMatch, onChatClick, onLike, onPass, 
               ) : (
                 <div className="flex items-start gap-1.5">
                   <span className=" text-[#EF4444] font-black flex-shrink-0 text-[10px] mt-0.5">▶</span>
-                  <span className="line-clamp-1 leading-tight">Ortak sinema zevki ve tür tercihleri</span>
+                  <span className="line-clamp-1 leading-tight">
+                    {locale === 'en' ? 'Shared cinema taste and genre preferences' : 'Ortak sinema zevki ve tür tercihleri'}
+                  </span>
                 </div>
               )}
             </div>
@@ -335,7 +353,7 @@ export function SwipeMatchCard({ match, nextMatch, onChatClick, onLike, onPass, 
             <div className="flex items-center justify-between text-[10px] text-[#A3A3A3] font-black uppercase tracking-widest mb-1.5">
               <span className="flex items-center gap-1">
                 <Film className="w-2.5 h-2.5  text-[#EF4444]" />
-                FAVORİ 4 SEÇKİ
+                {locale === 'en' ? 'TOP 4 SELECTIONS' : 'FAVORİ 4 SEÇKİ'}
               </span>
               <span>35MM</span>
             </div>
@@ -346,7 +364,7 @@ export function SwipeMatchCard({ match, nextMatch, onChatClick, onLike, onPass, 
                     key={i} 
                     role="button"
                     tabIndex={0}
-                    aria-label={`Favori başyapıt: ${fav.title}. Detaylar için tıkla.`}
+                    aria-label={locale === 'en' ? `Favorite masterpiece: ${fav.title}. Click for details.` : `Favori başyapıt: ${fav.title}. Detaylar için tıkla.`}
                     onPointerDown={(e) => e.stopPropagation()}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -360,7 +378,7 @@ export function SwipeMatchCard({ match, nextMatch, onChatClick, onLike, onPass, 
                       }
                     }}
                     className="group/poster relative aspect-[2/3] h-[64px] sm:h-[72px] mx-auto overflow-hidden bg-[#171717] border border-[#404040] focus:outline-none focus:ring-2 focus:ring-[#DC2626] cursor-pointer" 
-                    title={`${fav.title} — İncelemek için tıkla`}
+                    title={`${fav.title} — ${locale === 'en' ? 'Click to inspect' : 'İncelemek için tıkla'}`}
                   >
                     <img src={fav.posterUrl} alt={fav.title} width={48} height={72} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover/poster:scale-105 transition-transform duration-200" />
                     {/* Always visible subtle bottom badge on touch, full overlay on hover */}
@@ -393,8 +411,8 @@ export function SwipeMatchCard({ match, nextMatch, onChatClick, onLike, onPass, 
                 exitCard('pass');
               }}
               className="h-12 w-12 min-w-[48px] min-h-[48px] flex items-center justify-center  bg-[#262626]   hover:bg-[#EF4444] hover:text-[#0A0A0A]  text-[#FAFAFA] border-2  border-[#404040]  shadow-[2px_2px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer shrink-0"
-              title="Pas Geç"
-              aria-label="Pas Geç"
+              title={t.home.pass}
+              aria-label={t.home.pass}
             >
               <X className="w-5 h-5 stroke-[3]" />
             </button>
@@ -410,8 +428,8 @@ export function SwipeMatchCard({ match, nextMatch, onChatClick, onLike, onPass, 
                   exitCard('like', onBilet);
                 }}
                 className="h-12 w-12 min-w-[48px] min-h-[48px] flex items-center justify-center  bg-[#F59E0B]/15   hover:bg-[#F59E0B]  text-[#F59E0B] hover:text-[#0A0A0A] border-2  border-[#404040]  shadow-[2px_2px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer shrink-0"
-                title="BİLET Gönder — öne çıkan istek (ücretsiz hesapta günde 1)"
-                aria-label="BİLET gönder"
+                title={locale === 'en' ? 'Send TICKET — spotlight request (1/day on free accounts)' : 'BİLET Gönder — öne çıkan istek (ücretsiz hesapta günde 1)'}
+                aria-label={locale === 'en' ? 'Send TICKET' : 'BİLET gönder'}
               >
                 <Ticket className="w-5 h-5 stroke-[2.5]" />
               </button>
@@ -426,11 +444,11 @@ export function SwipeMatchCard({ match, nextMatch, onChatClick, onLike, onPass, 
                 onChatClick(match);
               }}
               className="flex-1 h-12 min-h-[48px] px-4   bg-[#EF4444] hover:bg-[#DC2626]  text-[#0A0A0A] text-xs font-black uppercase tracking-wider border-2  border-[#404040]  shadow-[3px_3px_0px_#000000] hover:shadow-[1px_1px_0px_#0A0A0A] active:translate-x-0.5 active:translate-y-0.5 transition-all flex items-center justify-center gap-2 cursor-pointer font-mono"
-              title="İzdaş Ol & Not Bırak"
-              aria-label="İzdaş Ol ve Not Bırak"
+              title={locale === 'en' ? 'Connect & Leave Note' : 'İzdaş Ol & Not Bırak'}
+              aria-label={locale === 'en' ? 'Connect & Leave Note' : 'İzdaş Ol ve Not Bırak'}
             >
               <MessageSquare className="w-4 h-4 stroke-[2.5]" />
-              <span>İzdaş Ol & Not Bırak</span>
+              <span>{locale === 'en' ? 'Connect & Leave Note' : 'İzdaş Ol & Not Bırak'}</span>
               {match.unreadCount ? <span className="w-2 h-2 bg-[#F59E0B] rounded-full animate-ping" /> : null}
             </button>
           </div>

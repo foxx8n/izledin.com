@@ -18,6 +18,7 @@ import {
   IzledinPlusBadge,
 } from "@/components/icons/CinemaIcons";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslation } from "@/lib/i18n/context";
 import { getInboxSummary } from "@/lib/services/inbox.service";
 import { getProfileById } from "@/lib/services/profile.service";
 import {
@@ -91,6 +92,7 @@ export function Navbar({
   const userMenuRef = useRef<HTMLDivElement>(null);
   const sidebarUserMenuRef = useRef<HTMLDivElement>(null);
   const { user, profile, isLoading, signOut } = useAuth();
+  const { t, locale, setLocale, href } = useTranslation();
 
   // Internal modal states when parent pages don't provide modal bindings
   const [internalPremiumOpen, setInternalPremiumOpen] = useState(false);
@@ -300,19 +302,19 @@ export function Navbar({
   // catalog showcase lives at /kesif. /upcoming stays routable but leaves the
   // nav (folds into Keşif later).
   const navLinks = [
-    { href: "/", label: "PERDE", icon: FilmReelIcon },
-    { href: "/matches", label: "İZDAŞ", icon: CinemaFrequencyIcon },
-    { href: "/kesif", label: "KEŞİF", icon: CinemaSearchLensIcon },
-    { href: "/diary", label: "GÜNLÜK", icon: FilmStripIcon },
+    { href: href("/"), label: t.home.deckTitle, icon: FilmReelIcon },
+    { href: href("/matches"), label: locale === 'tr' ? "İZDAŞ" : "RADAR", icon: CinemaFrequencyIcon },
+    { href: href("/kesif"), label: locale === 'tr' ? "KEŞİF" : "DISCOVER", icon: CinemaSearchLensIcon },
+    { href: href("/diary"), label: locale === 'tr' ? "GÜNLÜK" : "DIARY", icon: FilmStripIcon },
   ];
 
   const displayName =
     profile?.fullName ||
     user?.user_metadata?.full_name ||
     user?.email?.split("@")[0] ||
-    "Sinemasever";
+    (locale === 'tr' ? "Sinemasever" : "Cinephile");
   const username =
-    profile?.username || user?.user_metadata?.user_name || "kullanici";
+    profile?.username || user?.user_metadata?.user_name || (locale === 'tr' ? "kullanici" : "user");
   const avatarUrl =
     profile?.avatarUrl ||
     user?.user_metadata?.avatar_url ||
@@ -326,22 +328,22 @@ export function Navbar({
   const renderUserMenuItems = (close: () => void) => (
     <>
       <Link
-        href="/profile"
+        href={href("/profile")}
         onClick={close}
         className="flex items-center gap-2 p-2  hover:bg-[#262626] transition-colors min-h-[44px]"
       >
         <CinemaUserIcon size={14} className=" text-[#EF4444]" />
-        <span>Profilim</span>
+        <span>{t.nav.profile}</span>
       </Link>
 
       {isUserAdmin && (
         <Link
-          href="/admin"
+          href={href("/admin")}
           onClick={close}
           className="w-full flex items-center gap-2 p-2  bg-[#DC2626]/20 hover:bg-[#DC2626]   text-[#EF4444] hover:text-white font-black transition-colors border border-[#DC2626] min-h-[44px]"
         >
           <ShieldAlert className="w-3.5 h-3.5" />
-          <span>ADMİN PANELİ</span>
+          <span>{t.nav.admin.toUpperCase()}</span>
         </Link>
       )}
 
@@ -354,7 +356,7 @@ export function Navbar({
           className="w-full flex items-center gap-2 p-2 text-xs font-black  text-[#EF4444]  hover:bg-[#262626] transition-colors text-left uppercase font-mono cursor-pointer min-h-[44px]"
         >
           <LogOut className="w-3.5 h-3.5" />
-          <span>Çıkış Yap</span>
+          <span>{t.nav.signOut}</span>
         </button>
       </div>
     </>
@@ -457,19 +459,47 @@ export function Navbar({
 
           {/* 2. Right Zone: Compact Action Tools */}
           <div className="flex items-center justify-end gap-1 sm:gap-2.5 shrink-0">
+            {/* Language Switcher (TR | EN) */}
+            <div className="flex items-center border-2 border-[#262626] bg-[#171717] p-0.5 text-[10px] font-mono font-black shrink-0 min-h-[36px] sm:min-h-[38px]">
+              <button
+                type="button"
+                onClick={() => setLocale("tr")}
+                className={`px-1.5 py-1 text-center transition-colors cursor-pointer ${
+                  locale === "tr"
+                    ? "bg-[#DC2626] text-white"
+                    : "text-[#A3A3A3] hover:text-white"
+                }`}
+                aria-label="Türkçe"
+              >
+                TR
+              </button>
+              <button
+                type="button"
+                onClick={() => setLocale("en")}
+                className={`px-1.5 py-1 text-center transition-colors cursor-pointer ${
+                  locale === "en"
+                    ? "bg-[#DC2626] text-white"
+                    : "text-[#A3A3A3] hover:text-white"
+                }`}
+                aria-label="English"
+              >
+                EN
+              </button>
+            </div>
+
             {/* Quick Search Trigger */}
             <button
               onClick={handleOpenSearch}
               className="flex items-center gap-2 px-2 sm:px-3 py-2 text-xs font-mono  text-[#A3A3A3]  bg-[#171717]  hover:bg-[#262626] border-2  border-[#262626]  hover:border-[#DC2626] transition-all cursor-pointer  shadow-[2px_2px_0px_#000000] min-h-[36px] sm:min-h-[38px]"
-              title="Film & Dizi Arama"
-              aria-label="Film ve Dizi Arama"
+              title={t.common.search}
+              aria-label={t.common.search}
             >
               <CinemaSearchLensIcon
                 size={14}
                 className="text-[#DC2626] shrink-0"
               />
               <span className="hidden xl:inline truncate max-w-[70px]">
-                Film ara...
+                {t.common.search}...
               </span>
             </button>
 
@@ -487,11 +517,11 @@ export function Navbar({
             <button
               onClick={handleOpenQuickLog}
               className="flex items-center gap-1.5 px-2 sm:px-3 py-2 bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-black tracking-wider uppercase font-mono border-2 border-[#0A0A0A]  shadow-[2px_2px_0px_#000000]  hover:shadow-[1px_1px_0px_#000000] hover:translate-x-[1px] hover:translate-y-[1px] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer min-h-[36px] sm:min-h-[38px]"
-              aria-label="İzleme Kaydı Ekle"
-              title="İzleme Kaydı Ekle"
+              aria-label={t.nav.quickLog}
+              title={t.nav.quickLog}
             >
               <Plus className="w-4 h-4 stroke-[3]" />
-              <span className="hidden sm:inline">İzledim</span>
+              <span className="hidden sm:inline">{t.nav.quickLog}</span>
             </button>
 
             {/* User Auth & Personal Hub Section */}
@@ -576,9 +606,9 @@ export function Navbar({
         <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40  bg-[#0A0A0A]  text-[#FAFAFA] border-t-4  border-[#262626] px-1 py-1 flex items-center justify-around  shadow-[0px_-4px_0px_#000000] font-mono pb-safe transition-colors duration-150">
           {/* Perde — front door deck */}
           <Link
-            href="/"
+            href={href("/")}
             className={`flex-1 min-h-[48px] min-w-[48px] flex flex-col items-center justify-center gap-1 px-1 text-[10px] font-black uppercase transition-all ${
-              pathname === "/"
+              pathname === href("/")
                 ? " text-[#FF5555]  bg-[#171717] border  border-[#404040]"
                 : " text-[#D4D4D4]  hover:text-[#FAFAFA]"
             }`}
@@ -586,19 +616,19 @@ export function Navbar({
             <FilmReelIcon
               size={16}
               className={
-                pathname === "/"
+                pathname === href("/")
                   ? " text-[#FF5555]"
                   : " text-[#D4D4D4]"
               }
             />
-            <span>PERDE</span>
+            <span>{t.home.deckTitle}</span>
           </Link>
 
           {/* İzdaşlar */}
           <Link
-            href="/matches"
+            href={href("/matches")}
             className={`flex-1 min-h-[48px] min-w-[48px] relative flex flex-col items-center justify-center gap-1 px-1 text-[10px] font-black uppercase transition-all ${
-              pathname === "/matches"
+              pathname === href("/matches")
                 ? " text-[#FF5555]  bg-[#171717] border  border-[#404040]"
                 : " text-[#D4D4D4]  hover:text-[#FAFAFA]"
             }`}
@@ -606,12 +636,12 @@ export function Navbar({
             <CinemaFrequencyIcon
               size={16}
               className={
-                pathname === "/matches"
+                pathname === href("/matches")
                   ? " text-[#FF5555]"
                   : " text-[#D4D4D4]"
               }
             />
-            <span>İZDAŞ</span>
+            <span>{locale === 'tr' ? "İZDAŞ" : "RADAR"}</span>
           </Link>
 
           {/* Center Floating Quick Log Action Button */}
@@ -619,8 +649,8 @@ export function Navbar({
             <button
               onClick={handleOpenQuickLog}
               className="flex items-center justify-center -mt-6 w-12 h-12 bg-[#DC2626] hover:bg-[#B91C1C] text-white border-2 border-[#0A0A0A]  shadow-[2px_2px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer rounded-none"
-              title="İzleme Kaydı Ekle"
-              aria-label="İzleme Kaydı Ekle"
+              title={t.nav.quickLog}
+              aria-label={t.nav.quickLog}
             >
               <Plus className="w-6 h-6 stroke-[3]" />
             </button>
@@ -628,9 +658,9 @@ export function Navbar({
 
           {/* Keşif — catalog showcase */}
           <Link
-            href="/kesif"
+            href={href("/kesif")}
             className={`flex-1 min-h-[48px] min-w-[48px] flex flex-col items-center justify-center gap-1 px-1 text-[10px] font-black uppercase transition-all ${
-              pathname === "/kesif"
+              pathname === href("/kesif")
                 ? " text-[#FF5555]  bg-[#171717] border  border-[#404040]"
                 : " text-[#D4D4D4]  hover:text-[#FAFAFA]"
             }`}
@@ -638,19 +668,19 @@ export function Navbar({
             <CinemaSearchLensIcon
               size={16}
               className={
-                pathname === "/kesif"
+                pathname === href("/kesif")
                   ? " text-[#FF5555]"
                   : " text-[#D4D4D4]"
               }
             />
-            <span>KEŞİF</span>
+            <span>{locale === 'tr' ? "KEŞİF" : "DISCOVER"}</span>
           </Link>
 
           {/* Günlük */}
           <Link
-            href="/diary"
+            href={href("/diary")}
             className={`flex-1 min-h-[48px] min-w-[48px] flex flex-col items-center justify-center gap-1 px-1 text-[10px] font-black uppercase transition-all ${
-              pathname === "/diary"
+              pathname === href("/diary")
                 ? " text-[#FF5555]  bg-[#171717] border  border-[#404040]"
                 : " text-[#D4D4D4]  hover:text-[#FAFAFA]"
             }`}
@@ -658,17 +688,17 @@ export function Navbar({
             <FilmStripIcon
               size={16}
               className={
-                pathname === "/diary"
+                pathname === href("/diary")
                   ? " text-[#FF5555]"
                   : " text-[#D4D4D4]"
               }
             />
-            <span>GÜNLÜK</span>
+            <span>{locale === 'tr' ? "GÜNLÜK" : "DIARY"}</span>
           </Link>
 
           {/* Profil / Giriş */}
           <Link
-            href={user ? "/profile" : "/"}
+            href={user ? href("/profile") : href("/")}
             onClick={(e) => {
               if (!user) {
                 e.preventDefault();
@@ -676,7 +706,7 @@ export function Navbar({
               }
             }}
             className={`flex-1 min-h-[48px] min-w-[48px] relative flex flex-col items-center justify-center gap-1 px-1 text-[10px] font-black uppercase transition-all ${
-              pathname === "/profile"
+              pathname === href("/profile")
                 ? " text-[#FF5555]  bg-[#171717] border  border-[#404040]"
                 : " text-[#D4D4D4]  hover:text-[#FAFAFA]"
             }`}
@@ -684,12 +714,12 @@ export function Navbar({
             <CinemaUserIcon
               size={16}
               className={
-                pathname === "/profile"
+                pathname === href("/profile")
                   ? "text-[#DC2626]"
                   : " text-[#A3A3A3]"
               }
             />
-            <span>{user ? "PROFİL" : "GİRİŞ"}</span>
+            <span>{user ? (locale === 'tr' ? "PROFİL" : "PROFILE") : (locale === 'tr' ? "GİRİŞ" : "LOGIN")}</span>
             {user && unreadCount > 0 && (
               <span className="absolute top-1 right-2 w-2 h-2 rounded-full bg-[#DC2626]" />
             )}
@@ -707,7 +737,7 @@ export function Navbar({
 
         {/* ── 1. Logo Area ─────────────────────────────────────────────────── */}
         <div className="px-5 pt-6 pb-4 border-b-2  border-[#262626] shrink-0">
-          <Link href="/" className="flex items-center gap-3 group">
+          <Link href={href("/")} className="flex items-center gap-3 group">
             <CinemaLogoMark
               size={28}
               className="transition-transform group-hover:rotate-6 group-hover:scale-105 shrink-0"
@@ -723,7 +753,7 @@ export function Navbar({
                 </span>
               </span>
               <span className="text-[10px] uppercase font-mono tracking-widest  text-[#A3A3A3] -mt-0.5">
-                Sosyal Sinema Kulübü
+                {t.common.subTagline}
               </span>
             </div>
           </Link>
@@ -734,14 +764,14 @@ export function Navbar({
           <button
             onClick={handleOpenSearch}
             className="w-full flex items-center gap-2 px-3 py-2.5 text-xs font-mono  text-[#A3A3A3]  bg-[#171717]  hover:bg-[#262626] border-2  border-[#262626]  hover:border-[#DC2626] transition-all cursor-pointer  shadow-[2px_2px_0px_#000000] min-h-[44px]"
-            title="Film & Dizi Arama"
+            title={t.common.search}
           >
             <CinemaSearchLensIcon
               size={14}
               className="text-[#DC2626] shrink-0"
             />
             <span className="font-black uppercase tracking-wider">
-              Film ara...
+              {t.common.search}...
             </span>
           </button>
         </div>
@@ -783,11 +813,11 @@ export function Navbar({
                   ? "bg-[#171717] text-[#FAFAFA] border-2 border-[#404040] shadow-[2px_2px_0px_#000000]"
                   : "text-[#A3A3A3] hover:text-white hover:bg-[#171717]"
               }`}
-              title="Gelen Kutusu & Eşleşme İstekleri"
+              title={t.nav.inbox}
             >
               <span className="flex items-center gap-3">
                 <CinemaChatIcon size={16} className="text-[#EF4444] shrink-0" />
-                <span>Gelen Kutusu</span>
+                <span>{t.nav.inbox}</span>
               </span>
               {unreadCount > 0 && (
                 <span className="px-2 py-0.5 bg-[#DC2626] text-white text-[10px] font-black border border-[#0A0A0A]">
@@ -808,20 +838,48 @@ export function Navbar({
             className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-black tracking-wider uppercase font-mono border-2 border-[#0A0A0A]  shadow-[2px_2px_0px_#000000]  hover:shadow-[1px_1px_0px_#000000] hover:translate-x-[1px] hover:translate-y-[1px] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer min-h-[48px]"
           >
             <Plus className="w-4 h-4 stroke-[3]" />
-            <span>+ İZLEDİM</span>
+            <span>+ {t.nav.quickLog.toUpperCase()}</span>
           </button>
         </div>
 
-        {/* ── 7. izledin+ Kulüp Upsell ─────────────────────────────────────── */}
-        <div className="px-4 pb-3 flex items-center gap-2 shrink-0">
+        {/* ── 7. izledin+ Kulüp & Language Toggle ──────────────────────────── */}
+        <div className="px-4 pb-2 flex flex-col gap-2 shrink-0">
           <button
             onClick={handleOpenPremium}
-            className="flex items-center justify-center gap-2 flex-1 p-2.5  bg-[#171717]  hover:bg-[#262626] text-[#DC2626] border-2  border-[#DC2626]/50 hover:border-[#DC2626]  shadow-[2px_2px_0px_#000000] transition-all cursor-pointer min-w-[44px] min-h-[44px] font-mono text-xs font-black uppercase tracking-wider"
-            title="izledin+ Kulüp"
+            className="flex items-center justify-center gap-2 w-full p-2.5  bg-[#171717]  hover:bg-[#262626] text-[#DC2626] border-2  border-[#DC2626]/50 hover:border-[#DC2626]  shadow-[2px_2px_0px_#000000] transition-all cursor-pointer min-h-[44px] font-mono text-xs font-black uppercase tracking-wider"
+            title={t.nav.club}
           >
             <CinemaPlusPassIcon size={16} className="text-[#DC2626]" />
-            <span>izledin+ KULÜP</span>
+            <span>{t.nav.club.toUpperCase()}</span>
           </button>
+
+          {/* Desktop Language Switcher */}
+          <div className="flex items-center border-2 border-[#262626] bg-[#171717] p-0.5 text-xs font-mono font-black">
+            <button
+              type="button"
+              onClick={() => setLocale("tr")}
+              className={`flex-1 py-1.5 text-center transition-colors cursor-pointer ${
+                locale === "tr"
+                  ? "bg-[#DC2626] text-white shadow-[1px_1px_0px_#000000]"
+                  : "text-[#A3A3A3] hover:text-white"
+              }`}
+              aria-label="Türkçe"
+            >
+              TR
+            </button>
+            <button
+              type="button"
+              onClick={() => setLocale("en")}
+              className={`flex-1 py-1.5 text-center transition-colors cursor-pointer ${
+                locale === "en"
+                  ? "bg-[#DC2626] text-white shadow-[1px_1px_0px_#000000]"
+                  : "text-[#A3A3A3] hover:text-white"
+              }`}
+              aria-label="English"
+            >
+              EN
+            </button>
+          </div>
         </div>
 
         {/* ── 8. User Avatar / Name + Dropdown  OR  Login Button ───────────── */}

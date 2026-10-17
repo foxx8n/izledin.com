@@ -42,9 +42,11 @@ import { isOnboarded } from '@/lib/onboarding';
 import { getAllProvinces, getDistricts } from '@/data/locations';
 import { POPULAR_GENRES } from '@/lib/constants';
 import { MovieMateMatch, MediaItem, MatchIntent } from '@/types';
+import { useTranslation } from '@/lib/i18n/context';
 
 export default function MatchesPage() {
   const { user, profile } = useAuth();
+  const { t, locale, href } = useTranslation();
   // S8 İZDAŞ GÜVENCESİ: Sinematik Flört is opt-in. Members whose own intent
   // is friend never see dating-intent profiles or the Flört tab.
   const viewerIntent = (profile?.matchIntent as MatchIntent | undefined) || 'friend';
@@ -457,12 +459,14 @@ export default function MatchesPage() {
         <div className="flex items-end justify-between gap-3 flex-wrap">
           <h1 className="text-xl sm:text-2xl font-black tracking-tight uppercase font-sans text-white leading-none flex items-center gap-2.5">
             <span className="stamp-badge-solid px-2 py-1 text-xs font-black bg-[#EF4444] text-[#0A0A0A] shadow-[2px_2px_0px_#000000]">
-              İZDAŞ
+              {locale === 'en' ? 'FILM MATES' : 'İZDAŞ'}
             </span>
-            RADARI
+            {locale === 'en' ? 'RADAR' : 'RADARI'}
           </h1>
           <p className="text-[11px] font-mono text-neutral-500 hidden sm:block">
-            Aynı frekansı paylaşanları tara · BİLET'le öne çıkar
+            {locale === 'en'
+              ? 'Browse cinephiles sharing your wavelength · Spotlight with TICKET'
+              : "Aynı frekansı paylaşanları tara · BİLET'le öne çıkar"}
           </p>
         </div>
 
@@ -470,7 +474,7 @@ export default function MatchesPage() {
         {user && incomingRequests.length > 0 && (
           <div className="bg-[#171717] border-2 border-[#404040] p-3 flex items-center gap-3 overflow-x-auto">
             <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-[#EF4444] shrink-0">
-              SENİ BEĞENENLER ({incomingRequests.length})
+              {locale === 'en' ? 'LIKED YOU' : 'SENİ BEĞENENLER'} ({incomingRequests.length})
             </span>
             <div className="flex items-center -space-x-2">
               {incomingRequests.slice(0, 8).map((item) => (
@@ -481,8 +485,8 @@ export default function MatchesPage() {
                     setInboxInitialTab('requests');
                     setIsInboxOpen(true);
                   }}
-                  title={`@${item.partner.username}${item.isBiletForMe ? ' — BİLETLE geldi' : ''}`}
-                  aria-label={`@${item.partner.username} profilini gelen kutusunda aç`}
+                  title={`@${item.partner.username}${item.isBiletForMe ? (locale === 'en' ? ' — sent with TICKET' : ' — BİLETLE geldi') : ''}`}
+                  aria-label={`@${item.partner.username}`}
                   className="relative shrink-0 cursor-pointer hover:z-10 hover:-translate-y-0.5 transition-transform"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -496,7 +500,7 @@ export default function MatchesPage() {
                   />
                   {item.isBiletForMe && (
                     <span className="absolute -top-1.5 -right-1.5 px-1 py-0 bg-[#F59E0B] text-[#0A0A0A] text-[9px] font-black border border-[#0A0A0A] leading-tight">
-                      BİLET
+                      {locale === 'en' ? 'TICKET' : 'BİLET'}
                     </span>
                   )}
                 </button>
@@ -510,7 +514,7 @@ export default function MatchesPage() {
               }}
               className="ml-auto text-[10px] font-black uppercase tracking-wider text-neutral-400 hover:text-white shrink-0 cursor-pointer"
             >
-              TÜMÜ →
+              {locale === 'en' ? 'ALL →' : 'TÜMÜ →'}
             </button>
           </div>
         )}
@@ -527,7 +531,7 @@ export default function MatchesPage() {
                   : '  text-neutral-400 hover:text-[#FAFAFA]'
               }`}
             >
-              TÜMÜ ({matches.filter((m) => datingVisible || intentOf(m) !== 'dating').length})
+              {locale === 'en' ? 'ALL' : 'TÜMÜ'} ({matches.filter((m) => datingVisible || intentOf(m) !== 'dating').length})
             </button>
 
             <button
@@ -540,7 +544,7 @@ export default function MatchesPage() {
               }`}
             >
               <CinemaFriendshipIcon size={14} className="shrink-0" />
-              <span className="truncate">Film Arkadaşı ({matches.filter(m => (m.user.matchIntent || m.intent || 'friend') === 'friend').length})</span>
+              <span className="truncate">{locale === 'en' ? 'Film Friend' : 'Film Arkadaşı'} ({matches.filter(m => (m.user.matchIntent || m.intent || 'friend') === 'friend').length})</span>
             </button>
 
             {datingVisible && (
@@ -554,7 +558,7 @@ export default function MatchesPage() {
               }`}
             >
               <CinemaRomanceIcon size={14} className="shrink-0" />
-              <span className="truncate">Sinematik Flört ({matches.filter(m => (m.user.matchIntent || m.intent) === 'dating').length})</span>
+              <span className="truncate">{locale === 'en' ? 'Cinematic Dating' : 'Sinematik Flört'} ({matches.filter(m => (m.user.matchIntent || m.intent) === 'dating').length})</span>
             </button>
             )}
 
@@ -568,7 +572,7 @@ export default function MatchesPage() {
               }`}
             >
               <CinemaDuoIntentIcon size={14} className="shrink-0" />
-              <span className="truncate">Fark etmez ({matches.filter(m => (m.user.matchIntent || m.intent) === 'both').length})</span>
+              <span className="truncate">{locale === 'en' ? 'Both' : 'Fark etmez'} ({matches.filter(m => (m.user.matchIntent || m.intent) === 'both').length})</span>
             </button>
           </div>
         </div>
@@ -765,7 +769,7 @@ export default function MatchesPage() {
                   />
                   <div className="flex items-center justify-between font-mono text-[11px] font-black uppercase mt-3">
                     <span className="text-neutral-500">
-                      KART {Math.min(stackDeck.index + 1, filteredMatches.length)} /{' '}
+                      {locale === 'en' ? 'CARD' : 'KART'} {Math.min(stackDeck.index + 1, filteredMatches.length)} /{' '}
                       {filteredMatches.length}
                     </span>
                     <button
@@ -774,17 +778,19 @@ export default function MatchesPage() {
                       disabled={!stackDeck.canUndo}
                       className="text-[#EF4444] disabled:text-neutral-600 hover:text-white transition-colors cursor-pointer disabled:cursor-default"
                     >
-                      ⟲ GERİ AL
+                      ⟲ {locale === 'en' ? 'UNDO' : 'GERİ AL'}
                     </button>
                   </div>
                 </>
               ) : (
                 <div className="py-10 text-center bg-[#171717] border-2 border-[#404040] p-6 font-mono space-y-4">
                   <p className="text-xs font-black uppercase text-[#FAFAFA] tracking-wider">
-                    BU HAVUZDA KART KALMADI
+                    {locale === 'en' ? 'NO CARDS LEFT IN THIS POOL' : 'BU HAVUZDA KART KALMADI'}
                   </p>
                   <p className="text-[11px] text-neutral-400 font-sans">
-                    Filtreleri sıfırlayarak havuzu genişlet veya radarı yenile.
+                    {locale === 'en'
+                      ? 'Expand the pool by clearing filters or refresh the radar.'
+                      : 'Filtreleri sıfırlayarak havuzu genişlet veya radarı yenile.'}
                   </p>
                   <button
                     type="button"
@@ -792,7 +798,7 @@ export default function MatchesPage() {
                     className="h-11 min-h-[44px] px-5 bg-[#EF4444] hover:bg-[#DC2626] text-[#0A0A0A] text-xs font-black uppercase border-2 border-[#404040] shadow-[3px_3px_0px_#000000] inline-flex items-center gap-2 cursor-pointer"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
-                    <span>FİLTRELERİ SIFIRLA</span>
+                    <span>{locale === 'en' ? 'RESET FILTERS' : 'FİLTRELERİ SIFIRLA'}</span>
                   </button>
                 </div>
               )}

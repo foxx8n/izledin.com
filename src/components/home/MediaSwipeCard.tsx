@@ -4,6 +4,7 @@ import React, { useRef, useState, useCallback } from "react";
 import { X, Heart, Info } from "lucide-react";
 import { ClapperboardIcon } from "@/components/icons/CinemaIcons";
 import type { MediaItem } from "@/types";
+import { useTranslation } from "@/lib/i18n/context";
 
 interface MediaSwipeCardProps {
   item: MediaItem;
@@ -36,6 +37,7 @@ export function MediaSwipeCard({
   onPass,
   onDetail,
 }: MediaSwipeCardProps) {
+  const { t, locale } = useTranslation();
   const cardRef = useRef<HTMLDivElement>(null);
   const [imgError, setImgError] = useState(false);
   const dragState = useRef({ startX: 0, startY: 0, isDragging: false });
@@ -187,7 +189,7 @@ export function MediaSwipeCard({
             className="flex items-center gap-1.5 bg-[#DC2626] text-white px-3 py-1.5 border-2 border-white font-mono font-black text-xs uppercase tracking-widest shadow-[3px_3px_0px_#000000]"
           >
             <X className="w-4 h-4 stroke-[3]" />
-            <span>PAS</span>
+            <span>{t.home.pass}</span>
           </div>
         </div>
 
@@ -207,7 +209,7 @@ export function MediaSwipeCard({
             className="flex items-center gap-1.5 bg-emerald-500 text-[#0A0A0A] px-3 py-1.5 border-2 border-[#0A0A0A] font-mono font-black text-xs uppercase tracking-widest shadow-[3px_3px_0px_#000000]"
           >
             <Heart className="w-4 h-4 fill-current" />
-            <span>SEVDİM</span>
+            <span>{t.home.like}</span>
           </div>
         </div>
 
@@ -216,7 +218,7 @@ export function MediaSwipeCard({
           <div
             role="button"
             tabIndex={0}
-            aria-label={`${item.title} detayları`}
+            aria-label={`${item.title} — ${locale === "en" ? "Details" : "Detaylar"}`}
             onPointerDown={(e) => e.stopPropagation()}
             onClick={() => onDetail(item)}
             onKeyDown={(e) => {
@@ -239,7 +241,7 @@ export function MediaSwipeCard({
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent pointer-events-none" />
             <div className="absolute top-2.5 left-2.5 px-2 py-0.5 bg-[#0A0A0A] text-[#EF4444] border border-[#EF4444]/60 text-[10px] font-black uppercase font-mono tracking-widest">
-              GÜNÜN SEANSI
+              {locale === "en" ? "TODAY'S SCREENING" : "GÜNÜN SEANSI"}
             </div>
             {typeof item.voteAverage === "number" && (
               <div className="absolute bottom-2.5 right-2.5 flex items-center border-2 border-black shadow-[2px_2px_0px_#000000] overflow-hidden">
@@ -275,7 +277,7 @@ export function MediaSwipeCard({
           </div>
 
           <p className="text-xs text-neutral-300 font-sans leading-relaxed line-clamp-2 h-[34px] overflow-hidden">
-            {item.overview}
+            {locale === "en" && (item as any).overviewEn ? (item as any).overviewEn : item.overview}
           </p>
 
           {/* Buttons */}
@@ -288,8 +290,8 @@ export function MediaSwipeCard({
                 finish("pass");
               }}
               className="h-12 w-12 min-w-[48px] min-h-[48px] flex items-center justify-center bg-[#262626] hover:bg-[#EF4444] hover:text-[#0A0A0A] text-[#FAFAFA] border-2 border-[#404040] shadow-[2px_2px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer shrink-0"
-              title="Pas Geç"
-              aria-label="Pas Geç"
+              title={t.home.pass}
+              aria-label={t.home.pass}
             >
               <X className="w-5 h-5 stroke-[3]" />
             </button>
@@ -305,11 +307,11 @@ export function MediaSwipeCard({
                   ? "bg-emerald-500/20 text-emerald-300"
                   : "bg-[#EF4444] hover:bg-[#DC2626] text-[#0A0A0A]"
               }`}
-              title={isWatchlisted ? "İzleme listende" : "Sevdim — listene ekle"}
-              aria-label="Sevdim"
+              title={isWatchlisted ? (locale === "en" ? "In Watchlist" : "İzleme listende") : (locale === "en" ? "Loved it — add to list" : "Sevdim — listene ekle")}
+              aria-label={t.home.like}
             >
               <Heart className={`w-4 h-4 ${isWatchlisted ? "fill-current" : ""}`} />
-              <span>{isWatchlisted ? "LISTENDE" : "SEVDİM"}</span>
+              <span>{isWatchlisted ? (locale === "en" ? "IN LIST" : "LISTENDE") : t.home.like}</span>
             </button>
             <button
               type="button"
@@ -319,8 +321,8 @@ export function MediaSwipeCard({
                 onDetail(item);
               }}
               className="h-12 w-12 min-w-[48px] min-h-[48px] flex items-center justify-center bg-[#262626] hover:bg-[#404040] text-[#FAFAFA] border-2 border-[#404040] shadow-[2px_2px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer shrink-0"
-              title="İncele"
-              aria-label="İncele"
+              title={locale === "en" ? "Details" : "İncele"}
+              aria-label={locale === "en" ? "Details" : "İncele"}
             >
               <Info className="w-5 h-5" />
             </button>
@@ -328,7 +330,7 @@ export function MediaSwipeCard({
 
           <div className="flex items-center gap-1.5 text-[10px] text-neutral-500 font-bold uppercase tracking-widest">
             <ClapperboardIcon size={12} className="text-[#EF4444]" />
-            <span>SAĞA KAYDIR: SEVDİM • SOLA: PAS</span>
+            <span>{locale === "en" ? "SWIPE RIGHT: LOVED IT • LEFT: PASS" : "SAĞA KAYDIR: SEVDİM • SOLA: PAS"}</span>
           </div>
         </div>
       </div>

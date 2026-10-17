@@ -23,6 +23,11 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://www.izledin.com"),
   alternates: {
     canonical: "https://www.izledin.com",
+    languages: {
+      "en": "https://www.izledin.com",
+      "tr": "https://www.izledin.com/tr",
+      "x-default": "https://www.izledin.com",
+    },
   },
   title: "İzledin — Zevkinle Eşleşen Sinema Kulübü | Film, Dizi, Anime İzdaş Bul",
   description:
@@ -77,6 +82,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
 import { OfflineSyncIndicator } from "@/components/common/OfflineSyncIndicator";
 import { serializeJsonLd } from "@/lib/jsonld";
+import { LanguageProvider } from "@/lib/i18n/context";
 
 export default function RootLayout({
   children,
@@ -141,7 +147,9 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
         />
         <AuthProvider>
-          {children}
+          <LanguageProvider>
+            {children}
+          </LanguageProvider>
           <OfflineSyncIndicator />
         </AuthProvider>
         <SpeedInsights />

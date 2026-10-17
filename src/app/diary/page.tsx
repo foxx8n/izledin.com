@@ -53,9 +53,11 @@ import {
   CommunitySortMode,
 } from "@/lib/services/watch-logs.service";
 import { WatchLog, MediaItem, MovieMateMatch, MediaType } from "@/types";
+import { useTranslation } from "@/lib/i18n/context";
 
 export default function DiaryPage() {
   const { user } = useAuth();
+  const { t, locale, href } = useTranslation();
   const [logs, setLogs] = useState<WatchLog[]>([]);
   const [likedLogIds, setLikedLogIds] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<"all" | "mine">("all");
@@ -282,14 +284,15 @@ export default function DiaryPage() {
         <div className=" bg-[#0A0A0A]  text-[#FAFAFA] border-2  border-[#404040]  shadow-[8px_8px_0px_#000000] p-6 sm:p-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div className="space-y-2.5">
             <span className="stamp-badge-solid px-2.5 py-0.5 text-[10px] sm:text-xs font-black uppercase tracking-wider font-mono inline-block">
-              35MM ARŞİV & DAKTİLO GÜNLÜĞÜ
+              {locale === "en" ? "35MM ARCHIVE & TYPEWRITER DIARY" : "35MM ARŞİV & DAKTİLO GÜNLÜĞÜ"}
             </span>
             <h1 className="text-3xl sm:text-5xl font-black uppercase  text-[#EF4444] font-sans tracking-tight leading-[0.95]">
-              TOPLULUK İZLEME GÜNLÜĞÜ
+              {locale === "en" ? "COMMUNITY FILM DIARY" : "TOPLULUK İZLEME GÜNLÜĞÜ"}
             </h1>
             <p className="text-xs sm:text-sm text-[#D4D4D4] leading-relaxed max-w-xl font-mono">
-              Sinemaseverlerin daktilo ile kaydettiği tüm izleme geçmişi, 1-10
-              arası puanlar ve samimi film notları.
+              {locale === "en"
+                ? "Every watch logged on typewriters by fellow cinephiles: 1-10 ratings and candid film notes."
+                : "Sinemaseverlerin daktilo ile kaydettiği tüm izleme geçmişi, 1-10 arası puanlar ve samimi film notları."}
             </p>
           </div>
 
@@ -298,7 +301,7 @@ export default function DiaryPage() {
             className="px-6 py-3.5 bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-black uppercase tracking-wider border-2 border-white shadow-[4px_4px_0px_#ffffff] flex items-center gap-2 cursor-pointer self-start sm:self-auto transition-transform active:translate-x-0.5 active:translate-y-0.5 shrink-0 font-mono"
           >
             <Plus className="w-4 h-4 stroke-[3]" />
-            <span>+ YENİ İZLEME KAYDI YAZ</span>
+            <span>{locale === "en" ? "+ LOG NEW ENTRY" : "+ YENİ İZLEME KAYDI YAZ"}</span>
           </button>
         </div>
 
@@ -310,7 +313,7 @@ export default function DiaryPage() {
             <div
               className="grid grid-cols-2 gap-2 w-full md:w-auto"
               role="tablist"
-              aria-label="Günlük Akış Modu"
+              aria-label="Feed Mode"
             >
               <button
                 type="button"
@@ -323,7 +326,7 @@ export default function DiaryPage() {
                     : " bg-[#171717]  text-[#A3A3A3]  border-[#262626] hover:border-[#0A0A0A]"
                 }`}
               >
-                TOPLULUK AKIŞI
+                {locale === "en" ? "COMMUNITY FEED" : "TOPLULUK AKIŞI"}
               </button>
 
               <button
@@ -343,11 +346,8 @@ export default function DiaryPage() {
                     : " bg-[#171717]  text-[#A3A3A3]  border-[#262626] hover:border-[#0A0A0A]"
                 }`}
               >
-                BENİM GÜNLÜĞÜM
+                {locale === "en" ? "MY DIARY" : "BENİM GÜNLÜĞÜM"}
                 {(() => {
-                  // Real total of MY logs — the community feed is only a 50-row
-                  // window, so counting inside it showed wrong (or empty)
-                  // numbers. Hidden entirely while there are none.
                   if (!user) return null;
                   const mineInFeed = logs.filter(
                     (l) => l.userId === user.id,
@@ -374,8 +374,8 @@ export default function DiaryPage() {
                       fetchLogs();
                     }
                   }}
-                  placeholder="Film veya inceleme ara..."
-                  aria-label="Günlükte film veya inceleme ara"
+                  placeholder={locale === "en" ? "Search movies or reviews..." : "Film veya inceleme ara..."}
+                  aria-label="Search diary"
                   className="w-full h-11  bg-[#171717]  text-[#FAFAFA] text-xs font-bold pl-9 pr-8 border-2  border-[#404040] focus:border-[#DC2626] focus:outline-none placeholder-[#737373]"
                 />
                 {searchQuery && (
@@ -385,7 +385,7 @@ export default function DiaryPage() {
                       setSearchQuery("");
                       fetchLogs("");
                     }}
-                    aria-label="Aramayı temizle"
+                    aria-label="Clear search"
                     className="absolute right-2.5 top-2.5 p-1 text-[#737373]  hover:text-white cursor-pointer"
                   >
                     <X className="w-4 h-4" />
@@ -397,7 +397,7 @@ export default function DiaryPage() {
                 onClick={() => fetchLogs()}
                 className="h-11 px-4   bg-[#EF4444] hover:bg-[#DC2626]  text-[#0A0A0A] text-xs font-black uppercase border-2  border-[#404040]  shadow-[2px_2px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer flex-shrink-0"
               >
-                Ara
+                {locale === "en" ? "Search" : "Ara"}
               </button>
             </div>
           </div>
@@ -409,20 +409,20 @@ export default function DiaryPage() {
               {viewMode === "all" && (
                 <div className="flex items-center gap-1.5  bg-[#171717] border  border-[#404040] px-2.5 py-1">
                   <span className="text-[11px] font-black text-[#737373] uppercase shrink-0">
-                    Sırala:
+                    {locale === "en" ? "Sort:" : "Sırala:"}
                   </span>
                   <select
                     value={sortMode}
                     onChange={(e) =>
                       setSortMode(e.target.value as CommunitySortMode)
                     }
-                    aria-label="Sıralama Modu"
+                    aria-label="Sort Mode"
                     className="bg-transparent text-xs font-black uppercase  text-[#FAFAFA] focus:outline-none cursor-pointer"
                   >
-                    <option value="trending">Öne Çıkanlar</option>
-                    <option value="top">En Çok Beğenilenler</option>
-                    <option value="recent">En Yeniler</option>
-                    <option value="premium">İzledin+ Kulübü</option>
+                    <option value="trending">{locale === "en" ? "Trending" : "Öne Çıkanlar"}</option>
+                    <option value="top">{locale === "en" ? "Top Rated" : "En Çok Beğenilenler"}</option>
+                    <option value="recent">{locale === "en" ? "Newest" : "En Yeniler"}</option>
+                    <option value="premium">{locale === "en" ? "İzledin+ Club" : "İzledin+ Kulübü"}</option>
                   </select>
                 </div>
               )}
@@ -430,35 +430,35 @@ export default function DiaryPage() {
               {/* Rating Selector */}
               <div className="flex items-center gap-1.5  bg-[#171717] border  border-[#404040] px-2.5 py-1">
                 <span className="text-[11px] font-black text-[#737373] uppercase shrink-0">
-                  Puan:
+                  {locale === "en" ? "Rating:" : "Puan:"}
                 </span>
                 <select
                   value={filterRating}
                   onChange={(e) => setFilterRating(Number(e.target.value))}
-                  aria-label="Puan Filtresi"
+                  aria-label="Rating Filter"
                   className="bg-transparent text-xs font-black uppercase  text-[#FAFAFA] focus:outline-none cursor-pointer"
                 >
-                  <option value={0}>Tüm Puanlar</option>
-                  <option value={9}>9.0+ Başyapıt</option>
-                  <option value={8}>8.0+ Çok İyi</option>
-                  <option value={7}>7.0+ İyi Film</option>
+                  <option value={0}>{locale === "en" ? "All Scores" : "Tüm Puanlar"}</option>
+                  <option value={9}>{locale === "en" ? "9.0+ Masterpiece" : "9.0+ Başyapıt"}</option>
+                  <option value={8}>{locale === "en" ? "8.0+ Great" : "8.0+ Çok İyi"}</option>
+                  <option value={7}>{locale === "en" ? "7.0+ Good" : "7.0+ İyi Film"}</option>
                 </select>
               </div>
 
               {/* Media Type Selector */}
               <div className="flex items-center gap-1.5  bg-[#171717] border  border-[#404040] px-2.5 py-1">
                 <span className="text-[11px] font-black text-[#737373] uppercase shrink-0">
-                  Tür:
+                  {locale === "en" ? "Type:" : "Tür:"}
                 </span>
                 <select
                   value={filterMediaType}
                   onChange={(e) => setFilterMediaType(e.target.value as any)}
-                  aria-label="Medya Türü Filtresi"
+                  aria-label="Media Type Filter"
                   className="bg-transparent text-xs font-black uppercase  text-[#FAFAFA] focus:outline-none cursor-pointer"
                 >
-                  <option value="all">Tüm Yapımlar</option>
-                  <option value="movie">Sadece Filmler</option>
-                  <option value="tv">Sadece Diziler</option>
+                  <option value="all">{locale === "en" ? "All Media" : "Tüm Yapımlar"}</option>
+                  <option value="movie">{locale === "en" ? "Movies Only" : "Sadece Filmler"}</option>
+                  <option value="tv">{locale === "en" ? "Series Only" : "Sadece Diziler"}</option>
                 </select>
               </div>
 
@@ -477,16 +477,16 @@ export default function DiaryPage() {
                     setTimeout(() => fetchLogs(""), 0);
                   }}
                   className="px-2.5 py-1  bg-neutral-800   hover:bg-[#EF4444] hover:text-[#0A0A0A] border  border-[#404040] text-xs font-black uppercase transition-colors cursor-pointer flex items-center gap-1"
-                  title="Tüm filtreleri sıfırla"
+                  title="Reset filters"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
-                  <span>Sıfırla</span>
+                  <span>{locale === "en" ? "Reset" : "Sıfırla"}</span>
                 </button>
               )}
             </div>
 
             <div className="text-xs font-black text-[#737373] uppercase tracking-wider">
-              {filteredLogs.length} İNCELEME LİSTELENDİ
+              {filteredLogs.length} {locale === "en" ? "REVIEWS LISTED" : "İNCELEME LİSTELENDİ"}
             </div>
           </div>
         </div>
@@ -495,15 +495,15 @@ export default function DiaryPage() {
         <section aria-labelledby="diary-feed-heading">
           <h2 id="diary-feed-heading" className="sr-only">
             {viewMode === "mine"
-              ? "Kişisel İzleme Günlüğüm"
-              : "Topluluk Sinefil Günlüğü Akışı"}
+              ? (locale === "en" ? "Personal Film Diary" : "Kişisel İzleme Günlüğüm")
+              : (locale === "en" ? "Community Cinephile Diary Feed" : "Topluluk Sinefil Günlüğü Akışı")}
           </h2>
 
           {loading ? (
             <div className="py-24 flex flex-col items-center justify-center gap-3 font-mono">
               <Loader2 className="w-10 h-10  text-[#EF4444] animate-spin" />
               <span className="text-xs font-black uppercase tracking-widest text-[#737373]">
-                GÜNLÜK KAYITLARI YÜKLENİYOR...
+                {locale === "en" ? "LOADING DIARY ENTRIES..." : "GÜNLÜK KAYITLARI YÜKLENİYOR..."}
               </span>
             </div>
           ) : filteredLogs.length === 0 ? (
@@ -511,13 +511,17 @@ export default function DiaryPage() {
               <BookOpen className="w-14 h-14  text-[#EF4444] mx-auto stroke-[1.5]" />
               <h3 className="text-lg font-black uppercase tracking-tight">
                 {viewMode === "mine"
-                  ? "HENÜZ GÜNLÜĞE FİLM EKLENMEDİ"
-                  : "UYGUN GÜNLÜK KAYDI BULUNAMADI"}
+                  ? (locale === "en" ? "NO FILMS IN YOUR DIARY YET" : "HENÜZ GÜNLÜĞE FİLM EKLENMEDİ")
+                  : (locale === "en" ? "NO MATCHING DIARY ENTRIES FOUND" : "UYGUN GÜNLÜK KAYDI BULUNAMADI")}
               </h3>
               <p className="text-xs text-[#737373] max-w-md mx-auto leading-relaxed">
                 {viewMode === "mine"
-                  ? "Henüz günlüğe film eklenmedi. İlk başyapıtını kaydet! İzlediğin filmi puanlayıp daktilo notunu ekle."
-                  : "Seçilen filtrelere veya arama kriterine uygun izleme kaydı bulunamadı. Filtreleri sıfırlayabilir veya yeni bir kayıt ekleyebilirsiniz."}
+                  ? (locale === "en"
+                      ? "Your typewriter diary is blank. Log your first masterpiece! Rate what you watched and jot down your notes."
+                      : "Henüz günlüğe film eklenmedi. İlk başyapıtını kaydet! İzlediğin filmi puanlayıp daktilo notunu ekle.")
+                  : (locale === "en"
+                      ? "No diary logs match the selected filters or search terms. Try clearing filters or create a new entry."
+                      : "Seçilen filtrelere veya arama kriterine uygun izleme kaydı bulunamadı. Filtreleri sıfırlayabilir veya yeni bir kayıt ekleyebilirsiniz.")}
               </p>
               <div className="pt-2">
                 <button
@@ -526,7 +530,7 @@ export default function DiaryPage() {
                   className="px-6 py-3.5 bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-black uppercase tracking-wider border-2 border-[#0A0A0A]  shadow-[4px_4px_0px_#000000] cursor-pointer inline-flex items-center gap-2 transition-transform active:translate-x-0.5 active:translate-y-0.5"
                 >
                   <Plus className="w-4 h-4 stroke-[3]" />
-                  <span>+ İLK BAŞYAPITINI KAYDET</span>
+                  <span>{locale === "en" ? "+ LOG YOUR FIRST MASTERPIECE" : "+ İLK BAŞYAPITINI KAYDET"}</span>
                 </button>
               </div>
             </div>

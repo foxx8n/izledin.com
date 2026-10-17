@@ -17,6 +17,7 @@ import {
 } from '@/components/icons/CinemaIcons';
 import { MovieMateMatch } from '@/types';
 import { generateDynamicBio } from '@/lib/cinema-bio-generator';
+import { useTranslation } from '@/lib/i18n/context';
 
 interface MatchCardProps {
   match: MovieMateMatch;
@@ -29,6 +30,7 @@ interface MatchCardProps {
 }
 
 export function MatchCard({ match, onLike, onPass, onBilet, onMovieClick }: MatchCardProps) {
+  const { t, locale } = useTranslation();
   const { user, compatibilityScore, matchReasons } = match;
   const [imgError, setImgError] = useState(false);
 
@@ -71,9 +73,9 @@ export function MatchCard({ match, onLike, onPass, onBilet, onMovieClick }: Matc
           {/* Stamped High-Contrast Compatibility Badge with Micro-Highlight */}
           <div 
             className="stamp-badge px-2.5 py-1 text-xs font-black  bg-[#EF4444]/15 border-2 border-dashed  border-[#EF4444]  text-[#EF4444] text-center flex-shrink-0 tracking-wider"
-            title="Sinefil Uyum Puanı"
+            title={locale === 'en' ? 'Cinephile Compatibility Score' : 'Sinefil Uyum Puanı'}
           >
-            %{compatibilityScore} UYUM
+            %{compatibilityScore} {locale === 'en' ? 'MATCH' : 'UYUM'}
           </div>
         </div>
 
@@ -82,37 +84,37 @@ export function MatchCard({ match, onLike, onPass, onBilet, onMovieClick }: Matc
           {intent === 'friend' && (
             <span className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider bg-emerald-500/15  text-emerald-400 border border-emerald-600/30">
               <CinemaFriendshipIcon size={13} />
-              <span>Film Arkadaşlığı</span>
+              <span>{locale === 'en' ? 'Film Friendship' : 'Film Arkadaşlığı'}</span>
             </span>
           )}
           {intent === 'dating' && (
             <span className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider bg-rose-500/15  text-rose-400 border border-rose-600/30">
               <CinemaRomanceIcon size={13} />
-              <span>Sinematik Flört</span>
+              <span>{locale === 'en' ? 'Cinematic Dating' : 'Sinematik Flört'}</span>
             </span>
           )}
           {intent === 'both' && (
             <span className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider bg-amber-500/15  text-amber-400 border border-amber-600/30">
               <CinemaDuoIntentIcon size={13} />
-              <span>Fark etmez</span>
+              <span>{locale === 'en' ? 'Any Intent' : 'Fark etmez'}</span>
             </span>
           )}
 
           {match.resurfaced && (
             <span
               className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider bg-sky-500/15 text-sky-400 border border-sky-600/30"
-              title="Daha önce pas geçmiştin; frekansınız yeniden kesişti"
+              title={locale === 'en' ? 'Passed earlier; frequency aligned again' : 'Daha önce pas geçmiştin; frekansınız yeniden kesişti'}
             >
-              <span>Yeniden Karşında</span>
+              <span>{locale === 'en' ? 'Back on Radar' : 'Yeniden Karşında'}</span>
             </span>
           )}
 
           <span 
             className="inline-flex items-center gap-1 text-[10px] font-bold  text-neutral-300  bg-neutral-800 px-1.5 py-0.5 border  border-neutral-700"
-            title="Topluluk Güven Puanı"
+            title={locale === 'en' ? 'Community Trust Score' : 'Topluluk Güven Puanı'}
           >
             <CinemaTrustShieldIcon size={12} className=" text-emerald-400" />
-            <span>%{user.intentIntegrityScore ?? 98} Güven</span>
+            <span>%{user.intentIntegrityScore ?? 98} {locale === 'en' ? 'Trust' : 'Güven'}</span>
           </span>
         </div>
 
@@ -128,7 +130,7 @@ export function MatchCard({ match, onLike, onPass, onBilet, onMovieClick }: Matc
           <div className="flex items-center gap-1.5 mb-1">
             <FilmReelIcon size={12} className=" text-[#EF4444]" />
             <span className="text-[10px] font-black uppercase  text-[#EF4444] tracking-wider">
-              ORTAK FREKANS NOKTALARI
+              {locale === 'en' ? 'SHARED FREQUENCIES' : 'ORTAK FREKANS NOKTALARI'}
             </span>
           </div>
           <div className="h-[44px] overflow-hidden space-y-1 text-xs font-medium  text-[#D4D4D4]">
@@ -142,7 +144,9 @@ export function MatchCard({ match, onLike, onPass, onBilet, onMovieClick }: Matc
             ) : (
               <div className="flex items-start gap-1.5">
                 <span className=" text-[#EF4444] font-black flex-shrink-0 mt-0.5 text-[10px]">▶</span>
-                <span className="line-clamp-1 leading-tight">Ortak sinema zevki ve tür tercihleri</span>
+                <span className="line-clamp-1 leading-tight">
+                  {locale === 'en' ? 'Shared cinema taste and genre preferences' : 'Ortak sinema zevki ve tür tercihleri'}
+                </span>
               </div>
             )}
           </div>
@@ -153,7 +157,7 @@ export function MatchCard({ match, onLike, onPass, onBilet, onMovieClick }: Matc
           <div className="flex items-center justify-between text-[10px] text-[#A3A3A3] font-black uppercase tracking-widest mb-1.5">
             <span className="flex items-center gap-1">
               <Film className="w-2.5 h-2.5  text-[#EF4444]" />
-              FAVORİ 4 SEÇKİ
+              {locale === 'en' ? 'TOP 4 PICKS' : 'FAVORİ 4 SEÇKİ'}
             </span>
             <span>35MM</span>
           </div>
@@ -164,7 +168,7 @@ export function MatchCard({ match, onLike, onPass, onBilet, onMovieClick }: Matc
                   key={i} 
                   role="button"
                   tabIndex={0}
-                  aria-label={`Favori başyapıt: ${fav.title}. Detaylar için tıkla.`}
+                  aria-label={locale === 'en' ? `Favorite masterpiece: ${fav.title}. Click for details.` : `Favori başyapıt: ${fav.title}. Detaylar için tıkla.`}
                   onClick={(e) => {
                     e.stopPropagation();
                     onMovieClick?.(fav.title, fav.posterUrl);
@@ -177,7 +181,7 @@ export function MatchCard({ match, onLike, onPass, onBilet, onMovieClick }: Matc
                     }
                   }}
                   className="group/poster relative aspect-[2/3] h-[72px] mx-auto overflow-hidden bg-[#171717] border border-[#404040] focus:outline-none focus:ring-2 focus:ring-[#DC2626] cursor-pointer" 
-                  title={`${fav.title} — İncelemek için tıkla`}
+                  title={`${fav.title} — ${locale === 'en' ? 'Click to inspect' : 'İncelemek için tıkla'}`}
                 >
                   <img 
                     src={fav.posterUrl} 
@@ -220,8 +224,8 @@ export function MatchCard({ match, onLike, onPass, onBilet, onMovieClick }: Matc
           type="button"
           onClick={() => onPass?.(match)}
           className="h-12 w-12 min-w-[48px] min-h-[48px] flex items-center justify-center  bg-[#262626]   hover:bg-[#EF4444] hover:text-[#0A0A0A]  text-[#FAFAFA] border-2  border-[#404040]  shadow-[2px_2px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer font-black shrink-0"
-          title="Pas Geç"
-          aria-label="Pas Geç"
+          title={t.home.pass}
+          aria-label={t.home.pass}
         >
           <X className="w-5 h-5 stroke-[3]" />
         </button>
@@ -232,8 +236,8 @@ export function MatchCard({ match, onLike, onPass, onBilet, onMovieClick }: Matc
             type="button"
             onClick={() => onBilet?.(match)}
             className="h-12 w-12 min-w-[48px] min-h-[48px] flex items-center justify-center  bg-[#F59E0B]/15   hover:bg-[#F59E0B]  text-[#F59E0B] hover:text-[#0A0A0A] border-2  border-[#404040]  shadow-[2px_2px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer shrink-0"
-            title="BİLET Gönder — öne çıkan istek (ücretsiz hesapta günde 1)"
-            aria-label="BİLET gönder"
+            title={locale === 'en' ? 'Send TICKET — spotlight request (1/day on free accounts)' : 'BİLET Gönder — öne çıkan istek (ücretsiz hesapta günde 1)'}
+            aria-label={locale === 'en' ? 'Send TICKET' : 'BİLET gönder'}
           >
             <CinemaTicketIcon size={20} className="shrink-0" />
           </button>
@@ -245,11 +249,11 @@ export function MatchCard({ match, onLike, onPass, onBilet, onMovieClick }: Matc
             type="button"
             onClick={() => onLike(match)}
             className="flex-1 h-12 min-h-[48px] px-4   bg-[#EF4444] hover:bg-[#DC2626]  text-[#0A0A0A] text-xs font-black uppercase tracking-wider border-2  border-[#404040]  shadow-[3px_3px_0px_#000000] hover:shadow-[1px_1px_0px_#0A0A0A] active:translate-x-0.5 active:translate-y-0.5 transition-all flex items-center justify-center gap-2 cursor-pointer font-mono"
-            title="İzdaş ol — karşılıklı beğenide sohbet açılır"
-            aria-label="İzdaş Ol"
+            title={locale === 'en' ? 'Connect — chat unlocks upon mutual like' : 'İzdaş ol — karşılıklı beğenide sohbet açılır'}
+            aria-label={locale === 'en' ? 'Connect' : 'İzdaş Ol'}
           >
             <CinemaHeartIcon size={16} filled className="shrink-0" />
-            <span>İZDAŞ OL</span>
+            <span>{locale === 'en' ? 'CONNECT' : 'İZDAŞ OL'}</span>
           </button>
         )}
       </div>
